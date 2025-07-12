@@ -9,7 +9,9 @@
       "Bash(php artisan make:controller:*)",
       "Bash(php artisan make:model:*)",
       "Bash(php artisan make:listener:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
