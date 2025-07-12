@@ -90,3 +90,36 @@ Implements barcode generation using milon/barcode and picqer/php-barcode-generat
 - Tests use SQLite in-memory database
 - Company isolation must be tested for all tenant-scoped features
 - Use factories to create test data with proper company relationships
+
+## Stratégie de Branches Git
+
+### Branches Principales
+- **`main`**: Production stable - code déployé en production
+- **`develop`**: Intégration continue - point de convergence pour toutes les fonctionnalités
+
+### Branches de Fonctionnalités (`feature/`)
+- **`feature/inventory-management`**: Gestion complète des stocks et mouvements
+- **`feature/sales-invoicing`**: Système de vente et facturation 
+- **`feature/purchase-management`**: Gestion des achats et fournisseurs
+- **`feature/multi-tenant-security`**: Amélioration sécurité multi-tenant
+- **`feature/reports-analytics`**: Rapports et analytics avancés
+- **`feature/barcode-labels`**: Génération codes-barres et étiquettes
+- **`feature/user-management`**: Gestion utilisateurs et permissions
+
+### Branches d'Amélioration
+- **`improvement/performance-optimization`**: Optimisations performance
+- **`improvement/ui-ux-enhancement`**: Améliorations interface utilisateur
+- **`enhancement/api-development`**: Développement API REST
+
+### Branches de Maintenance
+- **`bugfix/tenant-isolation`**: Corrections isolation tenant
+- **`hotfix/production-issues`**: Corrections urgentes production
+- **`release/v1.0.0`**: Préparation release v1.0.0
+
+### Workflow Recommandé
+1. Créer une branche feature depuis `develop`
+2. Développer la fonctionnalité avec tests
+3. Merger vers `develop` via Pull Request
+4. Créer une branche `release/` depuis `develop` pour finaliser
+5. Merger `release/` vers `main` et `develop`
+6. Utiliser `hotfix/` depuis `main` pour corrections urgentes
