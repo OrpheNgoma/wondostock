@@ -55,15 +55,23 @@
         <!-- Desktop sidebar -->
         <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-sm border-r border-gray-200 sidebar-scroll">
-                <!-- Logo -->
-                <div class="flex h-16 shrink-0 items-center border-b border-gray-100">
-                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 group">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 shadow-sm group-hover:shadow-md group-hover:bg-emerald-700 transition-all duration-200">
-                            <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                <!-- Logo et informations entreprise -->
+                <div class="flex h-20 shrink-0 items-center border-b border-gray-100 px-2">
+                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 group w-full">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:shadow-xl group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300">
+                            <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                             </svg>
                         </div>
-                        <span class="text-xl font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors duration-200">WondoStock</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-lg font-bold text-gray-900 group-hover:text-emerald-700 transition-colors duration-200 truncate">WondoStock</div>
+                            @if(auth()->user()->company)
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                                    <span class="text-xs font-medium text-gray-600 truncate">{{ auth()->user()->company->name }}</span>
+                                </div>
+                            @endif
+                        </div>
                     </a>
                 </div>
 
@@ -560,54 +568,127 @@
 
                 <!-- Profile dropdown -->
                 <div class="flex items-center gap-x-4 lg:gap-x-6">
-                    <!-- User menu -->
+                    <!-- User menu avec informations multi-tenant -->
                     <div x-data="{ open: false }" class="relative">
                         <button type="button" 
                                 @click="open = !open" 
-                                class="flex items-center gap-x-4 text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200" 
+                                class="flex items-center gap-x-4 text-sm font-semibold leading-6 text-gray-900 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200 group" 
                                 id="user-menu-button" 
                                 :aria-expanded="open" 
                                 aria-haspopup="true">
                             <span class="sr-only">Ouvrir le menu utilisateur</span>
                             <div class="hidden sm:flex sm:flex-col sm:items-end">
-                                <span class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</span>
-                                <span class="text-xs text-gray-500">
-                                    @if(auth()->user()->company)
-                                        {{ auth()->user()->company->name }}
-                                    @else
-                                        Aucune entreprise
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</span>
+                                    @if(auth()->user()->is_global_admin)
+                                        <span class="inline-flex items-center rounded-full bg-gradient-to-r from-purple-100 to-purple-200 px-2 py-0.5 text-xs font-medium text-purple-800 ring-1 ring-purple-300">
+                                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3.75 5.25a8.25 8.25 0 01-16.5 0 8.25 8.25 0 0116.5 0z" />
+                                            </svg>
+                                            Admin Global
+                                        </span>
                                     @endif
-                                </span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    @if(auth()->user()->company)
+                                        <div class="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                                        <span class="text-xs text-gray-600">{{ Str::limit(auth()->user()->company->name, 20) }}</span>
+                                    @else
+                                        <div class="h-1.5 w-1.5 rounded-full bg-red-500"></div>
+                                        <span class="text-xs text-red-600">Aucune entreprise</span>
+                                    @endif
+                                    @if(auth()->user()->store)
+                                        <span class="text-xs text-gray-400">• {{ auth()->user()->store->name }}</span>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                            <div class="relative h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:shadow-xl transition-all duration-200">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                @if(auth()->user()->company && auth()->user()->company->is_active)
+                                    <div class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-green-400 border-2 border-white flex items-center justify-center">
+                                        <div class="h-2 w-2 rounded-full bg-green-600"></div>
+                                    </div>
+                                @else
+                                    <div class="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-400 border-2 border-white flex items-center justify-center">
+                                        <div class="h-2 w-2 rounded-full bg-red-600"></div>
+                                    </div>
+                                @endif
                             </div>
                         </button>
 
-                        <!-- Dropdown menu -->
+                        <!-- Dropdown menu amélioré -->
                         <div x-show="open" 
                              @click.outside="open = false"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 z-50 mt-2.5 w-56 origin-top-right rounded-lg bg-white py-2 shadow-lg ring-1 ring-gray-900/5 border border-gray-200"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="transform opacity-0 scale-95 translate-y-[-10px]"
+                             x-transition:enter-end="transform opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="transform opacity-0 scale-95 translate-y-[-10px]"
+                             class="absolute right-0 z-50 mt-3 w-80 origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 border border-gray-100"
                              x-cloak
                              style="display: none;">
-                            <a href="{{ route('profile.index') }}" 
-                               class="block px-3 py-1 text-sm leading-6 text-gray-900 hover:bg-gray-50 rounded-md mx-2 transition-colors duration-200">
-                                Mon Profil
-                            </a>
-                            <hr class="my-2 border-gray-100">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" 
-                                        class="block w-full text-left px-3 py-1 text-sm leading-6 text-red-700 hover:bg-red-50 rounded-md mx-2 transition-colors duration-200">
-                                    Se déconnecter
-                                </button>
-                            </form>
+                            
+                            <!-- Informations utilisateur et entreprise -->
+                            <div class="p-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</div>
+                                        <div class="text-xs text-gray-600">{{ Auth::user()->email }}</div>
+                                        @if(auth()->user()->company)
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <div class="h-2 w-2 rounded-full {{ auth()->user()->company->is_active ? 'bg-green-500' : 'bg-red-500' }}"></div>
+                                                <span class="text-xs font-medium {{ auth()->user()->company->is_active ? 'text-green-700' : 'text-red-700' }}">
+                                                    {{ auth()->user()->company->name }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="p-2">
+                                <a href="{{ route('profile.index') }}" 
+                                   class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors duration-200 group">
+                                    <div class="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors duration-200">
+                                        <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    <span>Mon Profil</span>
+                                </a>
+                                
+                                @if(auth()->user()->is_global_admin)
+                                    <a href="{{ route('admin.dashboard') }}" 
+                                       class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-xl transition-colors duration-200 group">
+                                        <div class="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-200">
+                                            <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3.75 5.25a8.25 8.25 0 01-16.5 0 8.25 8.25 0 0116.5 0z" />
+                                            </svg>
+                                        </div>
+                                        <span>Administration Globale</span>
+                                    </a>
+                                @endif
+                            </div>
+                            
+                            <div class="border-t border-gray-100 p-2">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-700 hover:bg-red-50 rounded-xl transition-colors duration-200 group">
+                                        <div class="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors duration-200">
+                                            <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                                            </svg>
+                                        </div>
+                                        <span>Se déconnecter</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
