@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(php artisan migrate:status:*)",
+      "Bash(php artisan tinker:*)",
+      "Bash(php artisan schema:dump:*)",
+      "Bash(php artisan make:middleware:*)",
+      "Bash(php artisan make:controller:*)",
+      "Bash(php artisan make:model:*)",
+      "Bash(php artisan make:listener:*)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}
