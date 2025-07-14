@@ -54,11 +54,12 @@ class Register extends Component
      */
     public function submit()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        // On utilise une transaction pour s'assurer que tout est créé correctement.
-        // Si une étape échoue, tout est annulé.
-        DB::transaction(function () {
+            // On utilise une transaction pour s'assurer que tout est créé correctement.
+            // Si une étape échoue, tout est annulé.
+            DB::transaction(function () {
             // 1. On récupère le plan par défaut ("Essentiel")
             $plan = Plan::where('slug', 'essentiel')->firstOrFail();
 
@@ -92,10 +93,21 @@ class Register extends Component
 
             // 7. Connexion de l'utilisateur
             Auth::login($user);
-
-            // 8. Redirection vers le tableau de bord
-            return $this->redirect('/dashboard', navigate: true);
         });
+
+        // 8. Message de bienvenue et redirection
+        session()->flash('notify', [
+            'message' => "🎉 Bienvenue dans WondoStock ! Votre entreprise {$this->companyName} a été créée avec succès.",
+            'type' => 'success'
+        ]);
+        
+            return $this->redirect('/dashboard', navigate: true);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'message' => 'Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.',
+                'type' => 'error'
+            ]);
+        }
     }
 
     public function render()
