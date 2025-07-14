@@ -7,7 +7,9 @@ enum StockMovementType: string {
     case Purchase = 'purchase';
     case TransferIn = 'transfer_in';
     case TransferOut = 'transfer_out';
-    case Adjustment = 'adjustment'; // Correction ici
+    case Adjustment = 'adjustment';
+    case Return = 'return';
+    case Production = 'production';
 
     public function label(): string
     {
@@ -17,6 +19,8 @@ enum StockMovementType: string {
             self::TransferIn => 'Entrée par transfert',
             self::TransferOut => 'Sortie par transfert',
             self::Adjustment => "Ajustement d'inventaire",
+            self::Return => 'Retour client',
+            self::Production => 'Production interne',
         };
     }
 }
