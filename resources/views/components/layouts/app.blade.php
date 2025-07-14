@@ -57,7 +57,7 @@
             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-sm border-r border-gray-200 sidebar-scroll">
                 <!-- Logo et informations entreprise -->
                 <div class="flex h-20 shrink-0 items-center border-b border-gray-100 px-2">
-                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 group w-full">
+                    <a href="{{ route('dashboard') }}"  class="flex items-center space-x-3 group w-full">
                         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg group-hover:shadow-xl group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300">
                             <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -332,7 +332,7 @@
             <div class="flex w-72 max-w-xs flex-col grow gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-lg border-r border-gray-200 sidebar-scroll">
                 <!-- Mobile Logo -->
                 <div class="flex h-16 shrink-0 items-center justify-between border-b border-gray-100">
-                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center space-x-3 group">
+                    <a href="{{ route('dashboard') }}"  class="flex items-center space-x-3 group">
                         <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 shadow-sm">
                             <svg class="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
@@ -702,6 +702,9 @@
             </main>
         </div>
     </div>
+
+    <!-- Notifications globales -->
+    <livewire:notifications />
 
     @vite('resources/js/app.js')
 </body>

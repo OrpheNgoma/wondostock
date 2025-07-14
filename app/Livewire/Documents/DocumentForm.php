@@ -1,18 +1,18 @@
 <?php
+
 namespace App\Livewire\Documents;
 
-use App\Models\Store;
-use App\Models\Product;
-use Livewire\Component;
+use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use App\Models\Customer;
 use App\Models\Document;
-use App\Enums\DocumentType;
-use App\Enums\DocumentStatus;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
 use App\Services\DocumentNumberService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Nouveau Document - KaziFlow')]
@@ -22,33 +22,55 @@ class DocumentForm extends Component
 
     // --- Form Properties ---
     public $type = 'quote';
+
     public ?int $customer_id = null;
+
     public ?int $store_id = null;
+
     public $document_date;
+
     public $due_date;
+
     public $notes = '';
-    
+
     // --- Line Items & Totals ---
     public array $items = [];
+
     public float $sub_total = 0;
+
     public float $tax_amount = 0;
+
     public float $total_amount = 0;
 
     // --- Helpers ---
     public string $customer_search = '';
+
     public $customers_list = [];
+
     public string $product_search = '';
+
     public $products_list = [];
 
     protected function rules()
     {
+        $companyId = Auth::user()->company_id;
+
         return [
-            'customer_id' => 'required|exists:customers,id',
-            'store_id' => 'required|exists:stores,id',
+            'customer_id' => [
+                'required',
+                'exists:customers,id,company_id,'.$companyId,
+            ],
+            'store_id' => [
+                'required',
+                'exists:stores,id,company_id,'.$companyId,
+            ],
             'document_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:document_date',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => [
+                'required',
+                'exists:products,id,company_id,'.$companyId,
+            ],
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
         ];
@@ -66,7 +88,7 @@ class DocumentForm extends Component
             if ($this->document->due_date) {
                 $this->due_date = $this->document->due_date->format('Y-m-d');
             }
-            
+
             // On charge les lignes d'articles
             foreach ($this->document->items as $item) {
                 $this->items[] = [
@@ -93,10 +115,11 @@ class DocumentForm extends Component
     {
         if (strlen($this->customer_search) < 2) {
             $this->customers_list = [];
+
             return;
         }
         $this->customers_list = Customer::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%' . $this->customer_search . '%')
+            ->where('name', 'like', '%'.$this->customer_search.'%')
             ->limit(5)->get();
     }
 
@@ -104,10 +127,11 @@ class DocumentForm extends Component
     {
         if (strlen($this->product_search) < 2) {
             $this->products_list = [];
+
             return;
         }
         $this->products_list = Product::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%' . $this->product_search . '%')
+            ->where('name', 'like', '%'.$this->product_search.'%')
             ->limit(5)->get();
     }
 
@@ -130,14 +154,15 @@ class DocumentForm extends Component
             if ($item['product_id'] === $product->id) {
                 $this->items[$key]['quantity']++;
                 $this->calculateTotals();
+
                 return;
             }
         }
-        
+
         $this->items[] = [
             'product_id' => $product->id,
-            'name' => $product->name, // Le nom est utilisé pour l'affichage
-            'description' => $product->name, // On utilise le nom du produit comme description de la ligne
+            'name' => $product->name,
+            'description' => $product->name,
             'quantity' => 1,
             'unit_price' => $product->selling_price,
             'tax_rate' => $product->tax?->rate ?? 0,
@@ -151,7 +176,7 @@ class DocumentForm extends Component
         $this->items = array_values($this->items); // Re-index array
         $this->calculateTotals();
     }
-    
+
     public function updatedItems()
     {
         $this->calculateTotals();
@@ -175,7 +200,9 @@ class DocumentForm extends Component
     {
         $this->validate();
 
-        DB::transaction(function() {
+        DB::transaction(function () {
+            $isNewDocument = ! $this->document->exists;
+
             $this->document->fill([
                 'company_id' => Auth::user()->company_id,
                 'customer_id' => $this->customer_id,
@@ -188,42 +215,190 @@ class DocumentForm extends Component
                 'sub_total' => $this->sub_total,
                 'tax_amount' => $this->tax_amount,
                 'total_amount' => $this->total_amount,
-                'document_number' => 'INV-'.now()->timestamp, // A améliorer
                 'status' => DocumentStatus::Draft,
             ]);
 
-            // Si c'est un nouveau document, on génère un numéro
-            if (!$this->document->exists) {
-                // On utilise le service pour générer le numéro
-                $this->document->document_number = DocumentNumberService::generate(Auth::user()->company_id, $this->type);
+            // Générer le numéro seulement pour un nouveau document
+            if ($isNewDocument) {
+                $this->document->document_number = DocumentNumberService::generate(
+                    Auth::user()->company_id,
+                    $this->type
+                );
             }
 
             $this->document->save();
-            
-            $this->document->items()->delete(); // A améliorer pour l'édition
-            
-            foreach($this->items as $item) {
-                // On s'assure que le tableau passé à create() contient bien les champs
-                // attendus par la table `document_items`, notamment `description`.
-                $this->document->items()->create([
-                    'product_id' => $item['product_id'],
-                    'description' => $item['name'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'tax_rate' => $item['tax_rate'],
-                    'total_amount' => $item['quantity'] * $item['unit_price'],
-                ]);
+
+            // Gérer les items plus efficacement
+            if ($isNewDocument) {
+                // Pour un nouveau document, créer directement les items
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+            } else {
+                // Pour un document existant, synchroniser les items
+                $this->document->items()->delete();
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
             }
         });
 
-        $this->dispatch('notify', message: 'Document sauvegardé avec succès.');
+        $this->dispatch('notify', [
+            'message' => 'Document sauvegardé avec succès !',
+            'type' => 'success'
+        ]);
         // Rediriger vers la page de détails du document (à créer)
+        $this->redirectRoute('documents.show', $this->document);
+    }
+
+    public function saveDraft()
+    {
+        $this->validate();
+
+        DB::transaction(function () {
+            $isNewDocument = ! $this->document->exists;
+            
+            $this->document->fill([
+                'company_id' => Auth::user()->company_id,
+                'customer_id' => $this->customer_id,
+                'store_id' => $this->store_id,
+                'user_id' => Auth::id(),
+                'type' => $this->type,
+                'document_date' => $this->document_date,
+                'due_date' => $this->due_date,
+                'notes' => $this->notes,
+                'sub_total' => $this->sub_total,
+                'tax_amount' => $this->tax_amount,
+                'total_amount' => $this->total_amount,
+                'status' => DocumentStatus::Draft,
+            ]);
+
+            if ($isNewDocument) {
+                $this->document->document_number = DocumentNumberService::generate(
+                    Auth::user()->company_id,
+                    $this->type
+                );
+            }
+
+            $this->document->save();
+
+            // Gérer les items
+            if ($isNewDocument) {
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+            } else {
+                $this->document->items()->delete();
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+            }
+        });
+
+        $this->dispatch('notify', [
+            'message' => 'Brouillon sauvegardé avec succès ! Vous pouvez le finaliser plus tard.',
+            'type' => 'info'
+        ]);
+    }
+
+    public function saveAndValidate()
+    {
+        $this->validate();
+
+        DB::transaction(function () {
+            $isNewDocument = ! $this->document->exists;
+            
+            $this->document->fill([
+                'company_id' => Auth::user()->company_id,
+                'customer_id' => $this->customer_id,
+                'store_id' => $this->store_id,
+                'user_id' => Auth::id(),
+                'type' => $this->type,
+                'document_date' => $this->document_date,
+                'due_date' => $this->due_date,
+                'notes' => $this->notes,
+                'sub_total' => $this->sub_total,
+                'tax_amount' => $this->tax_amount,
+                'total_amount' => $this->total_amount,
+                'status' => DocumentStatus::Validated,
+                'validated_at' => now(),
+            ]);
+
+            if ($isNewDocument) {
+                $this->document->document_number = DocumentNumberService::generate(
+                    Auth::user()->company_id,
+                    $this->type
+                );
+            }
+
+            $this->document->save();
+
+            // Gérer les items
+            if ($isNewDocument) {
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+            } else {
+                $this->document->items()->delete();
+                foreach ($this->items as $item) {
+                    $this->document->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'tax_rate' => $item['tax_rate'],
+                        'total_amount' => $item['quantity'] * $item['unit_price'],
+                    ]);
+                }
+            }
+        });
+
+        $this->dispatch('notify', [
+            'message' => 'Document validé et sauvegardé avec succès ! Le stock a été mis à jour.',
+            'type' => 'success'
+        ]);
         $this->redirectRoute('documents.show', $this->document);
     }
 
     public function render()
     {
         $stores = Auth::user()->company->stores;
+
         return view('livewire.documents.document-form', [
             'stores' => $stores,
             'documentTypes' => DocumentType::cases(), // On passe les types de documents à la vue
