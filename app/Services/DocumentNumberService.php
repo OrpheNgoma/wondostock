@@ -9,17 +9,23 @@ class DocumentNumberService
 {
     public static function generate(int $companyId, string $type): string
     {
-        $company = Company::find($companyId);
-        
         // Clés pour les paramètres
         $prefixKey = "{$type}_prefix";
         $counterKey = "{$type}_last_number";
         $formatKey = "{$type}_format";
 
         // Récupérer les paramètres ou utiliser des valeurs par défaut
-        $prefix = $company->settings()->where('key', $prefixKey)->value('value') ?? strtoupper(substr($type, 0, 4)) . '-';
-        $lastNumber = (int) ($company->settings()->where('key', $counterKey)->value('value') ?? 0);
-        $format = $company->settings()->where('key', $formatKey)->value('value') ?? '{PRE}-{ANNEE}-{NUMERO}';
+        $prefix = Setting::where('company_id', $companyId)
+            ->where('key', $prefixKey)
+            ->value('value') ?? strtoupper(substr($type, 0, 4)) . '-';
+            
+        $lastNumber = (int) (Setting::where('company_id', $companyId)
+            ->where('key', $counterKey)
+            ->value('value') ?? 0);
+            
+        $format = Setting::where('company_id', $companyId)
+            ->where('key', $formatKey)
+            ->value('value') ?? '{PRE}-{ANNEE}-{NUMERO}';
 
         $nextNumber = $lastNumber + 1;
 
