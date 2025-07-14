@@ -12,7 +12,15 @@
       "Bash(find:*)",
       "Bash(git checkout:*)",
       "Bash(git push:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(vendor/bin/pint:*)",
+      "Bash(php -l:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(php artisan config:clear:*)",
+      "Bash(php artisan view:clear:*)",
+      "Bash(php artisan make:migration:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
