@@ -26,17 +26,35 @@ class Login extends Component
 
     public function login()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+            if (!Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+                $this->dispatch('notify', [
+                    'message' => 'Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.',
+                    'type' => 'error'
+                ]);
+                
+                throw ValidationException::withMessages([
+                    'email' => 'Ces identifiants ne correspondent à aucun compte.',
+                ]);
+            }
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'message' => 'Une erreur est survenue. Veuillez réessayer.',
+                'type' => 'error'
             ]);
+            return;
         }
 
         session()->regenerate();
         
-        $this->dispatch('notify', message: 'Connexion réussie ! Bienvenue.');
+        session()->flash('notify', [
+            'message' => 'Connexion réussie ! Bienvenue dans WondoStock.',
+            'type' => 'success'
+        ]);
 
         return $this->redirect('/dashboard', navigate: true);
     }
