@@ -19,12 +19,12 @@ class Index extends Component
 
     // --- Form Properties ---
     public string $name = '';
-    public string $legal_name = '';
-    public string $email = '';
-    public string $phone_number = '';
-    public string $address = '';
-    public string $rccm = '';
-    public string $nif = '';
+    public ?string $legal_name = '';
+    public ?string $email = '';
+    public ?string $phone_number = '';
+    public ?string $address = '';
+    public ?string $rccm = '';
+    public ?string $nif = '';
     public $logo; // Pour le nouveau logo
 
     protected function rules()
@@ -44,31 +44,49 @@ class Index extends Component
     public function mount()
     {
         $this->company = Auth::user()->company;
-        $this->fill($this->company->toArray());
+        
+        // Remplir les propriétés en gérant les valeurs nulles
+        $this->name = $this->company->name ?? '';
+        $this->legal_name = $this->company->legal_name ?? '';
+        $this->email = $this->company->email ?? '';
+        $this->phone_number = $this->company->phone_number ?? '';
+        $this->address = $this->company->address ?? '';
+        $this->rccm = $this->company->rccm ?? '';
+        $this->nif = $this->company->nif ?? '';
     }
 
     public function save()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        $this->company->update([
-            'name' => $this->name,
-            'legal_name' => $this->legal_name,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number,
-            'address' => $this->address,
-            'rccm' => $this->rccm,
-            'nif' => $this->nif,
-        ]);
+            $this->company->update([
+                'name' => $this->name,
+                'legal_name' => $this->legal_name ?: null,
+                'email' => $this->email ?: null,
+                'phone_number' => $this->phone_number ?: null,
+                'address' => $this->address ?: null,
+                'rccm' => $this->rccm ?: null,
+                'nif' => $this->nif ?: null,
+            ]);
 
-        if ($this->logo) {
-            // Supprime l'ancien logo s'il existe
-            $this->company->clearMediaCollection('logo');
-            // Ajoute le nouveau logo
-            $this->company->addMedia($this->logo->getRealPath())->toMediaCollection('logo');
+            if ($this->logo) {
+                // Supprime l'ancien logo s'il existe
+                $this->company->clearMediaCollection('logo');
+                // Ajoute le nouveau logo
+                $this->company->addMedia($this->logo->getRealPath())->toMediaCollection('logo');
+            }
+
+            $this->dispatch('notify', [
+                'message' => 'Informations de l\'entreprise mises à jour avec succès !',
+                'type' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', [
+                'message' => 'Erreur lors de la sauvegarde : ' . $e->getMessage(),
+                'type' => 'error'
+            ]);
         }
-
-        $this->dispatch('notify', message: 'Informations de l\'entreprise mises à jour.');
     }
 
     public function render()
