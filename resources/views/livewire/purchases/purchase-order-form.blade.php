@@ -5,7 +5,7 @@
             {{ $document->exists ? 'Modifier le Bon de Commande' : 'Nouveau Bon de Commande' }}
         </h2>
         <div class="mt-5 flex sm:mt-0 sm:ml-4">
-            <a href="{{ route('purchases.index') }}" wire:navigate class="rounded-md bg-white py-2 px-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Annuler</a>
+            <a href="{{ route('purchases.index') }}"  class="rounded-md bg-white py-2 px-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Annuler</a>
             <button type="submit" class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">Sauvegarder</button>
         </div>
     </div>

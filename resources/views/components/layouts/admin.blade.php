@@ -57,7 +57,7 @@
 <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-sm border-r border-gray-200 admin-scroll">
                 <!-- Admin Logo -->
 <div class="flex h-16 shrink-0 items-center border-b border-gray-100">
-                    <a href="{{ route('admin.dashboard') }}" wire:navigate class="flex items-center space-x-3 group">
+                    <a href="{{ route('admin.dashboard') }}"  class="flex items-center space-x-3 group">
 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-600 shadow-sm group-hover:shadow-md group-hover:bg-purple-700 transition-all duration-200">
                             <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
@@ -197,7 +197,7 @@ class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 text-gray
 <div class="flex w-80 max-w-xs flex-col grow gap-y-5 overflow-y-auto bg-white px-6 pb-4 shadow-sm border-r border-gray-200 admin-scroll">
                 <!-- Mobile Admin Logo -->
 <div class="flex h-16 shrink-0 items-center justify-between border-b border-gray-100">
-                    <a href="{{ route('admin.dashboard') }}" wire:navigate class="flex items-center space-x-3 group">
+                    <a href="{{ route('admin.dashboard') }}"  class="flex items-center space-x-3 group">
 <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 shadow-sm">
                             <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>

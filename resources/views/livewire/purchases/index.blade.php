@@ -12,7 +12,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('purchases.create') }}" 
-                   wire:navigate 
+                    
                    class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors duration-200">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -133,7 +133,7 @@
                                 <td class="relative py-4 pl-3 pr-6 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('purchases.show', $order) }}" 
-                                           wire:navigate 
+                                            
                                            class="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200">
                                             <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -158,7 +158,7 @@
                                             <p class="text-xs text-gray-500 mt-1">Commencez par créer votre première commande fournisseur</p>
                                         </div>
                                         <a href="{{ route('purchases.create') }}" 
-                                           wire:navigate 
+                                            
                                            class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors duration-200">
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

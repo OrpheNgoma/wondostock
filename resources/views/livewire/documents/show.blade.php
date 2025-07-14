@@ -18,7 +18,7 @@
                     </p>
                 </div>
                 <div class="mt-5 flex flex-wrap gap-3 sm:mt-0 sm:ml-4">
-                     <a href="{{ route('documents.index') }}" wire:navigate class="inline-flex items-center rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                     <a href="{{ route('documents.index') }}"  class="inline-flex items-center rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                          Retour
                     </a>
                     
@@ -61,7 +61,7 @@
 
                     {{-- On ne peut créer un avoir que depuis une facture validée ou payée --}}
                     @if(in_array($document->status, [\App\Enums\DocumentStatus::Validated, \App\Enums\DocumentStatus::Paid, \App\Enums\DocumentStatus::PartiallyPaid]) && $document->type === \App\Enums\DocumentType::Invoice)
-                        <a href="{{ route('documents.credit-note.create', $document) }}" wire:navigate class="inline-flex items-center rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-green-500 hover:text-gray-900">
+                        <a href="{{ route('documents.credit-note.create', $document) }}"  class="inline-flex items-center rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-green-500 hover:text-gray-900">
                             Créer un Avoir
                         </a>
                     @endif

@@ -8,7 +8,7 @@
             <p class="mt-1 text-sm text-gray-500">Déplacez des produits d'un magasin à un autre.</p>
         </div>
         <div class="mt-5 flex sm:mt-0 sm:ml-4">
-            <a href="{{ route('dashboard') }}" wire:navigate class="rounded-md bg-white py-2 px-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Annuler</a>
+            <a href="{{ route('dashboard') }}"  class="rounded-md bg-white py-2 px-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Annuler</a>
             <button type="submit" class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">Enregistrer le Transfert</button>
         </div>
     </div>

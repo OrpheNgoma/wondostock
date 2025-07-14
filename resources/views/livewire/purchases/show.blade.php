@@ -8,7 +8,7 @@
                      <p class="mt-1 text-sm text-gray-500">Statut : {{ $document->status->label() }}</p>
                 </div>
                 <div class="mt-5 flex flex-wrap gap-3 sm:mt-0 sm:ml-4">
-                    <a href="{{ route('purchases.index') }}" wire:navigate class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                    <a href="{{ route('purchases.index') }}"  class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                          Retour
                     </a>
                     @if($document->status === \App\Enums\DocumentStatus::Draft)
