@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Company;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Company;
 
 class TenantIsolation
 {
@@ -18,7 +18,7 @@ class TenantIsolation
     public function handle(Request $request, Closure $next): Response
     {
         // Vérifier si l'utilisateur est connecté
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return $next($request);
         }
 
@@ -30,19 +30,19 @@ class TenantIsolation
         }
 
         // Vérifier si l'utilisateur a une company_id
-        if (!$user->company_id) {
+        if (! $user->company_id) {
             // Si pas de company_id, rediriger vers une page d'erreur ou setup
             abort(403, 'Aucune entreprise associée à votre compte.');
         }
 
         // Vérifier que la company existe et est active
         $company = Company::find($user->company_id);
-        if (!$company) {
+        if (! $company) {
             Auth::logout();
             abort(403, 'Entreprise non trouvée.');
         }
 
-        if (!$company->is_active) {
+        if (! $company->is_active) {
             Auth::logout();
             abort(403, 'Votre abonnement a expiré. Contactez l\'administrateur.');
         }

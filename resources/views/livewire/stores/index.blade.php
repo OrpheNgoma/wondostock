@@ -21,6 +21,13 @@
                         </svg>
                         Nouveau Magasin
                     </button>
+                    <a href="{{ route('country-branch.create') }}" 
+                       class="inline-flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-white shadow-lg ring-1 ring-white/20 hover:bg-white/20 transition-all duration-200">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9z" />
+                        </svg>
+                        Nouvelle Branche Pays
+                    </a>
                 </div>
             </div>
         </div>
@@ -61,7 +68,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900">Liste des Magasins</h3>
-                    <p class="text-sm text-gray-600">{{ $stores->count() }} magasin(s) au total</p>
+                    <p class="text-sm text-gray-600">{{ $regularStores->count() }} magasin(s) régulier(s)</p>
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-500">
                     <div class="h-3 w-3 rounded-full bg-blue-500"></div>
@@ -92,7 +99,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50 bg-white">
-                    @forelse ($stores as $store)
+                    @forelse ($regularStores as $store)
                         <tr wire:key="{{ $store->id }}" class="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200">
                             <td class="py-4 pl-6 pr-3">
                                 <div class="flex items-center gap-4">
@@ -197,6 +204,133 @@
             </table>
         </div>
     </div>
+
+    <!-- Section Branches Pays -->
+    @if($countryBranches->isNotEmpty())
+        <div class="bg-white rounded-2xl shadow-lg ring-1 ring-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-red-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <svg class="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">Branches Pays</h2>
+                            <p class="text-sm text-gray-600">Succursales avec factures personnalisées</p>
+                        </div>
+                    </div>
+                    <div class="text-sm font-medium text-gray-500">
+                        {{ $countryBranches->count() }} branche(s)
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-50">
+                    <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Branche
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pays
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Informations légales
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Templates
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Statut
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50 bg-white">
+                        @foreach($countryBranches as $branch)
+                            <tr wire:key="branch-{{ $branch->id }}" class="group hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-red-50/50 transition-all duration-200">
+                                <td class="py-4 pl-6 pr-3">
+                                    <div class="flex items-center gap-4">
+                                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center shadow-sm">
+                                            <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">{{ $branch->name }}</p>
+                                            <p class="text-xs text-gray-500">{{ $branch->city }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                            {{ $branch->country_code }}
+                                        </span>
+                                        <span class="text-gray-600">{{ $branch->country_name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    <div class="space-y-1">
+                                        @if($branch->nif)
+                                            <div class="text-xs">NIF: {{ $branch->nif }}</div>
+                                        @endif
+                                        @if($branch->rccm)
+                                            <div class="text-xs">RCCM: {{ $branch->rccm }}</div>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        @if($branch->invoice_header_image)
+                                            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                                                En-tête ✓
+                                            </span>
+                                        @endif
+                                        @if($branch->invoice_footer_image)
+                                            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                                                Pied ✓
+                                            </span>
+                                        @endif
+                                        @if(!$branch->invoice_header_image && !$branch->invoice_footer_image)
+                                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800">
+                                                Aucun template
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium 
+                                        {{ $branch->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                        {{ $branch->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('country-branch.edit', $branch) }}" 
+                                           class="text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                                            Modifier
+                                        </a>
+                                        <button wire:click="delete({{ $branch->id }})" 
+                                                type="button" 
+                                                class="text-red-600 hover:text-red-500 transition-colors duration-200"
+                                                wire:confirm="Êtes-vous sûr de vouloir supprimer cette branche ?">
+                                            Supprimer
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
     
     <!-- Panneau latéral (Slide-over) pour Créer/Modifier -->
         

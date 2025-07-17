@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Purchases;
 
-use Livewire\Component;
-use App\Models\Document;
 use App\Enums\DocumentStatus;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use App\Enums\StockMovementType;
-use Illuminate\Support\Facades\DB;
+use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Détail Commande Fournisseur - WondoStock')]
@@ -21,7 +21,7 @@ class Show extends Component
     {
         $this->loadDocumentData($document->id);
     }
-    
+
     public function markAsOrdered()
     {
         if ($this->document->status === DocumentStatus::Draft) {
@@ -36,11 +36,12 @@ class Show extends Component
     {
         if ($this->document->status !== DocumentStatus::Ordered) {
             $this->dispatch('notify', message: 'Seule une commande envoyée peut être réceptionnée.', type: 'error');
+
             return;
         }
 
-        DB::transaction(function() {
-            foreach($this->document->items as $item) {
+        DB::transaction(function () {
+            foreach ($this->document->items as $item) {
                 // Mise à jour du stock
                 DB::table('product_store')->updateOrInsert(
                     ['product_id' => $item->product_id, 'store_id' => $this->document->store_id],

@@ -3,11 +3,11 @@
 namespace App\Livewire\Settings\Company;
 
 use App\Models\Company;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Auth;
 
 #[Layout('components.layouts.app')]
 #[Title('Paramètres de l\'Entreprise - KaziFlow')]
@@ -19,12 +19,19 @@ class Index extends Component
 
     // --- Form Properties ---
     public string $name = '';
+
     public ?string $legal_name = '';
+
     public ?string $email = '';
+
     public ?string $phone_number = '';
+
     public ?string $address = '';
+
     public ?string $rccm = '';
+
     public ?string $nif = '';
+
     public $logo; // Pour le nouveau logo
 
     protected function rules()
@@ -44,7 +51,7 @@ class Index extends Component
     public function mount()
     {
         $this->company = Auth::user()->company;
-        
+
         // Remplir les propriétés en gérant les valeurs nulles
         $this->name = $this->company->name ?? '';
         $this->legal_name = $this->company->legal_name ?? '';
@@ -71,20 +78,30 @@ class Index extends Component
             ]);
 
             if ($this->logo) {
-                // Supprime l'ancien logo s'il existe
-                $this->company->clearMediaCollection('logo');
-                // Ajoute le nouveau logo
-                $this->company->addMedia($this->logo->getRealPath())->toMediaCollection('logo');
+                try {
+                    // Supprime l'ancien logo s'il existe
+                    $this->company->clearMediaCollection('logo');
+                    // Ajoute le nouveau logo
+                    $this->company->addMedia($this->logo->getRealPath())->toMediaCollection('logo');
+                    // Reset la propriété logo pour éviter les problèmes d'affichage
+                    $this->logo = null;
+                } catch (\Exception $logoException) {
+                    $this->dispatch('notify', [
+                        'message' => 'Erreur lors du téléchargement du logo : ' . $logoException->getMessage(),
+                        'type' => 'error',
+                    ]);
+                    return;
+                }
             }
 
             $this->dispatch('notify', [
                 'message' => 'Informations de l\'entreprise mises à jour avec succès !',
-                'type' => 'success'
+                'type' => 'success',
             ]);
         } catch (\Exception $e) {
             $this->dispatch('notify', [
-                'message' => 'Erreur lors de la sauvegarde : ' . $e->getMessage(),
-                'type' => 'error'
+                'message' => 'Erreur lors de la sauvegarde : '.$e->getMessage(),
+                'type' => 'error',
             ]);
         }
     }

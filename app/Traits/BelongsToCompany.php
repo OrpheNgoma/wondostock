@@ -19,7 +19,7 @@ trait BelongsToCompany
 
         // Assigner automatiquement la company_id lors de la création
         static::creating(function ($model) {
-            if (Auth::check() && Auth::user()->company_id && !$model->company_id) {
+            if (Auth::check() && Auth::user()->company_id && ! $model->company_id) {
                 $model->company_id = Auth::user()->company_id;
             }
         });

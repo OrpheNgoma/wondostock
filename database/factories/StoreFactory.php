@@ -17,7 +17,7 @@ class StoreFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Magasin ' . $this->faker->city(),
+            'name' => 'Magasin '.$this->faker->city(),
             'address' => $this->faker->streetAddress(),
             'city' => $this->faker->city(),
             'contact_phone' => $this->faker->phoneNumber(),

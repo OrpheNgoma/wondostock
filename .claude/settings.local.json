@@ -20,7 +20,14 @@
       "Bash(php artisan config:clear:*)",
       "Bash(php artisan view:clear:*)",
       "Bash(php artisan make:migration:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(php artisan make:livewire:*)",
+      "Bash(php artisan:*)",
+      "Bash(curl:*)",
+      "Bash(composer:*)",
+      "Bash(mkdir:*)",
+      "Bash(php:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

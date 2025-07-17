@@ -93,6 +93,21 @@
                                     </a>
                                 </li>
                                 @endcan
+                                
+                                @can('view_dashboard_stats')
+                                <li>
+                                    <a href="{{ route('store-activity.dashboard') }}" 
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('store-activity.*') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/>
+                                        </svg>
+                                        Activité Magasin
+                                        <span class="ml-auto inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                                            Nouveau
+                                        </span>
+                                    </a>
+                                </li>
+                                @endcan
                                 @can('manage_stores')
                                 <li>
                                     <a href="{{ route('stores.index') }}" 
@@ -370,6 +385,22 @@
                                     </a>
                                 </li>
                                 @endcan
+                                
+                                @can('view_dashboard_stats')
+                                <li>
+                                    <a href="{{ route('store-activity.dashboard') }}" 
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('store-activity.*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/>
+                                        </svg>
+                                        Activité Magasin
+                                        <span class="ml-auto inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                                            Nouveau
+                                        </span>
+                                    </a>
+                                </li>
+                                @endcan
                                 @can('manage_stores')
                                 <li>
                                     <a href="{{ route('stores.index') }}" 
@@ -568,6 +599,9 @@
 
                 <!-- Profile dropdown -->
                 <div class="flex items-center gap-x-4 lg:gap-x-6">
+                    <!-- Language selector -->
+                    <livewire:language-selector />
+                    
                     <!-- User menu avec informations multi-tenant -->
                     <div x-data="{ open: false }" class="relative">
                         <button type="button" 

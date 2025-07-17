@@ -2,17 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\PlanSeeder;
-use Database\Seeders\UnitSeeder;
-use Database\Seeders\CompanySeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\CustomerSeeder;
-use Database\Seeders\SupplierSeeder;
-use Database\Seeders\GlobalAdminSeeder;
-use Database\Seeders\NumberingSettingsSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -38,7 +29,7 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             // Ajoutez ici d'autres seeders si nécessaire (ex: DocumentSeeder)
         ]);
-        
+
         $this->command->info('Base de données remplie avec des données de test !');
         $this->command->info('Global-Admin Email: admin@wondostock.com | Mot de passe: password');
         $this->command->info('Client Admin Email: admin@pixel.com | Mot de passe: password');

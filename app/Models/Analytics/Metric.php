@@ -3,16 +3,16 @@
 namespace App\Models\Analytics;
 
 use App\Models\Company;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Metric extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'company_id', 'type', 'category', 'data', 'value', 'recorded_at'
+        'company_id', 'type', 'category', 'data', 'value', 'recorded_at',
     ];
 
     protected $casts = [

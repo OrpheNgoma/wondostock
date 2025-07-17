@@ -3,11 +3,11 @@
 namespace App\Livewire\Stores;
 
 use App\Models\Store;
-use Livewire\Component;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Gérer les Magasins - KaziFlow')]
@@ -21,9 +21,13 @@ class Index extends Component
 
     // Propriétés du formulaire liées aux champs de la BDD
     public string $name = '';
+
     public string $address = '';
+
     public string $city = '';
+
     public string $contact_phone = '';
+
     public bool $is_active = true;
 
     /**
@@ -39,7 +43,7 @@ class Index extends Component
             'is_active' => 'boolean',
         ];
     }
-    
+
     /**
      * Personnalisation des messages d'erreur en français.
      */
@@ -50,13 +54,13 @@ class Index extends Component
             'name.min' => 'Le nom doit comporter au moins 3 caractères.',
         ];
     }
-    
+
     /**
      * Initialise le composant.
      */
     public function mount()
     {
-        $this->editingStore = new Store(); // Initialise un modèle vide
+        $this->editingStore = new Store; // Initialise un modèle vide
     }
 
     /**
@@ -68,7 +72,7 @@ class Index extends Component
         // $this->showForm = true;
         $this->dispatch('open-form');
     }
-    
+
     /**
      * Ouvre le panneau pour l'édition d'un magasin existant.
      */
@@ -90,14 +94,15 @@ class Index extends Component
     public function save()
     {
         $this->validate();
-        
+
         // On vérifie les droits liés au plan d'abonnement
         // Si l'utilisateur n'a pas la feature 'multi_store' ET qu'il a déjà au moins 1 magasin ET qu'il n'est pas en train d'éditer, on bloque.
-        if (Gate::denies('use-feature-multi-store') && Auth::user()->company->stores()->count() >= 1 && !$this->editingStore->exists) {
-             $this->dispatch('notify', message: 'Passez au plan PRO pour gérer plusieurs magasins.', type: 'error');
+        if (Gate::denies('use-feature-multi-store') && Auth::user()->company->stores()->count() >= 1 && ! $this->editingStore->exists) {
+            $this->dispatch('notify', message: 'Passez au plan PRO pour gérer plusieurs magasins.', type: 'error');
             //  $this->showForm = false;
             $this->dispatch('close-form'); // On ferme le formulaire même en cas d'erreur de droits
-             return;
+
+            return;
         }
 
         // Si on a un magasin en cours d'édition, on met à jour.
@@ -114,15 +119,16 @@ class Index extends Component
         // On envoie un événement au navigateur pour fermer le formulaire
         $this->dispatch('close-form');
     }
-    
+
     /**
      * Supprime un magasin.
      */
     public function delete(Store $store)
     {
         // On ne peut pas supprimer le dernier magasin de la compagnie.
-        if(Auth::user()->company->stores()->count() === 1) {
+        if (Auth::user()->company->stores()->count() === 1) {
             $this->dispatch('notify', message: 'Vous ne pouvez pas supprimer votre seul magasin.', type: 'error');
+
             return;
         }
 
@@ -135,7 +141,7 @@ class Index extends Component
      */
     private function resetForm()
     {
-        $this->editingStore = new Store();
+        $this->editingStore = new Store;
         $this->name = '';
         $this->address = '';
         $this->city = '';
@@ -143,7 +149,7 @@ class Index extends Component
         $this->is_active = true;
         $this->resetErrorBag();
     }
-    
+
     /**
      * Regroupe les données du formulaire pour la création/mise à jour.
      */
@@ -157,13 +163,18 @@ class Index extends Component
             'is_active' => $this->is_active,
         ];
     }
-    
+
     /**
      * Rend la vue avec les données nécessaires.
      */
     public function render()
     {
-        $stores = Auth::user()->company->stores()->orderBy('name')->get();
-        return view('livewire.stores.index', ['stores' => $stores]);
+        $regularStores = Auth::user()->company->stores()->regularStores()->orderBy('name')->get();
+        $countryBranches = Auth::user()->company->stores()->countryBranches()->orderBy('country_name')->get();
+
+        return view('livewire.stores.index', [
+            'regularStores' => $regularStores,
+            'countryBranches' => $countryBranches,
+        ]);
     }
 }

@@ -22,7 +22,7 @@ class CompanyFactory extends Factory
             'address' => $this->faker->address(),
             'phone_number' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->companyEmail(),
-            'rccm' => 'RCCM/'. $this->faker->unique()->randomNumber(8),
+            'rccm' => 'RCCM/'.$this->faker->unique()->randomNumber(8),
             'nif' => $this->faker->unique()->randomNumber(8),
             // 'owner_id' sera défini dans le seeder
         ];

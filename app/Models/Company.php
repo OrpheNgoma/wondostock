@@ -2,28 +2,22 @@
 
 namespace App\Models;
 
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Product;
-use App\Models\Customer;
-use App\Models\Document;
-use App\Models\Subscription;
-use Spatie\MediaLibrary\HasMedia;
-use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Company extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\CompanyFactory> */
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
-        'name', 'legal_name', 'address', 'phone_number', 'email', 'rccm', 'nif', 'owner_id', 'is_active'
+        'name', 'legal_name', 'address', 'phone_number', 'email', 'rccm', 'nif', 'owner_id', 'is_active',
     ];
 
     protected $casts = [
@@ -44,12 +38,12 @@ class Company extends Model implements HasMedia
     {
         return $this->hasMany(Store::class);
     }
-    
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }
-    
+
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
@@ -67,9 +61,10 @@ class Company extends Model implements HasMedia
 
     public function hasFeature(string $featureSlug): bool
     {
-        if (!$this->subscription || !$this->subscription->plan) {
+        if (! $this->subscription || ! $this->subscription->plan) {
             return false;
         }
+
         return in_array($featureSlug, $this->subscription->plan->features);
     }
 }

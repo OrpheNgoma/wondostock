@@ -3,10 +3,10 @@
 namespace App\Livewire\Settings;
 
 use App\Models\Setting;
-use Livewire\Component;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Numérotation - WondoStock')]
@@ -18,14 +18,14 @@ class Numbering extends Component
     {
         $companyId = Auth::user()->company_id;
         $documentTypes = ['invoice', 'quote', 'credit_note', 'purchase_order'];
-        
+
         foreach ($documentTypes as $type) {
             $this->prefixes[$type] = Setting::where('company_id', $companyId)
                 ->where('key', "{$type}_prefix")
-                ->value('value') ?? strtoupper(substr($type, 0, 4)) . '-';
+                ->value('value') ?? strtoupper(substr($type, 0, 4)).'-';
         }
     }
-    
+
     public function save()
     {
         $companyId = Auth::user()->company_id;

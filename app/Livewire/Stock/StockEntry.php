@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Stock;
 
-use App\Models\Store;
-use App\Models\Product;
-use Livewire\Component;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use App\Enums\StockMovementType;
-use Illuminate\Support\Facades\DB;
+use App\Models\Product;
+use App\Models\Store;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Entrée de Stock - KaziFlow')]
@@ -17,8 +17,11 @@ class StockEntry extends Component
 {
     // --- Form Properties ---
     public ?int $store_id = null;
+
     public $entry_date;
+
     public $notes = '';
+
     public $type = 'purchase'; // 'purchase', 'adjustment', 'transfer_in', 'return', 'production'
 
     // --- Line Items ---
@@ -26,35 +29,36 @@ class StockEntry extends Component
 
     // --- Helpers ---
     public string $product_search = '';
+
     public $products_list = [];
 
     protected function rules()
     {
         $companyId = Auth::user()->company_id;
-        
+
         return [
             'store_id' => [
                 'required',
-                'exists:stores,id,company_id,'.$companyId
+                'exists:stores,id,company_id,'.$companyId,
             ],
             'entry_date' => [
                 'required',
                 'date',
-                'before_or_equal:today'
+                'before_or_equal:today',
             ],
             'items' => 'required|array|min:1|max:50', // Limite à 50 produits par entrée
             'items.*.product_id' => [
                 'required',
-                'exists:products,id,company_id,'.$companyId
+                'exists:products,id,company_id,'.$companyId,
             ],
             'items.*.quantity' => [
                 'required',
                 'numeric',
                 'min:1',
-                'max:99999' // Limite raisonnable
+                'max:99999', // Limite raisonnable
             ],
             'notes' => 'nullable|string|max:500',
-            'type' => 'required|in:purchase,adjustment,transfer_in,return,production'
+            'type' => 'required|in:purchase,adjustment,transfer_in,return,production',
         ];
     }
 
@@ -67,7 +71,7 @@ class StockEntry extends Component
         'items.max' => 'Maximum 50 produits par entrée de stock.',
         'items.*.quantity.min' => 'La quantité doit être au moins de 1.',
         'items.*.quantity.max' => 'Quantité maximale autorisée : 99,999.',
-        'notes.max' => 'Les notes ne peuvent pas dépasser 500 caractères.'
+        'notes.max' => 'Les notes ne peuvent pas dépasser 500 caractères.',
     ];
 
     public function mount()
@@ -77,23 +81,35 @@ class StockEntry extends Component
         $this->store_id = Auth::user()->company->stores()->first()?->id;
     }
 
+    public function updated($propertyName)
+    {
+        // S'assurer que les quantités sont toujours des entiers
+        if (strpos($propertyName, 'items.') === 0 && strpos($propertyName, '.quantity') !== false) {
+            $index = explode('.', $propertyName)[1];
+            if (isset($this->items[$index]['quantity'])) {
+                $this->items[$index]['quantity'] = max(1, (int) $this->items[$index]['quantity']);
+            }
+        }
+    }
+
     // --- Real-time Search ---
     public function updatedProductSearch()
     {
         if (strlen($this->product_search) < 2) {
             $this->products_list = [];
+
             return;
         }
-        
+
         $this->products_list = Product::with(['category'])
             ->where('company_id', Auth::user()->company_id)
-            ->where(function($query) {
-                $query->where('name', 'like', '%' . $this->product_search . '%')
-                      ->orWhere('sku', 'like', '%' . $this->product_search . '%');
+            ->where(function ($query) {
+                $query->where('name', 'like', '%'.$this->product_search.'%')
+                    ->orWhere('sku', 'like', '%'.$this->product_search.'%');
             })
             ->limit(10)
             ->get()
-            ->map(function($product) {
+            ->map(function ($product) {
                 // Ajouter les informations de stock pour le magasin sélectionné
                 if ($this->store_id) {
                     $product->stock_quantity = DB::table('product_store')
@@ -101,6 +117,7 @@ class StockEntry extends Component
                         ->where('store_id', $this->store_id)
                         ->value('quantity') ?? 0;
                 }
+
                 return $product;
             });
     }
@@ -112,8 +129,9 @@ class StockEntry extends Component
         if ($product->company_id !== Auth::user()->company_id) {
             $this->dispatch('notify', [
                 'message' => 'Produit non autorisé.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
+
             return;
         }
 
@@ -123,11 +141,12 @@ class StockEntry extends Component
         // Vérifier si déjà dans la liste
         foreach ($this->items as $key => $item) {
             if ($item['product_id'] === $product->id) {
-                $this->items[$key]['quantity']++;
+                $this->items[$key]['quantity'] = (int) $this->items[$key]['quantity'] + 1;
                 $this->dispatch('notify', [
                     'message' => "Quantité mise à jour pour {$product->name}",
-                    'type' => 'success'
+                    'type' => 'success',
                 ]);
+
                 return;
             }
         }
@@ -136,11 +155,12 @@ class StockEntry extends Component
         if (count($this->items) >= 50) {
             $this->dispatch('notify', [
                 'message' => 'Maximum 50 produits par entrée de stock.',
-                'type' => 'error'
+                'type' => 'error',
             ]);
+
             return;
         }
-        
+
         $this->items[] = [
             'product_id' => $product->id,
             'name' => $product->name,
@@ -150,7 +170,7 @@ class StockEntry extends Component
 
         $this->dispatch('notify', [
             'message' => "Produit {$product->name} ajouté avec succès",
-            'type' => 'success'
+            'type' => 'success',
         ]);
     }
 
@@ -163,21 +183,26 @@ class StockEntry extends Component
     public function incrementQuantity($index)
     {
         if (isset($this->items[$index])) {
-            $this->items[$index]['quantity']++;
+            $this->items[$index]['quantity'] = (int) $this->items[$index]['quantity'] + 1;
         }
     }
 
     public function decrementQuantity($index)
     {
-        if (isset($this->items[$index]) && $this->items[$index]['quantity'] > 1) {
-            $this->items[$index]['quantity']--;
+        if (isset($this->items[$index])) {
+            $currentQuantity = (int) $this->items[$index]['quantity'];
+            if ($currentQuantity > 1) {
+                $this->items[$index]['quantity'] = $currentQuantity - 1;
+            }
         }
     }
 
     public function getCurrentStock($productId)
     {
-        if (!$this->store_id) return 0;
-        
+        if (! $this->store_id) {
+            return 0;
+        }
+
         return DB::table('product_store')
             ->where('product_id', $productId)
             ->where('store_id', $this->store_id)
@@ -188,16 +213,16 @@ class StockEntry extends Component
     {
         $this->validate();
 
-        DB::transaction(function() {
+        DB::transaction(function () {
             $store = Store::find($this->store_id);
 
-            foreach($this->items as $item) {
+            foreach ($this->items as $item) {
                 // 1. Mettre à jour (ou insérer) le stock dans le magasin
                 $existing = DB::table('product_store')
                     ->where('product_id', $item['product_id'])
                     ->where('store_id', $this->store_id)
                     ->first();
-                
+
                 if ($existing) {
                     DB::table('product_store')
                         ->where('product_id', $item['product_id'])
@@ -207,19 +232,19 @@ class StockEntry extends Component
                     DB::table('product_store')->insert([
                         'product_id' => $item['product_id'],
                         'store_id' => $this->store_id,
-                        'quantity' => $item['quantity']
+                        'quantity' => $item['quantity'],
                     ]);
                 }
 
                 // 2. Enregistrer le mouvement de stock pour la traçabilité
                 $previousStock = $existing ? $existing->quantity : 0;
                 $newStock = $previousStock + $item['quantity'];
-                
+
                 $store->stockMovements()->create([
                     'company_id' => Auth::user()->company_id,
                     'product_id' => $item['product_id'],
                     'user_id' => Auth::id(),
-                    'type' => match($this->type) {
+                    'type' => match ($this->type) {
                         'purchase' => StockMovementType::Purchase,
                         'adjustment' => StockMovementType::Adjustment,
                         'transfer_in' => StockMovementType::TransferIn,
@@ -236,7 +261,7 @@ class StockEntry extends Component
 
         session()->flash('notify', [
             'message' => 'Entrée de stock enregistrée avec succès ! Le stock a été mis à jour.',
-            'type' => 'success'
+            'type' => 'success',
         ]);
         $this->redirectRoute('dashboard');
     }
@@ -244,8 +269,9 @@ class StockEntry extends Component
     public function render()
     {
         $stores = Auth::user()->company->stores;
+
         return view('livewire.stock.stock-entry', [
-            'stores' => $stores
+            'stores' => $stores,
         ]);
     }
 }

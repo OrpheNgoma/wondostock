@@ -21,7 +21,7 @@ class ProductFactory extends Factory
 
         return [
             'name' => $this->faker->words(3, true),
-            'sku' => 'SKU-' . $this->faker->unique()->randomNumber(6),
+            'sku' => 'SKU-'.$this->faker->unique()->randomNumber(6),
             'description' => $this->faker->paragraph(),
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,

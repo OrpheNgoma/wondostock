@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Products;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\Tax;
 use App\Models\Unit;
-use App\Models\Product;
-use Livewire\Component;
-use App\Models\Category;
-use Livewire\WithFileUploads;
-use Livewire\Attributes\Layout;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('components.layouts.app')]
 class ProductForm extends Component
@@ -33,13 +33,16 @@ class ProductForm extends Component
         'attributes_json' => '',
         'low_stock_threshold' => 10,
         'is_active' => true,
-        'type' => 'simple'
+        'type' => 'simple',
     ];
 
     // Propriétés d'interface - uniquement ce qui doit être réactif
     public $newImages = [];
+
     public $existingImages = [];
+
     public array $product_attributes = [];
+
     public array $variants = [];
 
     // Méthode appelée quand de nouvelles images sont uploadées
@@ -53,11 +56,11 @@ class ProductForm extends Component
     // On écoute un événement pour savoir quel produit charger
     // protected $listeners = ['loadProduct' => 'loadProduct'];
 
-    public function mount(?Product $product = null) 
+    public function mount(?Product $product = null)
     {
         try {
-            $this->product = $product ?? new Product();
-            
+            $this->product = $product ?? new Product;
+
             // Remplir formData avec les données du produit
             if ($this->product->exists) {
                 $this->formData = array_merge($this->formData, [
@@ -70,25 +73,25 @@ class ProductForm extends Component
                     'tax_id' => $this->product->tax_id,
                     'unit_id' => $this->product->unit_id,
                     'is_active' => $this->product->is_active ?? true,
-                    'type' => $this->product->type?->value ?? 'simple'
+                    'type' => $this->product->type?->value ?? 'simple',
                 ]);
 
                 if ($this->product->type?->value === 'variable' && $this->product->attributes) {
-                    $this->product_attributes = array_map(function($key, $value) {
+                    $this->product_attributes = array_map(function ($key, $value) {
                         return ['name' => $key, 'values' => implode(', ', $value)];
                     }, array_keys($this->product->attributes), $this->product->attributes);
                 }
-                
-                $this->variants = $this->product->variants->map(fn($variant) => $variant->toArray())->toArray();
+
+                $this->variants = $this->product->variants->map(fn ($variant) => $variant->toArray())->toArray();
                 $this->existingImages = $this->product->getMedia('images');
             }
 
             // Définir une unité par défaut si nécessaire
-            if (!$this->formData['unit_id']) {
+            if (! $this->formData['unit_id']) {
                 $this->formData['unit_id'] = Unit::where('symbol', 'pce')->first()?->id;
             }
         } catch (\Exception $e) {
-            Log::error('Erreur lors du chargement du produit: ' . $e->getMessage());
+            Log::error('Erreur lors du chargement du produit: '.$e->getMessage());
             $this->dispatch('notify', message: 'Erreur lors du chargement du produit.', type: 'error');
         }
     }
@@ -108,21 +111,22 @@ class ProductForm extends Component
     public function generateVariants()
     {
         $attributes = collect($this->product_attributes)
-            ->filter(fn($attr) => !empty($attr['name']) && !empty($attr['values']))
-            ->mapWithKeys(fn($attr) => [$attr['name'] => array_map('trim', explode(',', $attr['values']))]);
+            ->filter(fn ($attr) => ! empty($attr['name']) && ! empty($attr['values']))
+            ->mapWithKeys(fn ($attr) => [$attr['name'] => array_map('trim', explode(',', $attr['values']))]);
 
         if ($attributes->isEmpty()) {
             $this->dispatch('notify', message: 'Veuillez définir au moins un attribut et ses valeurs.', type: 'error');
+
             return;
         }
 
         $combinations = $this->getCombinations($attributes->toArray());
-        
+
         $this->variants = [];
         foreach ($combinations as $combination) {
-            $variantName = $this->formData['name'] . ' - ' . implode(' / ', $combination);
-            $variantSku = $this->formData['sku'] . '-' . implode('-', array_map(fn($val) => strtoupper(substr($val, 0, 3)), $combination));
-            
+            $variantName = $this->formData['name'].' - '.implode(' / ', $combination);
+            $variantSku = $this->formData['sku'].'-'.implode('-', array_map(fn ($val) => strtoupper(substr($val, 0, 3)), $combination));
+
             $this->variants[] = [
                 'name' => $variantName,
                 'sku' => $variantSku,
@@ -145,15 +149,16 @@ class ProductForm extends Component
             }
             $result = $tmp;
         }
+
         return $result;
     }
-    
+
     public function updatedFormDataSku($value)
     {
         // Nettoyer le SKU automatiquement : supprimer espaces, convertir en majuscules, remplacer caractères spéciaux
         $cleanSku = strtoupper(trim($value));
         $cleanSku = preg_replace('/[^A-Z0-9\-_]/', '', $cleanSku);
-        
+
         if ($cleanSku !== $value) {
             $this->formData['sku'] = $cleanSku;
             $this->dispatch('notify', message: 'SKU nettoyé automatiquement (caractères spéciaux supprimés)', type: 'info');
@@ -164,7 +169,7 @@ class ProductForm extends Component
     {
         return [
             'formData.name' => 'required|string|max:255',
-            'formData.sku' => 'required|string|max:100|regex:/^[A-Z0-9\-_]+$/|unique:products,sku,' . $this->product->id,
+            'formData.sku' => 'required|string|max:100|regex:/^[A-Z0-9\-_]+$/|unique:products,sku,'.$this->product->id,
             'formData.selling_price' => 'required|numeric|min:0',
             'formData.purchase_price' => 'nullable|numeric|min:0',
             'formData.category_id' => 'nullable|exists:categories,id',
@@ -174,19 +179,20 @@ class ProductForm extends Component
         ];
     }
 
-    public function save() {
+    public function save()
+    {
         $this->validate();
         DB::transaction(function () {
             $this->product->fill([
-                'name' => $this->formData['name'], 
-                'sku' => $this->formData['sku'], 
+                'name' => $this->formData['name'],
+                'sku' => $this->formData['sku'],
                 'description' => $this->formData['description'],
-                'selling_price' => $this->formData['selling_price'], 
+                'selling_price' => $this->formData['selling_price'],
                 'purchase_price' => $this->formData['purchase_price'],
-                'category_id' => $this->formData['category_id'], 
-                'tax_id' => $this->formData['tax_id'], 
+                'category_id' => $this->formData['category_id'],
+                'tax_id' => $this->formData['tax_id'],
                 'unit_id' => $this->formData['unit_id'],
-                'is_active' => $this->formData['is_active'], 
+                'is_active' => $this->formData['is_active'],
                 'type' => $this->formData['type'],
                 'low_stock_threshold' => $this->formData['low_stock_threshold'] ?? 10,
                 'company_id' => Auth::user()->company_id,
@@ -194,8 +200,8 @@ class ProductForm extends Component
 
             if ($this->formData['type'] === 'variable') {
                 $this->product->attributes = collect($this->product_attributes)
-                    ->filter(fn($attr) => !empty($attr['name']) && !empty($attr['values']))
-                    ->mapWithKeys(fn($attr) => [$attr['name'] => array_map('trim', explode(',', $attr['values']))])
+                    ->filter(fn ($attr) => ! empty($attr['name']) && ! empty($attr['values']))
+                    ->mapWithKeys(fn ($attr) => [$attr['name'] => array_map('trim', explode(',', $attr['values']))])
                     ->toArray();
             }
 
@@ -218,32 +224,32 @@ class ProductForm extends Component
                     ]);
                 }
             }
-            
+
             // Gestion des nouvelles images
             if ($this->newImages) {
                 foreach ($this->newImages as $image) {
                     try {
                         // Copier le fichier temporaire dans un endroit accessible
                         $tempPath = $image->getRealPath();
-                        $fileName = time() . '_' . $image->getClientOriginalName();
-                        $destinationPath = storage_path('app/public/temp/' . $fileName);
-                        
+                        $fileName = time().'_'.$image->getClientOriginalName();
+                        $destinationPath = storage_path('app/public/temp/'.$fileName);
+
                         if (file_exists($tempPath) && copy($tempPath, $destinationPath)) {
                             $this->product->addMedia($destinationPath)
                                 ->usingName($image->getClientOriginalName())
                                 ->toMediaCollection('images');
-                            
+
                             // Nettoyer le fichier temporaire
                             if (file_exists($destinationPath)) {
                                 unlink($destinationPath);
                             }
                         }
                     } catch (\Exception $e) {
-                        Log::error('Erreur lors de l\'ajout d\'image: ' . $e->getMessage());
+                        Log::error('Erreur lors de l\'ajout d\'image: '.$e->getMessage());
                         $this->dispatch('notify', message: 'Erreur lors de l\'ajout d\'une image.', type: 'error');
                     }
                 }
-                
+
                 // Reset des nouvelles images et rafraîchir les existantes
                 $this->newImages = [];
                 $this->existingImages = $this->product->fresh()->getMedia('images');
@@ -265,14 +271,15 @@ class ProductForm extends Component
         $this->dispatch('notify', message: 'Image supprimée.');
     }
 
-    public function render() {
+    public function render()
+    {
         $companyId = Auth::user()->company_id;
         $categories = Category::where('company_id', $companyId)->get();
         $taxes = Tax::where('company_id', $companyId)->get();
         $units = Unit::all(); // Les unités sont globales
 
         return view('livewire.products.product-form', [
-            'categories' => $categories, 'taxes' => $taxes, 'units' => $units
+            'categories' => $categories, 'taxes' => $taxes, 'units' => $units,
         ]);
     }
 }

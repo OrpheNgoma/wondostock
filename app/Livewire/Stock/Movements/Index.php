@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Stock\Movements;
 
+use App\Enums\StockMovementType;
+use App\Models\StockMovement;
 use App\Models\Store;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\StockMovement;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
-use App\Enums\StockMovementType;
-use Illuminate\Support\Facades\Auth;
 
 #[Layout('components.layouts.app')]
 #[Title('Mouvements de Stock - KaziFlow')]
@@ -19,9 +19,13 @@ class Index extends Component
 
     // --- Filters ---
     public string $search = '';
+
     public ?int $storeFilter = null;
+
     public string $typeFilter = '';
+
     public ?string $dateFrom = null;
+
     public ?string $dateTo = null;
 
     /**
@@ -42,8 +46,8 @@ class Index extends Component
             ->with(['product', 'store', 'user', 'source']) // Eager loading pour la performance
             ->when($this->search, function ($query) {
                 $query->whereHas('product', function ($subQuery) {
-                    $subQuery->where('name', 'like', '%' . $this->search . '%')
-                             ->orWhere('sku', 'like', '%' . $this->search . '%');
+                    $subQuery->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('sku', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->storeFilter, function ($query) {
@@ -63,7 +67,7 @@ class Index extends Component
 
         $stores = Store::where('company_id', $companyId)->get();
         $movementTypes = StockMovementType::cases();
-            
+
         return view('livewire.stock.movements.index', [
             'movements' => $movements,
             'stores' => $stores,

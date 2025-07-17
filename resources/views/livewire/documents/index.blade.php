@@ -65,7 +65,7 @@
                             class="block w-full rounded-lg border-gray-300 text-sm focus:border-gray-500 focus:ring-gray-500 transition-colors duration-200">
                         <option value="">Tous les types</option>
                         @foreach($documentTypes as $type)
-                            <option value="{{ $type->value }}">{{ ucfirst(str_replace('_', ' ', $type->value)) }}</option>
+                            <option value="{{ $type->value }}">{{ $type->label() }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -77,7 +77,7 @@
                             class="block w-full rounded-lg border-gray-300 text-sm focus:border-gray-500 focus:ring-gray-500 transition-colors duration-200">
                         <option value="">Tous les statuts</option>
                         @foreach($documentStatuses as $status)
-                            <option value="{{ $status->value }}">{{ ucfirst(str_replace('_', ' ', $status->value)) }}</option>
+                            <option value="{{ $status->value }}">{{ $status->label() }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -155,7 +155,7 @@
                                         </div>
                                         <div>
                                             <p class="text-sm font-semibold text-gray-900">{{ $doc->document_number }}</p>
-                                            <p class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $doc->type->value)) }}</p>
+                                            <p class="text-xs text-gray-500">{{ $doc->type->label() }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -193,7 +193,7 @@
                                     @endphp
                                     <span class="inline-flex items-center gap-1 rounded-full {{ $statusConfig['bg'] }} px-2 py-1 text-xs font-medium {{ $statusConfig['text'] }} ring-1 {{ $statusConfig['ring'] }}">
                                         <div class="h-1.5 w-1.5 rounded-full {{ str_replace('bg-', 'bg-', $statusConfig['bg']) === 'bg-green-100' ? 'bg-green-500' : (str_replace('bg-', 'bg-', $statusConfig['bg']) === 'bg-yellow-100' ? 'bg-yellow-500' : (str_replace('bg-', 'bg-', $statusConfig['bg']) === 'bg-red-100' ? 'bg-red-500' : 'bg-gray-500')) }}"></div>
-                                        {{ ucfirst(str_replace('_', ' ', $doc->status->value)) }}
+                                        {{ $doc->status->label() }}
                                     </span>
                                 </td>
                                 <td class="relative py-4 pl-3 pr-6 text-right">

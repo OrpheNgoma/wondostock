@@ -10,7 +10,7 @@ enum PaymentMethod: string
     case MoovMoney = 'moov_money';
     case BankTransfer = 'bank_transfer';
     case Cheque = 'cheque';
-    
+
     public function label(): string
     {
         return match ($this) {

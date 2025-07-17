@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Purchases;
 
-use Livewire\Component;
 use App\Models\Document;
-use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.app')]
 #[Title('Bons de Commande - WondoStock')]
@@ -24,8 +24,8 @@ class Index extends Component
             ->where('type', \App\Enums\DocumentType::PurchaseOrder)
             ->with('supplier')
             ->when($this->search, function ($query) {
-                $query->where('document_number', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('supplier', fn($q) => $q->where('name', 'like', '%' . $this->search . '%'));
+                $query->where('document_number', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', '%'.$this->search.'%'));
             })
             ->latest('document_date')
             ->paginate(15);

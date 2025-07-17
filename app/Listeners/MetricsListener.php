@@ -14,7 +14,7 @@ class MetricsListener implements ShouldQueue
     public function handleLogin(Login $event): void
     {
         $user = $event->user;
-        
+
         if ($user->company_id) {
             MetricsService::recordLogin($user->id, $user->company_id);
         }

@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Company;
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class SupplierSeeder extends Seeder
 {
@@ -15,7 +14,9 @@ class SupplierSeeder extends Seeder
     public function run(): void
     {
         $company = Company::first();
-        if (!$company) return;
+        if (! $company) {
+            return;
+        }
 
         Supplier::factory(10)->create(['company_id' => $company->id]);
     }

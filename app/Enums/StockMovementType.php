@@ -2,7 +2,8 @@
 
 namespace App\Enums;
 
-enum StockMovementType: string {
+enum StockMovementType: string
+{
     case Sale = 'sale';
     case Purchase = 'purchase';
     case TransferIn = 'transfer_in';

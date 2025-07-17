@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Reports;
 
+use App\Models\Document;
 use App\Models\Payment;
 use App\Models\Product;
-use Livewire\Component;
-use App\Models\Document;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Rapports - WondoStock')]
@@ -25,22 +25,22 @@ class Index extends Component
             ->with(['customer', 'items'])
             ->latest('document_date')->get();
 
-        $fileName = 'journal_des_ventes_' . now()->format('Y-m-d') . '.csv';
+        $fileName = 'journal_des_ventes_'.now()->format('Y-m-d').'.csv';
         $headers = [
-            'Content-type'        => 'text/csv; charset=utf-8',
+            'Content-type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0'
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($documents) {
+        $callback = function () use ($documents) {
             $file = fopen('php://output', 'w');
             // En-têtes du CSV
             fputcsv($file, ['Date', 'Numero', 'Type', 'Client', 'Produit', 'Quantite', 'Prix Unitaire HT', 'Total HT']);
 
             foreach ($documents as $doc) {
-                foreach($doc->items as $item) {
+                foreach ($doc->items as $item) {
                     fputcsv($file, [
                         $doc->document_date->format('d/m/Y'),
                         $doc->document_number,
@@ -69,21 +69,21 @@ class Index extends Component
             ->with('stores')
             ->orderBy('name')->get();
 
-        $fileName = 'etat_des_stocks_' . now()->format('Y-m-d') . '.csv';
+        $fileName = 'etat_des_stocks_'.now()->format('Y-m-d').'.csv';
         $headers = [
-            'Content-type'        => 'text/csv; charset=utf-8',
+            'Content-type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0'
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($products) {
+        $callback = function () use ($products) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Produit', 'SKU', 'Magasin', 'Quantite en Stock', 'Valeur du Stock (Prix Achat)']);
 
             foreach ($products as $product) {
-                foreach($product->stores as $store) {
+                foreach ($product->stores as $store) {
                     fputcsv($file, [
                         $product->name,
                         $product->sku,
@@ -95,6 +95,7 @@ class Index extends Component
             }
             fclose($file);
         };
+
         return response()->stream($callback, 200, $headers);
     }
 
@@ -108,16 +109,16 @@ class Index extends Component
             ->with(['invoice', 'user'])
             ->latest('payment_date')->get();
 
-        $fileName = 'historique_paiements_' . now()->format('Y-m-d') . '.csv';
+        $fileName = 'historique_paiements_'.now()->format('Y-m-d').'.csv';
         $headers = [
-            'Content-type'        => 'text/csv; charset=utf-8',
+            'Content-type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma'              => 'no-cache',
-            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires'             => '0'
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
-        $callback = function() use ($payments) {
+        $callback = function () use ($payments) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Date Paiement', 'Facture N°', 'Montant', 'Methode', 'Enregistre par']);
 
@@ -132,9 +133,9 @@ class Index extends Component
             }
             fclose($file);
         };
+
         return response()->stream($callback, 200, $headers);
     }
-
 
     public function render()
     {

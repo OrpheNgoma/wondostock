@@ -21,7 +21,7 @@ class GlobalAdminController extends Controller
      */
     private function ensureGlobalAdmin()
     {
-        if (!auth()->check() || !auth()->user()->is_global_admin) {
+        if (! auth()->check() || ! auth()->user()->is_global_admin) {
             abort(403, 'Accès réservé aux administrateurs globaux.');
         }
     }
@@ -32,7 +32,7 @@ class GlobalAdminController extends Controller
     public function dashboard()
     {
         $this->ensureGlobalAdmin();
-        
+
         $stats = [
             'total_companies' => Company::count(),
             'active_companies' => Company::where('is_active', true)->count(),
@@ -55,13 +55,13 @@ class GlobalAdminController extends Controller
     public function companies(Request $request)
     {
         $this->ensureGlobalAdmin();
-        
+
         $query = Company::withCount('users')
             ->withoutGlobalScope(\App\Scopes\CompanyScope::class);
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('status')) {
@@ -79,9 +79,9 @@ class GlobalAdminController extends Controller
     public function showCompany(Company $company)
     {
         $this->ensureGlobalAdmin();
-        
+
         $company->load(['users', 'subscription']);
-        
+
         $metrics = [
             'users_count' => $company->users()->count(),
             'products_count' => $company->products()->count(),
@@ -102,10 +102,11 @@ class GlobalAdminController extends Controller
     public function toggleCompanyStatus(Company $company)
     {
         $this->ensureGlobalAdmin();
-        
-        $company->update(['is_active' => !$company->is_active]);
-        
+
+        $company->update(['is_active' => ! $company->is_active]);
+
         $status = $company->is_active ? 'activée' : 'désactivée';
+
         return back()->with('success', "L'entreprise {$company->name} a été {$status}.");
     }
 
@@ -115,7 +116,7 @@ class GlobalAdminController extends Controller
     public function systemStats()
     {
         $this->ensureGlobalAdmin();
-        
+
         $stats = [
             'database_size' => $this->getDatabaseSize(),
             'storage_usage' => $this->getStorageUsage(),
@@ -160,7 +161,8 @@ class GlobalAdminController extends Controller
     {
         try {
             $result = DB::select("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'size_mb' FROM information_schema.tables WHERE table_schema = DATABASE()");
-            return $result[0]->size_mb . ' MB';
+
+            return $result[0]->size_mb.' MB';
         } catch (\Exception $e) {
             return 'N/A';
         }

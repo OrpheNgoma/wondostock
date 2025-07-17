@@ -2,14 +2,15 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-
 use Livewire\Attributes\On;
+use Livewire\Component;
 
 class Notifications extends Component
 {
     public $message;
+
     public $type;
+
     public $show = false;
 
     /**

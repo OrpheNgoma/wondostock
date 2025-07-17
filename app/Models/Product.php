@@ -2,25 +2,19 @@
 
 namespace App\Models;
 
-use App\Models\Tax;
-use App\Models\Unit;
-use App\Models\Store;
-use App\Models\Company;
-use App\Models\Category;
 use App\Enums\ProductType;
-use App\Models\DocumentItem;
-use Illuminate\Database\Eloquent\Model;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Spatie\MediaLibrary\HasMedia; // spatie/laravel-medialibrary
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia; // spatie/laravel-medialibrary
 
 class Product extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'parent_id', 'category_id', 'tax_id', 'type', 'name', 'sku',
@@ -79,6 +73,7 @@ class Product extends Model implements HasMedia
     public function getImageUrlAttribute(): string
     {
         $firstImage = $this->getFirstMediaUrl('images');
+
         return $firstImage ?: asset('images/product-placeholder.png');
     }
 

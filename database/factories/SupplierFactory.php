@@ -23,7 +23,7 @@ class SupplierFactory extends Factory
             'phone_number' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
             'nif' => $this->faker->unique()->randomNumber(8),
-            'rccm' => 'RCCM/' . $this->faker->unique()->randomNumber(8),
+            'rccm' => 'RCCM/'.$this->faker->unique()->randomNumber(8),
             'notes' => $this->faker->sentence(),
             'is_active' => true,
         ];

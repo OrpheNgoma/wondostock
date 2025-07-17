@@ -3,30 +3,32 @@
 namespace App\Livewire\Products;
 
 use App\Models\Product;
-use Livewire\Component;
-use Milon\Barcode\DNS1D;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Imprimer des Étiquettes - WondoStock')]
 class PrintLabels extends Component
 {
     public string $search = '';
+
     public $searchResults = [];
+
     public array $productsToPrint = [];
 
     public function updatedSearch()
     {
         if (strlen($this->search) < 2) {
             $this->searchResults = [];
+
             return;
         }
         $this->searchResults = Product::where('company_id', Auth::user()->company_id)
             ->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('sku', 'like', '%' . $this->search . '%');
+                $query->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('sku', 'like', '%'.$this->search.'%');
             })
             ->limit(10)->get();
     }
@@ -36,14 +38,16 @@ class PrintLabels extends Component
         // Vérifier que le produit appartient à la bonne entreprise
         if ($product->company_id !== Auth::user()->company_id) {
             $this->dispatch('notify', message: 'Produit non autorisé.', type: 'error');
+
             return;
         }
 
         // Vérifier si le produit n'est pas déjà dans la liste
-        if (!collect($this->productsToPrint)->pluck('id')->contains($product->id)) {
+        if (! collect($this->productsToPrint)->pluck('id')->contains($product->id)) {
             // Valider que le SKU est valide pour un code-barres
             if (empty($product->sku) || strlen($product->sku) < 3) {
                 $this->dispatch('notify', message: 'Le SKU du produit est trop court pour générer un code-barres.', type: 'error');
+
                 return;
             }
 
@@ -54,12 +58,12 @@ class PrintLabels extends Component
                 'price' => $product->selling_price,
                 'quantity' => 1, // Quantité d'étiquettes à imprimer
             ];
-            
+
             $this->dispatch('notify', message: 'Produit ajouté à la liste d\'impression.', type: 'success');
         } else {
             $this->dispatch('notify', message: 'Ce produit est déjà dans la liste.', type: 'warning');
         }
-        
+
         $this->search = '';
         $this->searchResults = [];
     }

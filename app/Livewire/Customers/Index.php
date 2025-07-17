@@ -2,13 +2,12 @@
 
 namespace App\Livewire\Customers;
 
-use Livewire\Component;
 use App\Models\Customer;
-use App\Enums\CustomerType;
-use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.app')]
 #[Title('Gérer les Clients - KaziFlow')]
@@ -18,32 +17,38 @@ class Index extends Component
 
     // State
     public bool $showForm = false;
+
     public ?Customer $editingCustomer;
+
     public string $search = '';
 
     // Form Properties
     public string $name = '';
+
     public string $email = '';
+
     public string $phone_number = '';
+
     public string $address = '';
+
     public string $type = 'individual';
 
     protected function rules()
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'email' => 'nullable|email|max:255|unique:customers,email,' . ($this->editingCustomer?->id ?? 'NULL'),
+            'email' => 'nullable|email|max:255|unique:customers,email,'.($this->editingCustomer?->id ?? 'NULL'),
             'phone_number' => 'nullable|string',
             'address' => 'nullable|string',
             'type' => 'required|in:individual,professional',
         ];
     }
-    
+
     public function mount()
     {
-        $this->editingCustomer = new Customer();
+        $this->editingCustomer = new Customer;
     }
-    
+
     public function create()
     {
         $this->resetForm();
@@ -81,7 +86,7 @@ class Index extends Component
             Customer::create($data);
             $this->dispatch('notify', message: 'Client créé.');
         }
-        
+
         $this->showForm = false;
     }
 
@@ -94,7 +99,7 @@ class Index extends Component
 
     private function resetForm()
     {
-        $this->editingCustomer = new Customer();
+        $this->editingCustomer = new Customer;
         $this->reset(['name', 'email', 'phone_number', 'address', 'type']);
         $this->resetErrorBag();
     }
@@ -102,7 +107,7 @@ class Index extends Component
     public function render()
     {
         $customers = Customer::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%' . $this->search . '%')
+            ->where('name', 'like', '%'.$this->search.'%')
             ->latest()
             ->paginate(10);
 

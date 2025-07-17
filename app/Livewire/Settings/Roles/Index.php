@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Settings\Roles;
 
-use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -13,7 +13,9 @@ use Spatie\Permission\Models\Role;
 class Index extends Component
 {
     public $roles;
+
     public ?Role $selectedRole = null;
+
     public $rolePermissions = [];
 
     public function mount()
@@ -32,13 +34,13 @@ class Index extends Component
         if ($this->selectedRole) {
             $permissions = Permission::whereIn('id', $this->rolePermissions)->get();
             $this->selectedRole->syncPermissions($permissions);
-            $this->dispatch('notify', message: 'Permissions mises à jour pour le rôle ' . $this->selectedRole->name);
+            $this->dispatch('notify', message: 'Permissions mises à jour pour le rôle '.$this->selectedRole->name);
         }
     }
 
     public function render()
     {
-        $permissions = Permission::all()->groupBy(function($permission) {
+        $permissions = Permission::all()->groupBy(function ($permission) {
             return explode('_', $permission->name)[1]; // Groupe par ex: 'products', 'users', etc.
         });
 

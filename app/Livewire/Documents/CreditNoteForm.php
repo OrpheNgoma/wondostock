@@ -2,22 +2,25 @@
 
 namespace App\Livewire\Documents;
 
-use Livewire\Component;
-use App\Models\Document;
-use App\Enums\DocumentType;
 use App\Enums\DocumentStatus;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\DB;
+use App\Enums\DocumentType;
+use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('components.layouts.app')]
 #[Title('Créer un Avoir - WondoStock')]
 class CreditNoteForm extends Component
 {
     public Document $sourceDocument;
+
     public array $items = [];
+
     public string $notes = '';
+
     public string $document_date;
 
     protected function rules()
@@ -77,7 +80,7 @@ class CreditNoteForm extends Component
                 'source_document_id' => $this->sourceDocument->id,
                 'type' => DocumentType::CreditNote,
                 'status' => DocumentStatus::Draft,
-                'document_number' => 'AVOIR-' . now()->timestamp,
+                'document_number' => 'AVOIR-'.now()->timestamp,
                 'document_date' => $this->document_date,
                 'sub_total' => $sub_total,
                 'tax_amount' => $tax_amount,

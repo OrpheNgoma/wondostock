@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Plan;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class PlanSeeder extends Seeder
 {
@@ -20,7 +19,7 @@ class PlanSeeder extends Seeder
             'features' => json_encode([
                 'base_stock',
                 'invoicing',
-                'reporting_essentiel'
+                'reporting_essentiel',
             ]),
         ]);
 
@@ -32,7 +31,7 @@ class PlanSeeder extends Seeder
                 'reporting_essentiel',
                 'multi_store', // <-- Fonctionnalité PRO
                 'roles_permissions', // <-- Fonctionnalité PRO
-                'advanced_reporting' // <-- Fonctionnalité PRO
+                'advanced_reporting', // <-- Fonctionnalité PRO
             ]),
         ]);
 
@@ -46,7 +45,7 @@ class PlanSeeder extends Seeder
                 'roles_permissions',
                 'advanced_reporting',
                 'api_access', // <-- Fonctionnalité ENTREPRISE
-                'priority_support' // <-- Fonctionnalité ENTREPRISE
+                'priority_support', // <-- Fonctionnalité ENTREPRISE
             ]),
         ]);
     }

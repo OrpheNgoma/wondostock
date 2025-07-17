@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Company;
 use App\Models\Setting;
 
 class DocumentNumberService
@@ -17,12 +16,12 @@ class DocumentNumberService
         // Récupérer les paramètres ou utiliser des valeurs par défaut
         $prefix = Setting::where('company_id', $companyId)
             ->where('key', $prefixKey)
-            ->value('value') ?? strtoupper(substr($type, 0, 4)) . '-';
-            
+            ->value('value') ?? strtoupper(substr($type, 0, 4)).'-';
+
         $lastNumber = (int) (Setting::where('company_id', $companyId)
             ->where('key', $counterKey)
             ->value('value') ?? 0);
-            
+
         $format = Setting::where('company_id', $companyId)
             ->where('key', $formatKey)
             ->value('value') ?? '{PRE}-{ANNEE}-{NUMERO}';

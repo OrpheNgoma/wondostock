@@ -149,7 +149,7 @@
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-600">Quantité totale</span>
                                 <span class="text-lg font-bold text-blue-600">
-                                    {{ array_sum(array_column($items, 'quantity')) }}
+                                    {{ collect($items)->sum(function($item) { return (int) $item['quantity']; }) }}
                                 </span>
                             </div>
                             

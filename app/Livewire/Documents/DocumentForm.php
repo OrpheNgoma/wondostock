@@ -259,7 +259,7 @@ class DocumentForm extends Component
 
         $this->dispatch('notify', [
             'message' => 'Document sauvegardé avec succès !',
-            'type' => 'success'
+            'type' => 'success',
         ]);
         // Rediriger vers la page de détails du document (à créer)
         $this->redirectRoute('documents.show', $this->document);
@@ -271,7 +271,7 @@ class DocumentForm extends Component
 
         DB::transaction(function () {
             $isNewDocument = ! $this->document->exists;
-            
+
             $this->document->fill([
                 'company_id' => Auth::user()->company_id,
                 'customer_id' => $this->customer_id,
@@ -325,7 +325,7 @@ class DocumentForm extends Component
 
         $this->dispatch('notify', [
             'message' => 'Brouillon sauvegardé avec succès ! Vous pouvez le finaliser plus tard.',
-            'type' => 'info'
+            'type' => 'info',
         ]);
     }
 
@@ -335,7 +335,7 @@ class DocumentForm extends Component
 
         DB::transaction(function () {
             $isNewDocument = ! $this->document->exists;
-            
+
             $this->document->fill([
                 'company_id' => Auth::user()->company_id,
                 'customer_id' => $this->customer_id,
@@ -390,7 +390,7 @@ class DocumentForm extends Component
 
         $this->dispatch('notify', [
             'message' => 'Document validé et sauvegardé avec succès ! Le stock a été mis à jour.',
-            'type' => 'success'
+            'type' => 'success',
         ]);
         $this->redirectRoute('documents.show', $this->document);
     }

@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Suppliers;
 
-use Livewire\Component;
 use App\Models\Supplier;
-use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('components.layouts.app')]
 #[Title('Fournisseurs - WondoStock')]
@@ -17,18 +17,28 @@ class Index extends Component
 
     // --- State ---
     public bool $showForm = false;
+
     public ?Supplier $editingSupplier;
+
     public string $search = '';
 
     // --- Form Properties ---
     public string $name = '';
+
     public string $contact_person = '';
+
     public string $email = '';
+
     public string $phone_number = '';
+
     public string $address = '';
+
     public string $nif = '';
+
     public string $rccm = '';
+
     public string $notes = '';
+
     public bool $is_active = true;
 
     protected function rules()
@@ -45,12 +55,12 @@ class Index extends Component
             'is_active' => 'boolean',
         ];
     }
-    
+
     public function mount()
     {
-        $this->editingSupplier = new Supplier();
+        $this->editingSupplier = new Supplier;
     }
-    
+
     public function create()
     {
         $this->resetForm();
@@ -88,7 +98,7 @@ class Index extends Component
             'is_active' => $this->is_active,
             'company_id' => Auth::user()->company_id,
         ]);
-        
+
         $this->editingSupplier->save();
         $this->dispatch('notify', message: 'Fournisseur sauvegardé.');
         $this->closeForm();
@@ -108,7 +118,7 @@ class Index extends Component
 
     private function resetForm()
     {
-        $this->editingSupplier = new Supplier();
+        $this->editingSupplier = new Supplier;
         $this->reset(['name', 'contact_person', 'email', 'phone_number', 'address', 'nif', 'rccm', 'notes', 'is_active']);
         $this->resetErrorBag();
     }
@@ -116,7 +126,7 @@ class Index extends Component
     public function render()
     {
         $suppliers = Supplier::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%' . $this->search . '%')
+            ->where('name', 'like', '%'.$this->search.'%')
             ->latest()
             ->paginate(10);
 

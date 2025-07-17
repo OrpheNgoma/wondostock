@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Analytics\Metric;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MetricsService
@@ -38,7 +37,7 @@ class MetricsService
     /**
      * Enregistrer la création d'un document (facture, devis, etc.)
      */
-    public static function recordDocumentCreated(int $companyId, string $documentType, float $amount = null): void
+    public static function recordDocumentCreated(int $companyId, string $documentType, ?float $amount = null): void
     {
         Metric::record(
             type: 'document_created',
@@ -103,10 +102,10 @@ class MetricsService
     private static function getDailyActivity($start, $end): array
     {
         return Metric::select(
-                DB::raw('DATE(recorded_at) as date'),
-                DB::raw('COUNT(*) as total_actions'),
-                DB::raw('COUNT(DISTINCT company_id) as active_companies')
-            )
+            DB::raw('DATE(recorded_at) as date'),
+            DB::raw('COUNT(*) as total_actions'),
+            DB::raw('COUNT(DISTINCT company_id) as active_companies')
+        )
             ->inPeriod($start, $end)
             ->groupBy(DB::raw('DATE(recorded_at)'))
             ->orderBy('date')
@@ -137,6 +136,7 @@ class MetricsService
     public static function cleanOldMetrics(int $daysToKeep = 365): int
     {
         $cutoffDate = now()->subDays($daysToKeep);
+
         return Metric::where('recorded_at', '<', $cutoffDate)->delete();
     }
 }

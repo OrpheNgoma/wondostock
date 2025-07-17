@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Add company_id to roles table
-        if (Schema::hasTable('roles') && !Schema::hasColumn('roles', 'company_id')) {
+        if (Schema::hasTable('roles') && ! Schema::hasColumn('roles', 'company_id')) {
             Schema::table('roles', function (Blueprint $table) {
                 $table->unsignedBigInteger('company_id')->nullable()->after('id');
                 $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
@@ -21,7 +21,7 @@ return new class extends Migration
         }
 
         // Add company_id to model_has_roles table
-        if (Schema::hasTable('model_has_roles') && !Schema::hasColumn('model_has_roles', 'company_id')) {
+        if (Schema::hasTable('model_has_roles') && ! Schema::hasColumn('model_has_roles', 'company_id')) {
             Schema::table('model_has_roles', function (Blueprint $table) {
                 $table->unsignedBigInteger('company_id')->nullable();
                 $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
@@ -30,7 +30,7 @@ return new class extends Migration
         }
 
         // Add company_id to model_has_permissions table
-        if (Schema::hasTable('model_has_permissions') && !Schema::hasColumn('model_has_permissions', 'company_id')) {
+        if (Schema::hasTable('model_has_permissions') && ! Schema::hasColumn('model_has_permissions', 'company_id')) {
             Schema::table('model_has_permissions', function (Blueprint $table) {
                 $table->unsignedBigInteger('company_id')->nullable();
                 $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
@@ -39,7 +39,7 @@ return new class extends Migration
         }
 
         // Add company_id to permissions table
-        if (Schema::hasTable('permissions') && !Schema::hasColumn('permissions', 'company_id')) {
+        if (Schema::hasTable('permissions') && ! Schema::hasColumn('permissions', 'company_id')) {
             Schema::table('permissions', function (Blueprint $table) {
                 $table->unsignedBigInteger('company_id')->nullable()->after('id');
                 $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');

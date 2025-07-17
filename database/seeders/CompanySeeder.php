@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Plan;
-use App\Models\User;
-use App\Models\Store;
 use App\Models\Company;
+use App\Models\Plan;
+use App\Models\Store;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -50,7 +50,7 @@ class CompanySeeder extends Seeder
         // 5. Créer un Gérant de magasin et un Vendeur
         $manager = User::factory()->create(['company_id' => $company->id, 'store_id' => $store1->id]);
         $manager->assignRole('Gérant de Magasin');
-        
+
         $seller = User::factory()->create(['company_id' => $company->id, 'store_id' => $store2->id]);
         $seller->assignRole('Vendeur');
     }

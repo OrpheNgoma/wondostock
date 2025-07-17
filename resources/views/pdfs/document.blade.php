@@ -27,30 +27,69 @@
         .totals .grand-total { font-weight: bold; font-size: 14px; border-top: 2px solid #333; }
         .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background-color: #f8f9fa; padding: 20px 40px; border-top: 1px solid #dee2e6; font-size: 10px; text-align: center; }
         .clear-fix { clear: both; }
+        
+        /* Styles pour les images personnalisées */
+        .custom-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; }
+        .header-image { max-width: 150%; height: auto; max-height: 150px; }
+        .document-info-section { text-align: right; margin-bottom: 20px; }
+        .document-info-section .document-title { font-size: 28px; font-weight: bold; margin: 0 0 10px 0; }
+        .document-info-section .document-info { font-size: 14px; }
+        
+        .custom-footer { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; }
+        .footer-image { max-width: 200%; height: auto; max-height: 180px; }
+        
+        /* Mode impression sans en-tête/pied de page */
+        .print-content-only .custom-header,
+        .print-content-only .custom-footer,
+        .print-content-only .header,
+        .print-content-only .footer { display: none !important; }
+        .print-content-only .page-container { padding: 20px; }
+        .print-content-only .document-info-section { 
+            background: transparent; 
+            border: none; 
+            padding: 10px 0;
+        }
     </style>
 </head>
-<body>
+<body class="{{ ($printMode ?? 'standard') === 'content_only' ? 'print-content-only' : '' }}">
     <div class="page-container">
-        <div class="header">
-            <div class="header-left">
-                @if($logoBase64)
-                    <img src="{{ $logoBase64 }}" alt="Logo" class="company-logo">
-                @else
-                    <h1 class="company-name">{{ $document->company->name }}</h1>
-                @endif
-                <address class="company-address">
-                    {{ $document->company->address }}<br>
-                    {{ $document->company->phone_number }}
-                </address>
+        @if($useStoreData && $headerImageBase64)
+            <!-- En-tête personnalisé pour les branches pays -->
+            <div class="custom-header">
+                <img src="{{ $headerImageBase64 }}" alt="En-tête personnalisé" class="header-image">
             </div>
-            <div class="header-right">
+            
+            <!-- Informations du document uniquement -->
+            <div class="document-info-section">
                 <h2 class="document-title">{{ $document->type->label() }}</h2>
                 <div class="document-info">
                     <strong>#{{ $document->document_number }}</strong><br>
                     Date : {{ $document->document_date->format('d/m/Y') }}
                 </div>
             </div>
-        </div>
+        @else
+            <!-- En-tête classique pour les entreprises normales -->
+            <div class="header">
+                <div class="header-left">
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Logo" class="company-logo">
+                    @else
+                        <h1 class="company-name">{{ $document->company->name }}</h1>
+                    @endif
+                    <address class="company-address">
+                        {{ $document->company->address }}<br>
+                        {{ $document->company->phone_number }}
+                    </address>
+                </div>
+                <div class="header-right">
+                    <h2 class="document-title">{{ $document->type->label() }}</h2>
+                    <div class="document-info">
+                        <strong>#{{ $document->document_number }}</strong><br>
+                        Date : {{ $document->document_date->format('d/m/Y') }}
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="customer-info">
             <strong>Facturé à :</strong><br>
@@ -103,9 +142,18 @@
         <div class="clear-fix"></div>
     </div>
 
-    <div class="footer">
-        {{ $document->company->name }} - NIF : {{ $document->company->nif ?? 'N/A' }} - RCCM : {{ $document->company->rccm ?? 'N/A' }}<br>
-        Merci de votre confiance ! <strong>WondoStock conçu par: Pixel Parfait</strong>
-    </div>
+
+    @if($useStoreData && $footerImageBase64)
+        <!-- Pied de page personnalisé pour les branches pays - PLEINE LARGEUR -->
+        <div class="custom-footer">
+            <img src="{{ $footerImageBase64 }}" alt="Pied de page personnalisé" class="footer-image">
+        </div>
+    @else
+        <!-- Pied de page classique -->
+        <div class="footer">
+            {{ $document->company->name }} - NIF : {{ $document->company->nif ?? 'N/A' }} - RCCM : {{ $document->company->rccm ?? 'N/A' }}<br>
+            Merci de votre confiance ! <strong>WondoStock conçu par: Pixel Parfait</strong>
+        </div>
+    @endif
 </body>
 </html>
