@@ -14,8 +14,12 @@ class PlanSeeder extends Seeder
     {
         // Création des plans définis dans le business plan.
         // Les fonctionnalités sont des slugs que nous utiliserons dans les Gates.
-        Plan::firstOrCreate(['slug' => 'essentiel'], [
+        Plan::updateOrCreate(['slug' => 'essentiel'], [
             'name' => 'WondoStock ESSENTIEL',
+            'description' => 'Plan de base pour les petites entreprises avec fonctionnalités essentielles de gestion de stock.',
+            'price' => 29.99,
+            'user_limit' => 3,
+            'unlimited_users' => false,
             'features' => json_encode([
                 'base_stock',
                 'invoicing',
@@ -23,8 +27,12 @@ class PlanSeeder extends Seeder
             ]),
         ]);
 
-        Plan::firstOrCreate(['slug' => 'pro'], [
+        Plan::updateOrCreate(['slug' => 'pro'], [
             'name' => 'WondoStock PRO',
+            'description' => 'Plan professionnel avec fonctionnalités avancées pour les moyennes entreprises multi-magasins.',
+            'price' => 79.99,
+            'user_limit' => 10,
+            'unlimited_users' => false,
             'features' => json_encode([
                 'base_stock',
                 'invoicing',
@@ -35,8 +43,12 @@ class PlanSeeder extends Seeder
             ]),
         ]);
 
-        Plan::firstOrCreate(['slug' => 'entreprise'], [
+        Plan::updateOrCreate(['slug' => 'entreprise'], [
             'name' => 'WondoStock ENTREPRISE',
+            'description' => 'Plan entreprise avec accès API et support prioritaire pour les grandes organisations.',
+            'price' => 149.99,
+            'user_limit' => 0, // 0 pour indiquer illimité
+            'unlimited_users' => true,
             'features' => json_encode([
                 'base_stock',
                 'invoicing',

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.saas')
 
 @section('title', 'Créer une branche pays - WondoStock')
 

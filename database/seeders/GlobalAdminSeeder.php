@@ -16,6 +16,7 @@ class GlobalAdminSeeder extends Seeder
             'email' => 'admin@wondostock.com',
             'password' => Hash::make('password'),
             'company_id' => null, // Cet utilisateur n'appartient à aucune compagnie cliente
+            'is_global_admin' => true, // Flag pour identifier l'admin global
         ]);
 
         $globalAdmin->assignRole('Global-Admin');
