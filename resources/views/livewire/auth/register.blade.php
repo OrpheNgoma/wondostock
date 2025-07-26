@@ -289,6 +289,81 @@
                             </div>
                         </div>
 
+                        <!-- Sélection du plan d'abonnement -->
+                        <div class="space-y-4">
+                            <div class="text-center">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Choisissez votre plan</h3>
+                                <p class="text-sm text-gray-600">Sélectionnez le plan qui correspond le mieux à vos besoins</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 gap-4">
+                                @foreach($plans as $plan)
+                                <label class="relative cursor-pointer">
+                                    <input type="radio" 
+                                           wire:model="selectedPlanId" 
+                                           value="{{ $plan->id }}"
+                                           name="plan"
+                                           class="sr-only peer">
+                                    
+                                    <div class="border-2 border-gray-200 rounded-xl p-4 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200 hover:border-gray-300">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center peer-checked:border-blue-500 peer-checked:bg-blue-500">
+                                                            <div class="w-2 h-2 bg-white rounded-full peer-checked:block hidden"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="font-semibold text-gray-900">{{ $plan->name }}</h4>
+                                                        <p class="text-sm text-gray-600">{{ $plan->description }}</p>
+                                                        <p class="text-xs text-gray-500 mt-1">
+                                                            {{ \App\Helpers\PlanHelper::formatUserLimit($plan->unlimited_users, $plan->user_limit) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                @if(is_array($plan->features) && count($plan->features) > 0)
+                                                <div class="mt-2 flex flex-wrap gap-1">
+                                                    @foreach(array_slice($plan->features, 0, 3) as $feature)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ \App\Helpers\PlanHelper::translateFeature($feature) }}
+                                                    </span>
+                                                    @endforeach
+                                                    @if(count($plan->features) > 3)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                                                        +{{ count($plan->features) - 3 }} autres
+                                                    </span>
+                                                    @endif
+                                                </div>
+                                                @endif
+                                            </div>
+                                            
+                                            <div class="text-right ml-4">
+                                                @if($plan->price > 0)
+                                                    <div class="text-2xl font-bold text-gray-900">{{ \App\Helpers\PlanHelper::formatPrice($plan->price) }}</div>
+                                                    <div class="text-sm text-gray-500">par mois</div>
+                                                @else
+                                                    <div class="text-lg font-bold text-blue-600">{{ \App\Helpers\PlanHelper::formatPrice($plan->price) }}</div>
+                                                    <div class="text-sm text-gray-500">Contactez-nous</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                                @endforeach
+                            </div>
+                            
+                            @error('selectedPlanId')
+                            <div class="flex items-center space-x-1 text-red-600 text-sm">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>{{ $message }}</span>
+                            </div>
+                            @enderror
+                        </div>
+
                         <!-- Conditions d'utilisation -->
                         <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
                             <div class="flex items-start space-x-2">

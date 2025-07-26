@@ -26,6 +26,8 @@ class Register extends Component
 
     public string $password_confirmation = '';
 
+    public ?int $selectedPlanId = null;
+
     /**
      * Règles de validation pour le formulaire.
      */
@@ -36,6 +38,7 @@ class Register extends Component
             'userName' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
+            'selectedPlanId' => 'required|exists:plans,id',
         ];
     }
 
@@ -51,7 +54,21 @@ class Register extends Component
         'password.required' => 'Un mot de passe est requis.',
         'password.min' => 'Le mot de passe doit faire au moins 8 caractères.',
         'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+        'selectedPlanId.required' => 'Veuillez sélectionner un plan d\'abonnement.',
+        'selectedPlanId.exists' => 'Le plan sélectionné n\'existe pas.',
     ];
+
+    /**
+     * Initialise le composant avec le plan ESSENTIEL sélectionné par défaut.
+     */
+    public function mount()
+    {
+        // Sélectionner le plan ESSENTIEL par défaut
+        $defaultPlan = Plan::where('slug', 'essentiel')->first();
+        if ($defaultPlan) {
+            $this->selectedPlanId = $defaultPlan->id;
+        }
+    }
 
     /**
      * Gère la soumission du formulaire d'inscription.
@@ -64,8 +81,8 @@ class Register extends Component
             // On utilise une transaction pour s'assurer que tout est créé correctement.
             // Si une étape échoue, tout est annulé.
             DB::transaction(function () {
-                // 1. On récupère le plan par défaut ("Essentiel")
-                $plan = Plan::where('slug', 'essentiel')->firstOrFail();
+                // 1. On récupère le plan sélectionné par l'utilisateur
+                $plan = Plan::findOrFail($this->selectedPlanId);
 
                 // 1. Création de l'entreprise (Company) SANS l'owner_id pour l'instant.
                 $company = Company::create([
@@ -84,8 +101,31 @@ class Register extends Component
                 $company->owner_id = $user->id;
                 $company->save();
 
-                // 4. On assigne le rôle de "Super-Administrateur"
-                $user->assignRole('Super-Administrateur');
+                // 4. Créer et assigner le rôle de "Propriétaire" pour cette entreprise
+                setPermissionsTeamId($company->id);
+                
+                // Utiliser le nom de l'entreprise pour un affichage professionnel
+                $sanitizedCompanyName = preg_replace('/[^a-zA-Z0-9\s]/', '', $company->name);
+                $sanitizedCompanyName = preg_replace('/\s+/', '-', trim($sanitizedCompanyName));
+                $roleName = 'Propriétaire-' . $sanitizedCompanyName;
+                
+                // Vérifier si le rôle existe déjà
+                $ownerRole = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+                
+                if (!$ownerRole) {
+                    $ownerRole = \Spatie\Permission\Models\Role::create([
+                        'name' => $roleName,
+                        'guard_name' => 'web',
+                        'company_id' => $company->id,
+                    ]);
+                    
+                    // Assigner toutes les permissions au rôle Propriétaire
+                    $allPermissions = \Spatie\Permission\Models\Permission::all();
+                    $ownerRole->syncPermissions($allPermissions);
+                }
+                
+                // Assigner le rôle à l'utilisateur
+                $user->assignRole($ownerRole);
 
                 // 6. Création de l'abonnement
                 $company->subscription()->create([
@@ -107,8 +147,19 @@ class Register extends Component
 
             return $this->redirect('/dashboard', navigate: true);
         } catch (\Exception $e) {
+            // Log l'erreur pour le débogage
+            \Log::error('Erreur lors de l\'inscription', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_data' => [
+                    'companyName' => $this->companyName,
+                    'email' => $this->email,
+                    'userName' => $this->userName,
+                ]
+            ]);
+            
             $this->dispatch('notify', [
-                'message' => 'Une erreur est survenue lors de la création de votre compte. Veuillez réessayer.',
+                'message' => 'Une erreur est survenue lors de la création de votre compte: ' . $e->getMessage(),
                 'type' => 'error',
             ]);
         }
@@ -116,6 +167,10 @@ class Register extends Component
 
     public function render()
     {
-        return view('livewire.auth.register');
+        $plans = Plan::orderBy('price')->get();
+        
+        return view('livewire.auth.register', [
+            'plans' => $plans,
+        ]);
     }
 }
