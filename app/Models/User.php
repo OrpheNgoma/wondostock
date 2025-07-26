@@ -68,4 +68,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class);
     }
+
+    /**
+     * Get the team ID for Spatie Permission team isolation
+     */
+    public function getTeamIdAttribute(): int
+    {
+        return $this->company_id;
+    }
+
+
 }

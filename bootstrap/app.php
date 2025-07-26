@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TenantIsolation::class,
         ]);
+        
+        $middleware->alias([
+            'global_admin' => \App\Http\Middleware\GlobalAdminMiddleware::class,
+            'check_admin_redirect' => \App\Http\Middleware\CheckAdminRedirect::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

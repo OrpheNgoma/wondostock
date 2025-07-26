@@ -38,9 +38,15 @@ class AppServiceProvider extends ServiceProvider
             return $user->company->hasFeature('multi_store');
         });
 
-        // Feature: Rôles & Permissions (disponible pour le plan PRO)
+        // Feature: Rôles & Permissions (disponible pour le plan PRO + propriétaires d'entreprise)
         Gate::define('feature-roles-permissions', function (User $user) {
-            return $user->company->hasFeature('roles_permissions');
+            // Les propriétaires d'entreprise ont toujours accès aux rôles et permissions
+            $isCompanyOwner = $user->company && $user->company->owner_id === $user->id;
+            
+            // Ou si le plan inclut cette fonctionnalité
+            $hasFeatureInPlan = $user->company && $user->company->hasFeature('roles_permissions');
+            
+            return $isCompanyOwner || $hasFeatureInPlan;
         });
 
         // Feature: Reporting Avancé (disponible pour le plan PRO)

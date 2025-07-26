@@ -24,9 +24,14 @@ class TenantIsolation
 
         $user = Auth::user();
 
-        // Exclure les admins globaux de la vérification company_id
-        if ($user->is_global_admin) {
+        // Exclure complètement les routes d'administration globale
+        if ($request->is('admin/*')) {
             return $next($request);
+        }
+
+        // Pour les admins globaux qui accèdent aux routes normales (sauf dashboard qui a son propre middleware)
+        if ($user->is_global_admin && !$request->is('admin/*') && !$request->is('dashboard')) {
+            return redirect()->route('admin.dashboard');
         }
 
         // Vérifier si l'utilisateur a une company_id
@@ -48,9 +53,7 @@ class TenantIsolation
         }
 
         // Définir la company dans le contexte global pour Spatie Permission
-        if (method_exists('\Spatie\Permission\PermissionServiceProvider', 'setDefaultTeamId')) {
-            app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($user->company_id);
-        }
+        setPermissionsTeamId($user->company_id);
 
         // Ajouter la company_id au contexte de la requête
         $request->attributes->set('company_id', $user->company_id);
