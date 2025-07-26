@@ -11,13 +11,28 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
-                <button wire:click="create" type="button" 
-                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors duration-200">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Inviter un Utilisateur
-                </button>
+                @if($canCreateUser)
+                    <button wire:click="create" type="button" 
+                            class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors duration-200">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Inviter un Utilisateur
+                    </button>
+                @else
+                    <div class="text-center">
+                        <button disabled type="button" 
+                                class="inline-flex items-center gap-2 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Limite atteinte
+                        </button>
+                        <p class="text-xs text-gray-500 mt-1">
+                            {{ $currentUserCount }}/{{ $userLimit === PHP_INT_MAX ? '∞' : $userLimit }} utilisateurs
+                        </p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -44,7 +59,18 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900">Équipe</h3>
-                        <p class="text-xs text-gray-600 mt-1">{{ $users->total() }} utilisateur(s) au total</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            {{ $users->total() }} utilisateur(s) au total 
+                            @if(!$canCreateUser)
+                                <span class="text-orange-600 font-medium">
+                                    ({{ $currentUserCount }}/{{ $userLimit === PHP_INT_MAX ? '∞' : $userLimit }} - Limite atteinte)
+                                </span>
+                            @else
+                                <span class="text-green-600">
+                                    ({{ $currentUserCount }}/{{ $userLimit === PHP_INT_MAX ? '∞' : $userLimit }})
+                                </span>
+                            @endif
+                        </p>
                     </div>
                 </div>
             </div>

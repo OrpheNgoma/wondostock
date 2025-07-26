@@ -135,15 +135,15 @@
             {{-- Contenu des onglets --}}
             <div class="space-y-6">
                 @if($selectedTab === 'overview')
-                    @include('livewire.store-activity.partials.overview')
+                    @include('livewire.saas.store-activity.partials.overview')
                 @elseif($selectedTab === 'stock')
-                    @include('livewire.store-activity.partials.stock')
+                    @include('livewire.saas.store-activity.partials.stock')
                 @elseif($selectedTab === 'sales')
-                    @include('livewire.store-activity.partials.sales')
+                    @include('livewire.saas.store-activity.partials.sales')
                 @elseif($selectedTab === 'transfers')
-                    @include('livewire.store-activity.partials.transfers')
+                    @include('livewire.saas.store-activity.partials.transfers')
                 @elseif($selectedTab === 'analytics')
-                    @include('livewire.store-activity.partials.analytics')
+                    @include('livewire.saas.store-activity.partials.analytics')
                 @endif
             </div>
         </div>

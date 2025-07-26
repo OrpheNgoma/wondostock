@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'WondoStock' }}</title>
+    <title>@yield('title', 'WondoStock')</title>
     @vite('resources/css/app.css')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -315,6 +315,17 @@
                                     </a>
                                 </li>
                                 @endcan
+                                @can('feature-roles-permissions')
+                                <li>
+                                    <a href="{{ route('settings.roles.index') }}" 
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('settings.roles.*') ? 'bg-violet-50 text-violet-700 border-r-2 border-violet-600' : 'text-gray-700 hover:text-violet-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3.75 5.25a8.25 8.25 0 01-16.5 0 8.25 8.25 0 0116.5 0z"/>
+                                        </svg>
+                                        Rôles & Permissions
+                                    </a>
+                                </li>
+                                @endcan
                                 @can('manage_subscriptions')
                                 <li>
                                     <a href="{{ route('settings.subscription.index') }}" 
@@ -326,6 +337,24 @@
                                     </a>
                                 </li>
                                 @endcan
+                            </ul>
+                        </li>
+                        @endif
+
+                        <!-- Administration Globale -->
+                        @if(auth()->user()->is_global_admin)
+                        <li>
+                            <div class="text-xs font-medium leading-6 text-gray-500 uppercase tracking-wide mb-3">Administration</div>
+                            <ul role="list" class="space-y-1">
+                                <li>
+                                    <a href="{{ route('admin.companies.index') }}" 
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('admin.companies.*') ? 'bg-red-50 text-red-700 border-r-2 border-red-600' : 'text-gray-700 hover:text-red-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m2.25-18v18m13.5-18v18M6.75 9.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.75m-.75 3h.75"/>
+                                        </svg>
+                                        Gestion Entreprises
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         @endif
@@ -530,6 +559,18 @@
                                     </a>
                                 </li>
                                 @endcan
+                                @can('feature-roles-permissions')
+                                <li>
+                                    <a href="{{ route('settings.roles.index') }}" 
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('settings.roles.*') ? 'bg-violet-50 text-violet-700' : 'text-gray-700 hover:text-violet-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3.75 5.25a8.25 8.25 0 01-16.5 0 8.25 8.25 0 0116.5 0z"/>
+                                        </svg>
+                                        Rôles & Permissions
+                                    </a>
+                                </li>
+                                @endcan
                                 @can('manage_subscriptions')
                                 <li>
                                     <a href="{{ route('settings.subscription.index') }}" 
@@ -731,7 +772,7 @@
             <!-- Main content -->
             <main class="py-6 px-4 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-7xl">
-                    {{ $slot }}
+                    @yield('content')
                 </div>
             </main>
         </div>
