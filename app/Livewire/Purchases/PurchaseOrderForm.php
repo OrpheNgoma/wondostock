@@ -14,7 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Bon de Commande Fournisseur - WondoStock')]
 class PurchaseOrderForm extends Component
 {
@@ -398,7 +398,7 @@ class PurchaseOrderForm extends Component
 
     public function render()
     {
-        return view('livewire.purchases.purchase-order-form', [
+        return view('livewire.saas.purchases.purchase-order-form', [
             'stores' => $this->stores,
             'priorities' => $this->priorities,
         ]);

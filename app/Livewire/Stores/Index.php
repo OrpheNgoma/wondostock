@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Gérer les Magasins - KaziFlow')]
 class Index extends Component
 {
@@ -172,7 +172,7 @@ class Index extends Component
         $regularStores = Auth::user()->company->stores()->regularStores()->orderBy('name')->get();
         $countryBranches = Auth::user()->company->stores()->countryBranches()->orderBy('country_name')->get();
 
-        return view('livewire.stores.index', [
+        return view('livewire.saas.stores.index', [
             'regularStores' => $regularStores,
             'countryBranches' => $countryBranches,
         ]);

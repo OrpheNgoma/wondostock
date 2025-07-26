@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Gérer les Clients - KaziFlow')]
 class Index extends Component
 {
@@ -111,7 +111,7 @@ class Index extends Component
             ->latest()
             ->paginate(10);
 
-        return view('livewire.customers.index', [
+        return view('livewire.saas.customers.index', [
             'customers' => $customers,
         ]);
     }

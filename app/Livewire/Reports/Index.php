@@ -10,7 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Rapports - WondoStock')]
 class Index extends Component
 {
@@ -139,6 +139,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.reports.index');
+        return view('livewire.saas.reports.index');
     }
 }

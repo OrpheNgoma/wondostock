@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Bons de Commande - WondoStock')]
 class Index extends Component
 {
@@ -30,6 +30,6 @@ class Index extends Component
             ->latest('document_date')
             ->paginate(15);
 
-        return view('livewire.purchases.index', ['purchaseOrders' => $purchaseOrders]);
+        return view('livewire.saas.purchases.index', ['purchaseOrders' => $purchaseOrders]);
     }
 }

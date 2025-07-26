@@ -14,7 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Nouveau Document - KaziFlow')]
 class DocumentForm extends Component
 {
@@ -399,7 +399,7 @@ class DocumentForm extends Component
     {
         $stores = Auth::user()->company->stores;
 
-        return view('livewire.documents.document-form', [
+        return view('livewire.saas.documents.document-form', [
             'stores' => $stores,
             'documentTypes' => DocumentType::cases(), // On passe les types de documents à la vue
         ]);

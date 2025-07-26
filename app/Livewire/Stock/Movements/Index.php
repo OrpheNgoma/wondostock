@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Mouvements de Stock - KaziFlow')]
 class Index extends Component
 {
@@ -68,7 +68,7 @@ class Index extends Component
         $stores = Store::where('company_id', $companyId)->get();
         $movementTypes = StockMovementType::cases();
 
-        return view('livewire.stock.movements.index', [
+        return view('livewire.saas.stock.movements.index', [
             'movements' => $movements,
             'stores' => $stores,
             'movementTypes' => $movementTypes,

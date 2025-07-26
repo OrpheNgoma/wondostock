@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Détail Commande Fournisseur - WondoStock')]
 class Show extends Component
 {
@@ -70,6 +70,6 @@ class Show extends Component
 
     public function render()
     {
-        return view('livewire.purchases.show');
+        return view('livewire.saas.purchases.show');
     }
 }

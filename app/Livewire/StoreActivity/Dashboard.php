@@ -15,7 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Activité Magasin - WondoStock')]
 class Dashboard extends Component
 {
@@ -93,7 +93,7 @@ class Dashboard extends Component
     {
         $userCompany = $this->getSecureUserAndCompany();
         if (!$userCompany['valid']) {
-            return view('livewire.store-activity.dashboard', []);
+            return view('livewire.saas.store-activity.dashboard', []);
         }
 
         $user = $userCompany['user'];
@@ -101,7 +101,7 @@ class Dashboard extends Component
 
         // Si aucun magasin sélectionné, afficher la liste
         if (!$this->selectedStoreId) {
-            return view('livewire.store-activity.dashboard', [
+            return view('livewire.saas.store-activity.dashboard', [
                 'stores' => Store::where('company_id', $company->id)->get(),
                 'selectedStore' => null,
                 'noStoreSelected' => true,
@@ -132,7 +132,7 @@ class Dashboard extends Component
             default => []
         };
 
-        return view('livewire.store-activity.dashboard', [
+        return view('livewire.saas.store-activity.dashboard', [
             'stores' => Store::where('company_id', $company->id)->get(),
             'selectedStore' => $selectedStore,
             'data' => $data,

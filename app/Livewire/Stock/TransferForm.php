@@ -14,7 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Transfert de Stock - WondoStock')]
 class TransferForm extends Component
 {
@@ -366,7 +366,7 @@ class TransferForm extends Component
 
     public function render()
     {
-        return view('livewire.stock.transfer-form', [
+        return view('livewire.saas.stock.transfer-form', [
             'stores' => $this->stores,
             'transferReasons' => $this->transferReasons,
         ]);

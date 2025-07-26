@@ -14,7 +14,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Détail du Document - KaziFlow')]
 class Show extends Component
 {
@@ -280,6 +280,6 @@ class Show extends Component
 
     public function render()
     {
-        return view('livewire.documents.show');
+        return view('livewire.saas.documents.show');
     }
 }

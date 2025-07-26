@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Numérotation - WondoStock')]
 class Numbering extends Component
 {
@@ -40,6 +40,6 @@ class Numbering extends Component
 
     public function render()
     {
-        return view('livewire.settings.numbering');
+        return view('livewire.saas.settings.numbering');
     }
 }

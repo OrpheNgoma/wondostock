@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Liste des Produits - WondoStock')]
 class Index extends Component
 {
@@ -76,7 +76,7 @@ class Index extends Component
 
         // Vérification de sécurité
         if (! $user || ! $user->company_id) {
-            return view('livewire.products.index', ['products' => collect()->paginate(10)]);
+            return view('livewire.saas.products.index', ['products' => collect()->paginate(10)]);
         }
 
         try {
@@ -91,13 +91,13 @@ class Index extends Component
                 ->latest()
                 ->paginate(10);
 
-            return view('livewire.products.index', [
+            return view('livewire.saas.products.index', [
                 'products' => $products,
             ]);
         } catch (\Exception $e) {
             \Log::error('Erreur lors du chargement des produits: '.$e->getMessage());
 
-            return view('livewire.products.index', ['products' => collect()->paginate(10)]);
+            return view('livewire.saas.products.index', ['products' => collect()->paginate(10)]);
         }
     }
 }

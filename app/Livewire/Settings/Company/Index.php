@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Paramètres de l\'Entreprise - KaziFlow')]
 class Index extends Component
 {
@@ -108,6 +108,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.settings.company.index');
+        return view('livewire.saas.settings.company.index');
     }
 }

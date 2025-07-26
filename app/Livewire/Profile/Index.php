@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Mon Profil - WondoStock')]
 class Index extends Component
 {
@@ -196,6 +196,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.profile.index');
+        return view('livewire.saas.profile.index');
     }
 }

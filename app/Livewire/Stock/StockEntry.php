@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Entrée de Stock - KaziFlow')]
 class StockEntry extends Component
 {
@@ -270,7 +270,7 @@ class StockEntry extends Component
     {
         $stores = Auth::user()->company->stores;
 
-        return view('livewire.stock.stock-entry', [
+        return view('livewire.saas.stock.stock-entry', [
             'stores' => $stores,
         ]);
     }

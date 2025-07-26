@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Tableau de Bord - KaziFlow')]
 class Dashboard extends Component
 {
@@ -29,7 +29,7 @@ class Dashboard extends Component
 
         // Vérification de sécurité
         if (! $userCompany['valid']) {
-            return view('livewire.dashboard', [
+            return view('livewire.saas.dashboard', [
                 'totalRevenue' => 0, 'totalSales' => 0, 'estimatedProfit' => 0,
                 'newCustomersCount' => 0, 'lineChartLabels' => [], 'lineChartValues' => [],
                 'donutChartLabels' => [], 'donutChartValues' => [], 'topProducts' => collect(),
@@ -54,6 +54,6 @@ class Dashboard extends Component
             'donutValues' => $kpis['donutChartValues'],
         ]);
 
-        return view('livewire.dashboard', $kpis);
+        return view('livewire.saas.dashboard', $kpis);
     }
 }

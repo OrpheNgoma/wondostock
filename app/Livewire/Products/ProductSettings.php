@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Paramètres des Produits - WondoStock')]
 class ProductSettings extends Component
 {
@@ -308,7 +308,7 @@ class ProductSettings extends Component
         $taxes = $this->getFilteredTaxes();
         $categoryOptions = Category::where('company_id', $companyId)->pluck('name', 'id');
 
-        return view('livewire.products.product-settings', [
+        return view('livewire.saas.products.product-settings', [
             'categories' => $categories,
             'taxes' => $taxes,
             'categoryOptions' => $categoryOptions,

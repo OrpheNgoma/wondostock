@@ -11,7 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Créer un Avoir - WondoStock')]
 class CreditNoteForm extends Component
 {
@@ -110,6 +110,6 @@ class CreditNoteForm extends Component
 
     public function render()
     {
-        return view('livewire.documents.credit-note-form');
+        return view('livewire.saas.documents.credit-note-form');
     }
 }

@@ -27,7 +27,9 @@
       "Bash(composer:*)",
       "Bash(mkdir:*)",
       "Bash(php:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }

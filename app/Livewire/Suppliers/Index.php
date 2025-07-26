@@ -9,7 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Fournisseurs - WondoStock')]
 class Index extends Component
 {
@@ -130,7 +130,7 @@ class Index extends Component
             ->latest()
             ->paginate(10);
 
-        return view('livewire.suppliers.index', [
+        return view('livewire.saas.suppliers.index', [
             'suppliers' => $suppliers,
         ]);
     }

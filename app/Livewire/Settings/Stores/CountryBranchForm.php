@@ -10,7 +10,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Gestion des Branches Pays - WondoStock')]
 class CountryBranchForm extends Component
 {
@@ -209,6 +209,6 @@ class CountryBranchForm extends Component
 
     public function render()
     {
-        return view('livewire.settings.stores.country-branch-form');
+        return view('livewire.saas.settings.stores.country-branch-form');
     }
 }

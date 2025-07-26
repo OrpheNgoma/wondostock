@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Imprimer des Étiquettes - WondoStock')]
 class PrintLabels extends Component
 {
@@ -95,6 +95,6 @@ class PrintLabels extends Component
 
     public function render()
     {
-        return view('livewire.products.print-labels');
+        return view('livewire.saas.products.print-labels');
     }
 }

@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Documents de Vente - KaziFlow')]
 class Index extends Component
 {
@@ -77,7 +77,7 @@ class Index extends Component
 
         // Vérification de sécurité
         if (! $user || ! $user->company_id) {
-            return view('livewire.documents.index', [
+            return view('livewire.saas.documents.index', [
                 'documents' => collect()->paginate(15),
                 'documentTypes' => [],
                 'documentStatuses' => DocumentStatus::cases(),
@@ -120,7 +120,7 @@ class Index extends Component
                 ->latest('document_date')
                 ->paginate(15);
 
-            return view('livewire.documents.index', [
+            return view('livewire.saas.documents.index', [
                 'documents' => $documents,
                 'documentTypes' => $salesDocumentTypes,
                 'documentStatuses' => DocumentStatus::cases(),
@@ -128,7 +128,7 @@ class Index extends Component
         } catch (\Exception $e) {
             \Log::error('Erreur lors du chargement des documents: '.$e->getMessage());
 
-            return view('livewire.documents.index', [
+            return view('livewire.saas.documents.index', [
                 'documents' => collect()->paginate(15),
                 'documentTypes' => $salesDocumentTypes ?? [],
                 'documentStatuses' => DocumentStatus::cases(),

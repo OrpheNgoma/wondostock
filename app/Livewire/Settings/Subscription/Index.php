@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Mon Abonnement - WondoStock')]
 class Index extends Component
 {
@@ -159,6 +159,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.settings.subscription.index');
+        return view('livewire.saas.settings.subscription.index');
     }
 }

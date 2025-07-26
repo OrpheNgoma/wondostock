@@ -12,7 +12,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Utilisateurs - KaziFlow')]
 class Index extends Component
 {
@@ -42,7 +42,10 @@ class Index extends Component
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.($this->editingUser?->id ?? 'NULL'),
             'password' => $this->editingUser?->exists ? 'nullable|min:8' : 'required|min:8',
-            'role_id' => 'required|exists:roles,id',
+            'role_id' => [
+                'required',
+                'exists:roles,id,company_id,'.Auth::user()->company_id,
+            ],
             'store_id' => 'nullable|exists:stores,id',
         ];
     }
@@ -54,6 +57,12 @@ class Index extends Component
 
     public function create()
     {
+        if (! $this->canCreateUser()) {
+            $this->dispatch('notify', message: 'Limite d\'utilisateurs atteinte pour votre forfait. Veuillez upgrader votre plan.', type: 'error');
+
+            return;
+        }
+
         $this->resetForm();
         $this->showForm = true;
     }
@@ -73,6 +82,13 @@ class Index extends Component
     {
         $this->validate();
 
+        // Vérifier la limite avant de créer un nouvel utilisateur
+        if (! $this->editingUser->exists && ! $this->canCreateUser()) {
+            $this->dispatch('notify', message: 'Limite d\'utilisateurs atteinte pour votre forfait. Veuillez upgrader votre plan.', type: 'error');
+
+            return;
+        }
+
         $data = [
             'name' => $this->name,
             'email' => $this->email,
@@ -90,8 +106,24 @@ class Index extends Component
             $this->editingUser = User::create($data);
         }
 
-        $role = Role::findById($this->role_id);
-        $this->editingUser->syncRoles([$role->name]);
+        $role = Role::where('id', $this->role_id)
+            ->where('company_id', Auth::user()->company_id)
+            ->first();
+
+        if (! $role) {
+            session()->flash('error', 'Le rôle sélectionné n\'existe pas ou n\'appartient pas à votre entreprise.');
+
+            return;
+        }
+
+        // S'assurer que l'utilisateur a le bon company_id avant d'assigner le rôle
+        $this->editingUser->company_id = Auth::user()->company_id;
+        $this->editingUser->save();
+
+        // Assigner le rôle avec le contexte de l'équipe (company_id)
+        // La configuration utilise maintenant company_id comme team_foreign_key
+        setPermissionsTeamId(Auth::user()->company_id);
+        $this->editingUser->syncRoles([$role]);
 
         $this->dispatch('notify', message: 'Utilisateur sauvegardé.');
         $this->closeForm();
@@ -121,6 +153,19 @@ class Index extends Component
         $this->resetErrorBag();
     }
 
+    private function canCreateUser(): bool
+    {
+        $company = Auth::user()->company;
+        if (! $company || ! $company->subscription || ! $company->subscription->plan) {
+            return false;
+        }
+
+        $plan = $company->subscription->plan;
+        $currentUserCount = User::where('company_id', $company->id)->count();
+
+        return $plan->canHaveUsers($currentUserCount + 1);
+    }
+
     public function render()
     {
         $companyId = Auth::user()->company_id;
@@ -129,13 +174,23 @@ class Index extends Component
             ->with(['roles', 'store'])
             ->paginate(10);
 
-        $roles = Role::where('name', '!=', 'Super-Administrateur')->pluck('name', 'id');
+        $roles = Role::where('company_id', $companyId)
+            ->where('name', '!=', 'Super-Administrateur')
+            ->pluck('name', 'id');
         $stores = Store::where('company_id', $companyId)->pluck('name', 'id');
 
-        return view('livewire.settings.users.index', [
+        $company = Auth::user()->company;
+        $canCreateUser = $this->canCreateUser();
+        $userLimit = $company->subscription?->plan?->getUserLimit() ?? 0;
+        $currentUserCount = User::where('company_id', $companyId)->count();
+
+        return view('livewire.saas.settings.users.index', [
             'users' => $users,
             'roles' => $roles,
             'stores' => $stores,
+            'canCreateUser' => $canCreateUser,
+            'userLimit' => $userLimit,
+            'currentUserCount' => $currentUserCount,
         ]);
     }
 }

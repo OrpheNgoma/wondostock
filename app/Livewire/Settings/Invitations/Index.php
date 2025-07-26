@@ -12,7 +12,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 #[Title('Gestion des Invitations - WondoStock')]
 class Index extends Component
 {
@@ -340,7 +340,7 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.settings.invitations.index', [
+        return view('livewire.saas.settings.invitations.index', [
             'invitations' => $this->invitations,
             'roles' => $this->roles,
             'stores' => $this->stores,

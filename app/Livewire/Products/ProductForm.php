@@ -13,7 +13,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.saas')]
 class ProductForm extends Component
 {
     use WithFileUploads;
@@ -278,7 +278,7 @@ class ProductForm extends Component
         $taxes = Tax::where('company_id', $companyId)->get();
         $units = Unit::all(); // Les unités sont globales
 
-        return view('livewire.products.product-form', [
+        return view('livewire.saas.products.product-form', [
             'categories' => $categories, 'taxes' => $taxes, 'units' => $units,
         ]);
     }
