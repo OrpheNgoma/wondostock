@@ -4,7 +4,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">
-                    Documents de Vente
+                    Nouvelles Vente
                 </h1>
                 <p class="mt-1 text-sm text-gray-600">
                     Suivez vos devis, factures, et bons de livraison
@@ -17,7 +17,7 @@
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    Nouveau Document
+                    Nouvelle Vente
                 </a>
             </div>
         </div>
@@ -105,7 +105,7 @@
             <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-900">Liste des Documents</h3>
+                        <h3 class="text-sm font-semibold text-gray-900">Liste des Ventes</h3>
                         <p class="text-xs text-gray-600 mt-1">{{ $documents->total() }} document(s) au total</p>
                     </div>
                     <div class="flex items-center gap-2 text-xs text-gray-500">
@@ -253,7 +253,7 @@
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                             </svg>
-                                            Nouveau Document
+                                            Nouvelle Vente
                                         </a>
                                     </div>
                                 </td>

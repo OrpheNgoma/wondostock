@@ -1,18 +1,21 @@
 <div
-    x-data="{ show: @entangle('show') }"
-    x-init="$wire.on('notification-shown', () => { 
-        const timeout = $wire.type === 'error' ? 8000 : 5000;
-        setTimeout(() => { show = false }, timeout) 
-    })"
-    x-show="show"
+    x-data="{
+        init() {
+            $wire.on('notification-shown', () => { 
+                const timeout = $wire.type === 'error' ? 8000 : 5000;
+                setTimeout(() => { 
+                    $wire.show = false;
+                }, timeout);
+            });
+        }
+    }"
+    :class="$wire.show ? 'pointer-events-auto fixed top-5 right-5 z-50 w-full max-w-sm' : 'pointer-events-none fixed top-5 right-5 z-50 w-full max-w-sm opacity-0'"
     x-transition:enter="transform ease-out duration-300 transition"
     x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
     x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
     x-transition:leave="transition ease-in duration-100"
     x-transition:leave-start="opacity-100"
     x-transition:leave-end="opacity-0"
-    class="pointer-events-auto fixed top-5 right-5 z-50 w-full max-w-sm"
-    x-cloak
 >
     <div class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5"
          :class="{
@@ -75,7 +78,7 @@
                 </div>
                 
                 <div class="ml-4 flex flex-shrink-0">
-                    <button @click="show = false" type="button" 
+                    <button @click="$wire.show = false" type="button" 
                             class="inline-flex rounded-full p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
                             :class="{
                                 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-200 focus:ring-emerald-500': $wire.type === 'success',
