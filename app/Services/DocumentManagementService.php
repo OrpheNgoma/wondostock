@@ -59,7 +59,7 @@ class DocumentManagementService
     {
         return DB::transaction(function () use ($document, $newStatus) {
             $oldStatus = $document->status;
-            
+
             // Update status
             $document->update(['status' => $newStatus]);
 
@@ -82,7 +82,7 @@ class DocumentManagementService
     {
         foreach ($items as $itemData) {
             $product = Product::findOrFail($itemData['product_id']);
-            
+
             // Calculate totals
             $unitPrice = $itemData['unit_price'] ?? $product->selling_price;
             $quantity = $itemData['quantity'];
@@ -106,14 +106,14 @@ class DocumentManagementService
     {
         return DB::transaction(function () use ($item, $data) {
             $document = $item->document;
-            
+
             // Update the item
             $item->update($data);
-            
+
             // Recalculate item total if price or quantity changed
             if (isset($data['unit_price']) || isset($data['quantity'])) {
                 $item->update([
-                    'total_amount' => $item->unit_price * $item->quantity
+                    'total_amount' => $item->unit_price * $item->quantity,
                 ]);
             }
 
@@ -134,9 +134,9 @@ class DocumentManagementService
     {
         DB::transaction(function () use ($item) {
             $document = $item->document;
-            
+
             $item->delete();
-            
+
             // Recalculate document totals
             $this->recalculateDocumentTotals($document);
 
@@ -154,7 +154,7 @@ class DocumentManagementService
             // Create new document based on source
             $newDocumentData = $sourceDocument->toArray();
             unset($newDocumentData['id'], $newDocumentData['created_at'], $newDocumentData['updated_at']);
-            
+
             $newDocumentData['type'] = $targetType;
             $newDocumentData['status'] = DocumentStatus::Draft;
             $newDocumentData['document_number'] = $this->documentNumberService->generate(
@@ -206,9 +206,9 @@ class DocumentManagementService
             SUM(total_amount) as total_amount,
             AVG(total_amount) as average_amount
         ')
-        ->groupBy('type', 'status')
-        ->get()
-        ->groupBy('type');
+            ->groupBy('type', 'status')
+            ->get()
+            ->groupBy('type');
 
         $result = [];
         foreach (DocumentType::cases() as $type) {
@@ -241,7 +241,7 @@ class DocumentManagementService
 
     private function updateStockForDocument(Document $document): void
     {
-        if (!$document->store_id) {
+        if (! $document->store_id) {
             return; // No store specified, can't update stock
         }
 
@@ -273,7 +273,7 @@ class DocumentManagementService
         if ($newStatus === DocumentStatus::Validated && $oldStatus !== DocumentStatus::Validated) {
             $this->updateStockForDocument($document);
         }
-        
+
         // If invoice is being cancelled/reverted from validated
         if ($oldStatus === DocumentStatus::Validated && $newStatus !== DocumentStatus::Validated) {
             $this->revertStockForDocument($document);
@@ -282,7 +282,7 @@ class DocumentManagementService
 
     private function revertStockForDocument(Document $document): void
     {
-        if (!$document->store_id) {
+        if (! $document->store_id) {
             return;
         }
 

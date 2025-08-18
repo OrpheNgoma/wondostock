@@ -36,15 +36,15 @@ class UserInvitationNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject("Invitation à rejoindre {$companyName} sur WondoStock")
-            ->greeting("Bonjour !")
+            ->greeting('Bonjour !')
             ->line("{$inviterName} vous invite à rejoindre l'équipe de **{$companyName}** sur WondoStock.")
             ->line("**Votre rôle :** {$roleName}")
             ->when($storeName, function ($mail) use ($storeName) {
                 return $mail->line("**Magasin assigné :** {$storeName}");
             })
             ->when($this->invitation->message, function ($mail) {
-                return $mail->line("**Message personnel :**")
-                           ->line("_{$this->invitation->message}_");
+                return $mail->line('**Message personnel :**')
+                    ->line("_{$this->invitation->message}_");
             })
             ->line("Cette invitation expire le **{$this->invitation->expires_at->format('d/m/Y à H:i')}**.")
             ->action('Accepter l\'invitation', $this->invitation->getInvitationUrl())

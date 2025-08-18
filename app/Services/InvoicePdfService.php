@@ -20,7 +20,7 @@ class InvoicePdfService
         $invoice->load(['company', 'subscription', 'subscription.plan', 'paymentNotifications']);
 
         $pdf = PDF::loadView('pdfs.invoice', compact('invoice'));
-        
+
         // Configuration du PDF
         $pdf->setPaper('A4', 'portrait');
         $pdf->setOptions([
@@ -41,12 +41,12 @@ class InvoicePdfService
     public function downloadPdf(Invoice $invoice): Response
     {
         $pdf = $this->generatePdf($invoice);
-        
+
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, $this->getFileName($invoice), [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $this->getFileName($invoice) . '"',
+            'Content-Disposition' => 'attachment; filename="'.$this->getFileName($invoice).'"',
         ]);
     }
 
@@ -56,32 +56,32 @@ class InvoicePdfService
     public function streamPdf(Invoice $invoice): Response
     {
         $pdf = $this->generatePdf($invoice);
-        
+
         return response($pdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $this->getFileName($invoice) . '"',
+            'Content-Disposition' => 'inline; filename="'.$this->getFileName($invoice).'"',
         ]);
     }
 
     /**
      * Sauvegarder le PDF sur le système de fichiers.
      */
-    public function savePdf(Invoice $invoice, string $path = null): string
+    public function savePdf(Invoice $invoice, ?string $path = null): string
     {
         $pdf = $this->generatePdf($invoice);
-        
-        if (!$path) {
-            $path = storage_path('app/invoices/' . $this->getFileName($invoice));
+
+        if (! $path) {
+            $path = storage_path('app/invoices/'.$this->getFileName($invoice));
         }
 
         // Créer le dossier si nécessaire
         $directory = dirname($path);
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
         $pdf->save($path);
-        
+
         return $path;
     }
 
@@ -99,7 +99,7 @@ class InvoicePdfService
     public function getHtmlPreview(Invoice $invoice): string
     {
         $invoice->load(['company', 'subscription', 'subscription.plan', 'paymentNotifications']);
-        
+
         return view('pdfs.invoice', compact('invoice'))->render();
     }
 
@@ -110,23 +110,23 @@ class InvoicePdfService
     {
         $errors = [];
 
-        if (!$invoice->company) {
+        if (! $invoice->company) {
             $errors[] = 'La facture doit être associée à une entreprise';
         }
 
-        if (!$invoice->invoice_number) {
+        if (! $invoice->invoice_number) {
             $errors[] = 'La facture doit avoir un numéro';
         }
 
-        if (!$invoice->amount || $invoice->amount <= 0) {
+        if (! $invoice->amount || $invoice->amount <= 0) {
             $errors[] = 'La facture doit avoir un montant valide';
         }
 
-        if (!$invoice->issue_date) {
+        if (! $invoice->issue_date) {
             $errors[] = 'La facture doit avoir une date d\'émission';
         }
 
-        if (!$invoice->due_date) {
+        if (! $invoice->due_date) {
             $errors[] = 'La facture doit avoir une date d\'échéance';
         }
 
@@ -143,7 +143,7 @@ class InvoicePdfService
         foreach ($invoices as $invoice) {
             try {
                 $errors = $this->validateInvoice($invoice);
-                
+
                 if (empty($errors)) {
                     $path = $this->savePdf($invoice);
                     $results[] = [

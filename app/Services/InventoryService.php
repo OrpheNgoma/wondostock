@@ -18,9 +18,9 @@ class InventoryService
      * Add stock to a product in a specific store
      */
     public function addStock(
-        Product $product, 
-        Store $store, 
-        int $quantity, 
+        Product $product,
+        Store $store,
+        int $quantity,
         ?string $reason = null,
         ?float $unitCost = null
     ): StockMovement {
@@ -51,9 +51,9 @@ class InventoryService
      * Remove stock from a product in a specific store
      */
     public function removeStock(
-        Product $product, 
-        Store $store, 
-        int $quantity, 
+        Product $product,
+        Store $store,
+        int $quantity,
         ?string $reason = null
     ): StockMovement {
         return DB::transaction(function () use ($product, $store, $quantity, $reason) {
@@ -148,6 +148,7 @@ class InventoryService
     {
         // Check if there's a pivot record
         $pivot = $product->stores()->where('store_id', $store->id)->first();
+
         return $pivot ? $pivot->pivot->quantity : 0;
     }
 
@@ -174,8 +175,8 @@ class InventoryService
      * Get stock movement history for a product
      */
     public function getProductStockHistory(
-        Product $product, 
-        ?Store $store = null, 
+        Product $product,
+        ?Store $store = null,
         ?\Carbon\Carbon $startDate = null,
         ?\Carbon\Carbon $endDate = null
     ): \Illuminate\Support\Collection {
@@ -232,13 +233,13 @@ class InventoryService
     {
         $product->stores()->syncWithoutDetaching([
             $store->id => [
-                'quantity' => DB::raw("GREATEST(0, COALESCE(quantity, 0) + {$quantityChange})")
-            ]
+                'quantity' => DB::raw("GREATEST(0, COALESCE(quantity, 0) + {$quantityChange})"),
+            ],
         ]);
     }
 
     private function generateMovementReference(): string
     {
-        return 'SM-' . now()->format('YmdHis') . '-' . strtoupper(substr(uniqid(), -4));
+        return 'SM-'.now()->format('YmdHis').'-'.strtoupper(substr(uniqid(), -4));
     }
 }

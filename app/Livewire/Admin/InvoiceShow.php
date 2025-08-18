@@ -29,7 +29,7 @@ class InvoiceShow extends Component
             $this->invoice->refresh();
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la mise à jour : '.$e->getMessage());
         }
     }
 
@@ -45,7 +45,7 @@ class InvoiceShow extends Component
             $this->invoice->refresh();
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la mise à jour : '.$e->getMessage());
         }
     }
 
@@ -56,7 +56,7 @@ class InvoiceShow extends Component
             session()->flash('success', 'Facture envoyée par email !');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de l\'envoi : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de l\'envoi : '.$e->getMessage());
         }
     }
 
@@ -64,16 +64,17 @@ class InvoiceShow extends Component
     {
         try {
             $errors = $pdfService->validateInvoice($this->invoice);
-            
-            if (!empty($errors)) {
-                session()->flash('error', 'Impossible de générer le PDF : ' . implode(', ', $errors));
+
+            if (! empty($errors)) {
+                session()->flash('error', 'Impossible de générer le PDF : '.implode(', ', $errors));
+
                 return;
             }
 
             return $pdfService->downloadPdf($this->invoice);
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la génération du PDF : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la génération du PDF : '.$e->getMessage());
         }
     }
 
@@ -81,16 +82,17 @@ class InvoiceShow extends Component
     {
         try {
             $errors = $pdfService->validateInvoice($this->invoice);
-            
-            if (!empty($errors)) {
-                session()->flash('error', 'Impossible de générer le PDF : ' . implode(', ', $errors));
+
+            if (! empty($errors)) {
+                session()->flash('error', 'Impossible de générer le PDF : '.implode(', ', $errors));
+
                 return;
             }
 
             return redirect()->route('admin.invoices.pdf', $this->invoice);
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la génération du PDF : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la génération du PDF : '.$e->getMessage());
         }
     }
 

@@ -12,67 +12,57 @@
 |
 */
 
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Auth\LogoutController;
 // ============================================================================
 // CONTROLLERS - Communs
 // ============================================================================
-use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProductBarcodeController;
 use App\Http\Controllers\Settings\CountryBranchController;
-
+use App\Livewire\Auth\Login;
 // ============================================================================
 // LIVEWIRE - Auth & Communs
 // ============================================================================
-use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
-
+use App\Livewire\Customers\Index as CustomerIndex;
 // ============================================================================
 // LIVEWIRE - Dashboard SaaS (Multi-tenant)
 // ============================================================================
 use App\Livewire\Dashboard;
-use App\Livewire\StoreActivity\Dashboard as StoreActivityDashboard;
-use App\Livewire\Profile\Index as ProfileIndex;
-
-// SaaS - Produits
-use App\Livewire\Products\Index as ProductIndex;
-use App\Livewire\Products\ProductForm;
-use App\Livewire\Products\PrintLabels as ProductLabels;
-use App\Livewire\Products\ProductSettings;
-
-// SaaS - Documents & Ventes
-use App\Livewire\Documents\Index as DocumentIndex;
-use App\Livewire\Documents\DocumentForm;
 use App\Livewire\Documents\CreditNoteForm;
+use App\Livewire\Documents\DocumentForm;
+// SaaS - Produits
+use App\Livewire\Documents\Index as DocumentIndex;
 use App\Livewire\Documents\Show as DocumentShow;
-
-// SaaS - Gestion Relations
-use App\Livewire\Customers\Index as CustomerIndex;
-use App\Livewire\Suppliers\Index as SuppliersIndex;
-
-// SaaS - Stock
-use App\Livewire\Stock\Movements\Index as StockMovementsIndex;
-use App\Livewire\Stock\StockEntry;
-use App\Livewire\Stock\TransferForm;
-
-// SaaS - Achats
+use App\Livewire\Products\Index as ProductIndex;
+use App\Livewire\Products\PrintLabels as ProductLabels;
+// SaaS - Documents & Ventes
+use App\Livewire\Products\ProductForm;
+use App\Livewire\Products\ProductSettings;
+use App\Livewire\Profile\Index as ProfileIndex;
 use App\Livewire\Purchases\Index as PurchasesIndex;
+// SaaS - Gestion Relations
 use App\Livewire\Purchases\PurchaseOrderForm;
 use App\Livewire\Purchases\Show as PurchasesShow;
-
-// SaaS - Magasins & Rapports
-use App\Livewire\Stores\Index as StoreIndex;
+// SaaS - Stock
 use App\Livewire\Reports\Index as ReportsIndex;
-
-// SaaS - Paramètres
 use App\Livewire\Settings\Company\Index as CompanySettingsIndex;
-use App\Livewire\Settings\Users\Index as UsersIndex;
-use App\Livewire\Settings\Roles\Index as RolesIndex;
 use App\Livewire\Settings\Invitations\Index as InvitationsIndex;
+// SaaS - Achats
 use App\Livewire\Settings\Numbering as NumberingSettings;
+use App\Livewire\Settings\Roles\Index as RolesIndex;
 use App\Livewire\Settings\Subscription\Index as SubscriptionIndex;
+// SaaS - Magasins & Rapports
+use App\Livewire\Settings\Users\Index as UsersIndex;
+use App\Livewire\Stock\Movements\Index as StockMovementsIndex;
+// SaaS - Paramètres
+use App\Livewire\Stock\StockEntry;
+use App\Livewire\Stock\TransferForm;
+use App\Livewire\StoreActivity\Dashboard as StoreActivityDashboard;
+use App\Livewire\Stores\Index as StoreIndex;
+use App\Livewire\Suppliers\Index as SuppliersIndex;
+use Illuminate\Support\Facades\Route;
 
 // ============================================================================
 // ROUTES COMMUNES (Langue, Auth, Invitations)

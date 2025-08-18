@@ -18,13 +18,13 @@ class InvalidateDashboardCacheListener implements ShouldQueue
     public function handle($event): void
     {
         $model = $this->extractModelFromEvent($event);
-        
-        if (!$model || !$this->shouldInvalidateCache($model)) {
+
+        if (! $model || ! $this->shouldInvalidateCache($model)) {
             return;
         }
 
         $companyId = $this->getCompanyIdFromModel($model);
-        
+
         if ($companyId) {
             $this->dashboardCacheService->invalidateKPIs($companyId);
         }

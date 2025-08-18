@@ -26,8 +26,8 @@ class Document extends Model
     protected $casts =
         [
             'type' => DocumentType::class, 'status' => DocumentStatus::class, 'document_date' => 'date',
-            'due_date' => 'date', 'sub_total' => 'decimal:3', 'tax_amount' => 'decimal:3',
-            'total_amount' => 'decimal:3', 'paid_amount' => 'decimal:3', 'validated_at' => 'datetime',
+            'due_date' => 'date', 'sub_total' => 'integer', 'tax_amount' => 'integer',
+            'total_amount' => 'integer', 'paid_amount' => 'integer', 'validated_at' => 'datetime',
             'last_reminder_sent_at' => 'datetime',
         ];
 

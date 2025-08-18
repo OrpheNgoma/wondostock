@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/home/orphe-ngoma/.config/herd-lite/bin/php",
+            "args": [
+                "/home/orphe-ngoma/Bureau/APPS/WondoStock/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}

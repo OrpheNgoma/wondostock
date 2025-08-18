@@ -13,12 +13,17 @@ use Livewire\Component;
 class SubscriptionCreate extends Component
 {
     public $company_id = '';
+
     public $plan_id = '';
+
     public $starts_at = '';
+
     public $ends_at = '';
+
     public $status = 'active';
 
     public $companies = [];
+
     public $plans = [];
 
     protected $rules = [
@@ -47,7 +52,7 @@ class SubscriptionCreate extends Component
     {
         $this->companies = Company::orderBy('name')->get();
         $this->plans = Plan::orderBy('name')->get();
-        
+
         // Valeurs par défaut
         $this->starts_at = Carbon::now()->format('Y-m-d');
         $this->ends_at = Carbon::now()->addMonth()->format('Y-m-d');
@@ -93,10 +98,11 @@ class SubscriptionCreate extends Component
             ]);
 
             session()->flash('success', 'Abonnement créé avec succès !');
+
             return $this->redirect(route('admin.subscriptions.index'));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la création de l\'abonnement : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la création de l\'abonnement : '.$e->getMessage());
         }
     }
 

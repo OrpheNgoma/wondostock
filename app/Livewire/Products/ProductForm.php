@@ -67,8 +67,8 @@ class ProductForm extends Component
                     'name' => $this->product->name ?? '',
                     'sku' => $this->product->sku ?? '',
                     'description' => $this->product->description ?? '',
-                    'selling_price' => $this->product->selling_price ?? '',
-                    'purchase_price' => $this->product->purchase_price ?? '',
+                    'selling_price' => (string) ($this->product->selling_price ?? ''),
+                    'purchase_price' => (string) ($this->product->purchase_price ?? ''),
                     'category_id' => $this->product->category_id,
                     'tax_id' => $this->product->tax_id,
                     'unit_id' => $this->product->unit_id,
@@ -82,8 +82,24 @@ class ProductForm extends Component
                     }, array_keys($this->product->attributes), $this->product->attributes);
                 }
 
-                $this->variants = $this->product->variants->map(fn ($variant) => $variant->toArray())->toArray();
-                $this->existingImages = $this->product->getMedia('images');
+                $this->variants = $this->product->variants->map(function ($variant) {
+                    return [
+                        'id' => $variant->id,
+                        'name' => $variant->name,
+                        'sku' => $variant->sku,
+                        'selling_price' => (string) $variant->selling_price,
+                        'purchase_price' => (string) $variant->purchase_price,
+                        'attributes' => $variant->attributes ?? [],
+                    ];
+                })->toArray();
+                $this->existingImages = $this->product->getMedia('images')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'url' => $media->getUrl(),
+                    ];
+                })->toArray();
             }
 
             // Définir une unité par défaut si nécessaire
@@ -187,8 +203,8 @@ class ProductForm extends Component
                 'name' => $this->formData['name'],
                 'sku' => $this->formData['sku'],
                 'description' => $this->formData['description'],
-                'selling_price' => $this->formData['selling_price'],
-                'purchase_price' => $this->formData['purchase_price'],
+                'selling_price' => (int) $this->formData['selling_price'],
+                'purchase_price' => (int) ($this->formData['purchase_price'] ?: 0),
                 'category_id' => $this->formData['category_id'],
                 'tax_id' => $this->formData['tax_id'],
                 'unit_id' => $this->formData['unit_id'],
@@ -216,8 +232,8 @@ class ProductForm extends Component
                         'company_id' => Auth::user()->company_id,
                         'name' => $variantData['name'],
                         'sku' => $variantData['sku'],
-                        'selling_price' => $variantData['selling_price'],
-                        'purchase_price' => $variantData['purchase_price'],
+                        'selling_price' => (int) $variantData['selling_price'],
+                        'purchase_price' => (int) ($variantData['purchase_price'] ?: 0),
                         'attributes' => $variantData['attributes'],
                         'type' => 'variant',
                         'unit_id' => $this->formData['unit_id'],
@@ -252,7 +268,14 @@ class ProductForm extends Component
 
                 // Reset des nouvelles images et rafraîchir les existantes
                 $this->newImages = [];
-                $this->existingImages = $this->product->fresh()->getMedia('images');
+                $this->existingImages = $this->product->fresh()->getMedia('images')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'url' => $media->getUrl(),
+                    ];
+                })->toArray();
             }
             $this->dispatch('notify', message: 'Produit sauvegardé.');
             $this->redirectRoute('products.index', navigate: true);
@@ -267,7 +290,14 @@ class ProductForm extends Component
             $media->delete();
         }
         // On rafraîchit la collection d'images
-        $this->existingImages = $this->product->fresh()->getMedia('images');
+        $this->existingImages = $this->product->fresh()->getMedia('images')->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'name' => $media->name,
+                'file_name' => $media->file_name,
+                'url' => $media->getUrl(),
+            ];
+        })->toArray();
         $this->dispatch('notify', message: 'Image supprimée.');
     }
 
@@ -281,5 +311,16 @@ class ProductForm extends Component
         return view('livewire.saas.products.product-form', [
             'categories' => $categories, 'taxes' => $taxes, 'units' => $units,
         ]);
+    }
+
+    public function dehydrate()
+    {
+        // S'assurer que les propriétés numériques sont bien des entiers/chaînes
+        if (isset($this->formData['selling_price'])) {
+            $this->formData['selling_price'] = (string) $this->formData['selling_price'];
+        }
+        if (isset($this->formData['purchase_price'])) {
+            $this->formData['purchase_price'] = (string) $this->formData['purchase_price'];
+        }
     }
 }

@@ -11,13 +11,21 @@ use Livewire\Component;
 class PlanEdit extends Component
 {
     public Plan $plan;
+
     public $name = '';
+
     public $slug = '';
+
     public $description = '';
+
     public $price = '';
+
     public $user_limit = '';
+
     public $unlimited_users = false;
+
     public $features = [];
+
     public $newFeature = '';
 
     protected $rules = [
@@ -69,7 +77,7 @@ class PlanEdit extends Component
 
     public function addFeature()
     {
-        if (!empty(trim($this->newFeature))) {
+        if (! empty(trim($this->newFeature))) {
             $this->features[] = trim($this->newFeature);
             $this->newFeature = '';
         }
@@ -85,13 +93,13 @@ class PlanEdit extends Component
     {
         // Validation conditionnelle pour user_limit
         $rules = $this->rules;
-        if (!$this->unlimited_users) {
+        if (! $this->unlimited_users) {
             $rules['user_limit'] = 'required|integer|min:1';
         }
 
         // Validation unique pour name et slug (exclure le plan actuel)
-        $rules['name'] .= ',name,' . $this->plan->id;
-        $rules['slug'] .= ',slug,' . $this->plan->id;
+        $rules['name'] .= ',name,'.$this->plan->id;
+        $rules['slug'] .= ',slug,'.$this->plan->id;
 
         $this->validate($rules);
 
@@ -107,10 +115,11 @@ class PlanEdit extends Component
             ]);
 
             session()->flash('success', 'Plan modifié avec succès !');
+
             return $this->redirect(route('admin.plans.index'));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la modification du plan : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la modification du plan : '.$e->getMessage());
         }
     }
 

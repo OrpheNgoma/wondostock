@@ -72,7 +72,7 @@ class CountryBranchController extends Controller
 
     public function edit(Store $store)
     {
-        if (!$store->is_country_branch) {
+        if (! $store->is_country_branch) {
             abort(404);
         }
 
@@ -81,7 +81,7 @@ class CountryBranchController extends Controller
 
     public function update(Request $request, Store $store)
     {
-        if (!$store->is_country_branch) {
+        if (! $store->is_country_branch) {
             abort(404);
         }
 

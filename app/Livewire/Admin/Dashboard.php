@@ -7,7 +7,6 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,7 +17,7 @@ class Dashboard extends Component
 {
     public function mount()
     {
-        if (!Auth::user()->is_global_admin) {
+        if (! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé.');
         }
     }
@@ -44,8 +43,8 @@ class Dashboard extends Component
         return [
             'monthly_revenue' => $monthlyRevenue,
             'annual_revenue' => $annualRevenue,
-            'average_revenue_per_company' => $this->system_stats['active_companies'] > 0 
-                ? $monthlyRevenue / $this->system_stats['active_companies'] 
+            'average_revenue_per_company' => $this->system_stats['active_companies'] > 0
+                ? $monthlyRevenue / $this->system_stats['active_companies']
                 : 0,
         ];
     }
@@ -54,13 +53,13 @@ class Dashboard extends Component
     {
         return Plan::leftJoin('subscriptions', function ($join) {
             $join->on('plans.id', '=', 'subscriptions.plan_id')
-                 ->where('subscriptions.status', '=', 'active');
+                ->where('subscriptions.status', '=', 'active');
         })
-        ->select('plans.name', 'plans.slug', 'plans.price')
-        ->selectRaw('COUNT(subscriptions.id) as subscription_count')
-        ->groupBy('plans.id', 'plans.name', 'plans.slug', 'plans.price')
-        ->orderBy('plans.price')
-        ->get();
+            ->select('plans.name', 'plans.slug', 'plans.price')
+            ->selectRaw('COUNT(subscriptions.id) as subscription_count')
+            ->groupBy('plans.id', 'plans.name', 'plans.slug', 'plans.price')
+            ->orderBy('plans.price')
+            ->get();
     }
 
     public function getRecentCompaniesProperty()
@@ -74,13 +73,13 @@ class Dashboard extends Component
     public function getCompanyGrowthProperty()
     {
         $last6Months = collect();
-        
+
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             $count = Company::whereYear('created_at', $date->year)
-                           ->whereMonth('created_at', $date->month)
-                           ->count();
-            
+                ->whereMonth('created_at', $date->month)
+                ->count();
+
             $last6Months->push([
                 'month' => $date->format('M Y'),
                 'count' => $count,

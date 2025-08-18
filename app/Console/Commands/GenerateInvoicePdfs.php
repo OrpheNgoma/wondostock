@@ -42,25 +42,27 @@ class GenerateInvoicePdfs extends Command
 
         if ($this->option('month')) {
             $month = $this->option('month');
-            if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
                 $this->error('Format de mois invalide. Utilisez YYYY-MM');
+
                 return 1;
             }
-            
+
             $query->whereYear('issue_date', substr($month, 0, 4))
-                  ->whereMonth('issue_date', substr($month, 5, 2));
+                ->whereMonth('issue_date', substr($month, 5, 2));
         }
 
-        if (!$this->option('all') && !$this->option('company') && !$this->option('month')) {
+        if (! $this->option('all') && ! $this->option('company') && ! $this->option('month')) {
             // Par défaut, traiter les factures du mois en cours
             $query->whereYear('issue_date', now()->year)
-                  ->whereMonth('issue_date', now()->month);
+                ->whereMonth('issue_date', now()->month);
         }
 
         $invoices = $query->get();
 
         if ($invoices->isEmpty()) {
             $this->warn('Aucune facture trouvée avec les critères spécifiés.');
+
             return 0;
         }
 
@@ -74,53 +76,55 @@ class GenerateInvoicePdfs extends Command
         $storageDir = storage_path('app/invoices');
 
         // Créer le dossier si nécessaire
-        if (!is_dir($storageDir)) {
+        if (! is_dir($storageDir)) {
             mkdir($storageDir, 0755, true);
         }
 
         foreach ($invoices as $invoice) {
             $fileName = "facture-{$invoice->invoice_number}.pdf";
-            $filePath = $storageDir . '/' . $fileName;
+            $filePath = $storageDir.'/'.$fileName;
 
             // Vérifier si le fichier existe déjà
-            if (file_exists($filePath) && !$this->option('overwrite')) {
+            if (file_exists($filePath) && ! $this->option('overwrite')) {
                 $results[] = [
                     'invoice' => $invoice->invoice_number,
                     'status' => 'skipped',
-                    'message' => 'Fichier existant'
+                    'message' => 'Fichier existant',
                 ];
                 $bar->advance();
+
                 continue;
             }
 
             try {
                 // Valider la facture
                 $errors = $pdfService->validateInvoice($invoice);
-                
-                if (!empty($errors)) {
+
+                if (! empty($errors)) {
                     $results[] = [
                         'invoice' => $invoice->invoice_number,
                         'status' => 'error',
-                        'message' => implode(', ', $errors)
+                        'message' => implode(', ', $errors),
                     ];
                     $bar->advance();
+
                     continue;
                 }
 
                 // Générer le PDF
                 $pdfService->savePdf($invoice, $filePath);
-                
+
                 $results[] = [
                     'invoice' => $invoice->invoice_number,
                     'status' => 'success',
-                    'message' => $fileName
+                    'message' => $fileName,
                 ];
 
             } catch (\Exception $e) {
                 $results[] = [
                     'invoice' => $invoice->invoice_number ?? 'N/A',
                     'status' => 'error',
-                    'message' => $e->getMessage()
+                    'message' => $e->getMessage(),
                 ];
             }
 
@@ -141,17 +145,17 @@ class GenerateInvoicePdfs extends Command
                 return [
                     $result['invoice'],
                     $result['status'],
-                    $result['message']
+                    $result['message'],
                 ];
             })->toArray()
         );
 
         $this->info("✅ {$successCount} PDF(s) généré(s) avec succès");
-        
+
         if ($skippedCount > 0) {
             $this->warn("⚠️  {$skippedCount} fichier(s) ignoré(s) (déjà existant)");
         }
-        
+
         if ($errorCount > 0) {
             $this->error("❌ {$errorCount} erreur(s) rencontrée(s)");
         }

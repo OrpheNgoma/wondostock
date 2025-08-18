@@ -45,9 +45,9 @@ class Invoice extends Model
         'due_date' => 'date',
         'paid_at' => 'date',
         'billing_address' => 'array',
-        'amount' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'amount' => 'integer',
+        'tax_amount' => 'integer',
+        'total_amount' => 'integer',
     ];
 
     /**
@@ -107,9 +107,9 @@ class Invoice extends Model
         $lastInvoice = self::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
             ->first();
-        
+
         $nextNumber = $lastInvoice ? (int) substr($lastInvoice->invoice_number, -4) + 1 : 1;
-        
-        return 'INV-' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
+        return 'INV-'.$year.'-'.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

@@ -59,9 +59,9 @@ class ReportingService
             DB::raw('SUM(di.total_amount) as daily_revenue'),
             DB::raw('SUM(di.quantity) as daily_quantity'),
         ])
-        ->groupBy(DB::raw('DATE(d.document_date)'))
-        ->orderBy(DB::raw('DATE(d.document_date)'))
-        ->get();
+            ->groupBy(DB::raw('DATE(d.document_date)'))
+            ->orderBy(DB::raw('DATE(d.document_date)'))
+            ->get();
 
         // Top products by revenue
         $topProductsQuery = clone $query;
@@ -73,10 +73,10 @@ class ReportingService
             DB::raw('SUM(di.total_amount) as total_revenue'),
             DB::raw('AVG(di.unit_price) as average_price'),
         ])
-        ->groupBy('p.id', 'p.name', 'p.sku')
-        ->orderByDesc('total_revenue')
-        ->limit(10)
-        ->get();
+            ->groupBy('p.id', 'p.name', 'p.sku')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
 
         // Sales by category
         $categoryQuery = clone $query;
@@ -87,9 +87,9 @@ class ReportingService
             DB::raw('SUM(di.total_amount) as total_revenue'),
             DB::raw('COUNT(DISTINCT di.product_id) as products_count'),
         ])
-        ->groupBy('cat.id', 'cat.name')
-        ->orderByDesc('total_revenue')
-        ->get();
+            ->groupBy('cat.id', 'cat.name')
+            ->orderByDesc('total_revenue')
+            ->get();
 
         // Top customers
         $customersQuery = clone $query;
@@ -101,10 +101,10 @@ class ReportingService
             DB::raw('SUM(di.total_amount) as total_spent'),
             DB::raw('AVG(d.total_amount) as average_order_value'),
         ])
-        ->groupBy('c.id', 'c.name', 'c.email')
-        ->orderByDesc('total_spent')
-        ->limit(10)
-        ->get();
+            ->groupBy('c.id', 'c.name', 'c.email')
+            ->orderByDesc('total_spent')
+            ->limit(10)
+            ->get();
 
         return [
             'period' => [
@@ -178,7 +178,7 @@ class ReportingService
             ->where('p.is_active', true)
             ->where(function ($query) {
                 $query->whereNull('ps.quantity')
-                      ->orWhere('ps.quantity', '<=', 0);
+                    ->orWhere('ps.quantity', '<=', 0);
             })
             ->when($storeId, function ($query) use ($storeId) {
                 return $query->where('ps.store_id', $storeId);
@@ -261,6 +261,7 @@ class ReportingService
             ->map(function ($item) {
                 $item->gross_profit = $item->revenue - $item->cogs;
                 $item->gross_profit_margin = $item->revenue > 0 ? ($item->gross_profit / $item->revenue) * 100 : 0;
+
                 return $item;
             });
 

@@ -2,12 +2,12 @@
 
 namespace App\Livewire\StoreActivity;
 
+use App\Models\Document;
+use App\Models\StockMovement;
+use App\Models\StockTransfer;
+use App\Models\Store;
 use App\Services\InventoryService;
 use App\Services\ReportingService;
-use App\Models\Store;
-use App\Models\StockMovement;
-use App\Models\Document;
-use App\Models\StockTransfer;
 use App\Traits\SecureCompanyAccess;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +22,14 @@ class Dashboard extends Component
     use SecureCompanyAccess;
 
     public ?int $selectedStoreId = null;
+
     public string $selectedPeriod = '7'; // 7 jours par défaut
+
     public string $selectedTab = 'overview'; // overview, stock, sales, transfers, analytics
 
     // Real-time refresh
     public bool $autoRefresh = false;
+
     public int $refreshInterval = 30; // secondes
 
     protected $listeners = [
@@ -39,12 +42,12 @@ class Dashboard extends Component
     public function mount(?int $storeId = null)
     {
         $userCompany = $this->getSecureUserAndCompany();
-        if (!$userCompany['valid']) {
+        if (! $userCompany['valid']) {
             abort(403);
         }
 
         $user = $userCompany['user'];
-        
+
         // Auto-sélectionner un magasin
         if ($storeId) {
             $this->selectedStoreId = $storeId;
@@ -74,8 +77,8 @@ class Dashboard extends Component
 
     public function toggleAutoRefresh()
     {
-        $this->autoRefresh = !$this->autoRefresh;
-        
+        $this->autoRefresh = ! $this->autoRefresh;
+
         if ($this->autoRefresh) {
             $this->dispatch('start-auto-refresh', $this->refreshInterval);
         } else {
@@ -92,7 +95,7 @@ class Dashboard extends Component
     public function render()
     {
         $userCompany = $this->getSecureUserAndCompany();
-        if (!$userCompany['valid']) {
+        if (! $userCompany['valid']) {
             return view('livewire.saas.store-activity.dashboard', []);
         }
 
@@ -100,7 +103,7 @@ class Dashboard extends Component
         $company = $userCompany['company'];
 
         // Si aucun magasin sélectionné, afficher la liste
-        if (!$this->selectedStoreId) {
+        if (! $this->selectedStoreId) {
             return view('livewire.saas.store-activity.dashboard', [
                 'stores' => Store::where('company_id', $company->id)->get(),
                 'selectedStore' => null,
@@ -113,8 +116,9 @@ class Dashboard extends Component
             ->where('id', $this->selectedStoreId)
             ->first();
 
-        if (!$selectedStore) {
+        if (! $selectedStore) {
             $this->selectedStoreId = null;
+
             return $this->render();
         }
 
@@ -123,7 +127,7 @@ class Dashboard extends Component
         $startDate = Carbon::now()->subDays((int) $this->selectedPeriod);
 
         // Données selon l'onglet sélectionné
-        $data = match($this->selectedTab) {
+        $data = match ($this->selectedTab) {
             'overview' => $this->getOverviewData($company->id, $selectedStore->id, $startDate, $endDate),
             'stock' => $this->getStockData($company->id, $selectedStore->id),
             'sales' => $this->getSalesData($company->id, $selectedStore->id, $startDate, $endDate),
@@ -153,7 +157,7 @@ class Dashboard extends Component
             ->sum('total_amount');
 
         $stockValue = app(InventoryService::class)->calculateStockValue($companyId, $storeId);
-        
+
         $lowStockCount = app(InventoryService::class)
             ->getLowStockProducts($companyId, $storeId)
             ->count();
@@ -193,10 +197,10 @@ class Dashboard extends Component
     private function getStockData(int $companyId, int $storeId): array
     {
         $inventoryService = app(InventoryService::class);
-        
+
         $stockValue = $inventoryService->calculateStockValue($companyId, $storeId);
         $lowStockProducts = $inventoryService->getLowStockProducts($companyId, $storeId);
-        
+
         // Top produits par valeur
         $topValueProducts = DB::table('products as p')
             ->join('product_store as ps', 'p.id', '=', 'ps.product_id')
@@ -206,7 +210,7 @@ class Dashboard extends Component
             ->select([
                 'p.name', 'p.sku', 'ps.quantity',
                 'p.selling_price',
-                DB::raw('ps.quantity * p.selling_price as total_value')
+                DB::raw('ps.quantity * p.selling_price as total_value'),
             ])
             ->orderByDesc('total_value')
             ->limit(10)
@@ -231,10 +235,10 @@ class Dashboard extends Component
     private function getSalesData(int $companyId, int $storeId, Carbon $startDate, Carbon $endDate): array
     {
         $reportingService = app(ReportingService::class);
-        
+
         // Rapport de ventes pour la période
         $salesReport = $reportingService->generateSalesReport($companyId, $startDate, $endDate, $storeId);
-        
+
         // Ventes par heure aujourd'hui
         $hourlyToday = DB::table('documents')
             ->where('company_id', $companyId)
@@ -245,7 +249,7 @@ class Dashboard extends Component
             ->select([
                 DB::raw('HOUR(created_at) as hour'),
                 DB::raw('COUNT(*) as sales_count'),
-                DB::raw('SUM(total_amount) as revenue')
+                DB::raw('SUM(total_amount) as revenue'),
             ])
             ->groupBy('hour')
             ->orderBy('hour')
@@ -294,7 +298,7 @@ class Dashboard extends Component
     {
         // Analyse de performance
         $previousPeriod = $startDate->copy()->subDays($startDate->diffInDays($endDate));
-        
+
         $currentPeriodSales = Document::where('company_id', $companyId)
             ->where('store_id', $storeId)
             ->whereBetween('document_date', [$startDate, $endDate])
@@ -305,8 +309,8 @@ class Dashboard extends Component
             ->whereBetween('document_date', [$previousPeriod, $startDate])
             ->sum('total_amount');
 
-        $growthRate = $previousPeriodSales > 0 
-            ? (($currentPeriodSales - $previousPeriodSales) / $previousPeriodSales) * 100 
+        $growthRate = $previousPeriodSales > 0
+            ? (($currentPeriodSales - $previousPeriodSales) / $previousPeriodSales) * 100
             : 0;
 
         // Rotation des stocks
@@ -327,7 +331,7 @@ class Dashboard extends Component
         // Stock critique
         $criticalStock = app(InventoryService::class)
             ->getLowStockProducts($companyId, $storeId);
-        
+
         if ($criticalStock->count() > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -340,9 +344,9 @@ class Dashboard extends Component
 
         // Transferts en attente
         $pendingTransfers = StockTransfer::where('company_id', $companyId)
-            ->where(function($q) use ($storeId) {
+            ->where(function ($q) use ($storeId) {
                 $q->where('from_store_id', $storeId)
-                  ->orWhere('to_store_id', $storeId);
+                    ->orWhere('to_store_id', $storeId);
             })
             ->where('status', 'pending')
             ->count();
@@ -364,7 +368,7 @@ class Dashboard extends Component
     {
         // Calcul simplifié de la rotation des stocks
         $avgStock = app(InventoryService::class)->calculateStockValue($companyId, $storeId);
-        
+
         $cogs = DB::table('documents as d')
             ->join('document_items as di', 'd.id', '=', 'di.document_id')
             ->join('products as p', 'di.product_id', '=', 'p.id')

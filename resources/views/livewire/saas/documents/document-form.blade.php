@@ -194,7 +194,7 @@
                                 Articles ({{ count($items) }})
                             </span>
                             <div class="text-sm opacity-90">
-                                Total: {{ number_format($total_amount, 0, ',', ' ') }} XAF
+                                Total: {{ format_fcfa($total_amount) }}
                             </div>
                         </h2>
                     </div>
@@ -229,7 +229,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <div class="font-semibold text-green-600">{{ number_format($product->selling_price, 0, ',', ' ') }} XAF</div>
+                                        <div class="font-semibold text-green-600">{{ format_fcfa($product->selling_price) }}</div>
                                     </div>
                                     <svg class="w-5 h-5 text-gray-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -275,7 +275,7 @@
                                                    class="w-full px-3 py-2 text-right border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         </td>
                                         <td class="px-4 py-4 text-right font-semibold text-gray-900">
-                                            {{ number_format($item['quantity'] * $item['unit_price'], 0, ',', ' ') }} XAF
+                                            {{ format_fcfa($item['quantity'] * $item['unit_price']) }}
                                         </td>
                                         <td class="px-4 py-4 text-center">
                                             <button type="button" 
@@ -376,16 +376,16 @@
                             </div>
                             <div class="flex justify-between items-center">
                                 <dt class="text-sm text-gray-600">Sous-total</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ number_format($sub_total, 0, ',', ' ') }} XAF</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ format_fcfa($sub_total) }}</dd>
                             </div>
                             <div class="flex justify-between items-center">
                                 <dt class="text-sm text-gray-600">Taxes</dt>
-                                <dd class="text-sm font-medium text-gray-900">{{ number_format($tax_amount, 0, ',', ' ') }} XAF</dd>
+                                <dd class="text-sm font-medium text-gray-900">{{ format_fcfa($tax_amount) }}</dd>
                             </div>
                             <div class="border-t border-gray-200 pt-4">
                                 <div class="flex justify-between items-center">
                                     <dt class="text-lg font-semibold text-gray-900">Total</dt>
-                                    <dd class="text-2xl font-bold text-amber-600">{{ number_format($total_amount, 0, ',', ' ') }} XAF</dd>
+                                    <dd class="text-2xl font-bold text-amber-600">{{ format_fcfa($total_amount) }}</dd>
                                 </div>
                             </div>
                         </dl>

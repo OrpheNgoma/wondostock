@@ -29,7 +29,7 @@ class SecurityCacheService
     {
         Cache::forget("user_{$userId}_permissions");
         Cache::forget("user_{$userId}_roles");
-        
+
         // Utiliser aussi le nouveau service de permissions
         app(PermissionCacheService::class)->invalidateUserCache($userId);
     }
@@ -49,9 +49,9 @@ class SecurityCacheService
     public function refreshUserGlobalAdminStatus(int $userId): bool
     {
         $this->invalidateUserCache($userId);
-        
+
         $user = \App\Models\User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -66,13 +66,13 @@ class SecurityCacheService
     public function refreshCompanyAccessibility(int $companyId): bool
     {
         $this->invalidateCompanyCache($companyId);
-        
+
         return Cache::remember("company_{$companyId}_is_accessible", 900, function () use ($companyId) {
             $company = \App\Models\Company::find($companyId);
-            
-            return $company && 
-                   $company->is_active && 
-                   !$company->is_suspended &&
+
+            return $company &&
+                   $company->is_active &&
+                   ! $company->is_suspended &&
                    ($company->subscription_expires_at === null || $company->subscription_expires_at->isFuture());
         });
     }

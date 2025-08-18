@@ -18,8 +18,8 @@ class RolePermissionService
     public function canManageRoles(): bool
     {
         $user = Auth::user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return false;
         }
 
@@ -41,7 +41,7 @@ class RolePermissionService
     public function getCompanyRoles(?int $companyId = null): \Illuminate\Database\Eloquent\Collection
     {
         $companyId = $companyId ?? Auth::user()->company_id;
-        
+
         return Role::where('company_id', $companyId)
             ->orderBy('name')
             ->get();
@@ -61,7 +61,7 @@ class RolePermissionService
     public function createRole(string $name, ?string $description = null, ?int $companyId = null): Role
     {
         $companyId = $companyId ?? Auth::user()->company_id;
-        
+
         return Role::create([
             'name' => $name,
             'description' => $description,
@@ -77,7 +77,7 @@ class RolePermissionService
     {
         // Vérifier que le rôle appartient à l'entreprise actuelle
         $this->ensureRoleBelongsToCompany($role);
-        
+
         $role->update([
             'name' => $name,
             'description' => $description,
@@ -93,7 +93,7 @@ class RolePermissionService
     {
         // Vérifier que le rôle appartient à l'entreprise actuelle
         $this->ensureRoleBelongsToCompany($role);
-        
+
         // Vérifier qu'aucun utilisateur n'a ce rôle
         if ($role->users()->count() > 0) {
             throw new \Exception('Ce rôle ne peut pas être supprimé car il est assigné à des utilisateurs.');
@@ -109,7 +109,7 @@ class RolePermissionService
     {
         // Vérifier que le rôle appartient à l'entreprise actuelle
         $this->ensureRoleBelongsToCompany($role);
-        
+
         $permissions = Permission::whereIn('id', $permissionIds)->get();
         $role->syncPermissions($permissions);
     }
@@ -122,7 +122,7 @@ class RolePermissionService
         // Vérifier que l'utilisateur et le rôle appartiennent à la même entreprise
         $this->ensureUserBelongsToCompany($user);
         $this->ensureRoleBelongsToCompany($role);
-        
+
         if ($user->company_id !== $role->company_id) {
             throw new \Exception('L\'utilisateur et le rôle doivent appartenir à la même entreprise.');
         }
@@ -148,7 +148,7 @@ class RolePermissionService
     public function getUsersWithoutRole(Role $role): \Illuminate\Database\Eloquent\Collection
     {
         $this->ensureRoleBelongsToCompany($role);
-        
+
         return User::where('company_id', $role->company_id)
             ->whereDoesntHave('roles', function ($query) use ($role) {
                 $query->where('roles.id', $role->id);
@@ -162,7 +162,7 @@ class RolePermissionService
     public function getRoleStats(?int $companyId = null): array
     {
         $companyId = $companyId ?? Auth::user()->company_id;
-        
+
         $totalRoles = Role::where('company_id', $companyId)->count();
         $totalUsers = User::where('company_id', $companyId)->count();
         $usersWithRoles = User::where('company_id', $companyId)
@@ -205,6 +205,7 @@ class RolePermissionService
     {
         return Permission::all()->groupBy(function ($permission) {
             $parts = explode('_', $permission->name);
+
             return $parts[1] ?? 'general';
         });
     }
@@ -215,7 +216,7 @@ class RolePermissionService
     public function isRoleNameUnique(string $name, ?int $excludeRoleId = null, ?int $companyId = null): bool
     {
         $companyId = $companyId ?? Auth::user()->company_id;
-        
+
         $query = Role::where('company_id', $companyId)
             ->where('name', $name);
 
@@ -232,7 +233,7 @@ class RolePermissionService
     public function getCompanyRole(int $roleId, ?int $companyId = null): ?Role
     {
         $companyId = $companyId ?? Auth::user()->company_id;
-        
+
         return Role::where('company_id', $companyId)
             ->where('id', $roleId)
             ->first();

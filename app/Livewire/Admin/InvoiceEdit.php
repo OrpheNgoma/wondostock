@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Invoice;
 use App\Models\Company;
+use App\Models\Invoice;
 use App\Models\Subscription;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -12,20 +12,31 @@ use Livewire\Component;
 class InvoiceEdit extends Component
 {
     public Invoice $invoice;
-    
+
     public $invoice_number = '';
+
     public $company_id = '';
+
     public $subscription_id = '';
+
     public $amount = '';
+
     public $tax_amount = '';
+
     public $total_amount = '';
+
     public $status = '';
+
     public $issue_date = '';
+
     public $due_date = '';
+
     public $billing_address = '';
+
     public $notes = '';
 
     public $companies = [];
+
     public $subscriptions = [];
 
     protected $rules = [
@@ -59,10 +70,10 @@ class InvoiceEdit extends Component
     public function mount(Invoice $invoice)
     {
         $this->invoice = $invoice->load(['company', 'subscription']);
-        
+
         $this->companies = Company::orderBy('name')->get();
         $this->subscriptions = Subscription::with(['company', 'plan'])->orderBy('created_at', 'desc')->get();
-        
+
         // Charger les valeurs actuelles
         $this->invoice_number = $invoice->invoice_number;
         $this->company_id = $invoice->company_id;
@@ -73,8 +84,8 @@ class InvoiceEdit extends Component
         $this->status = $invoice->status;
         $this->issue_date = $invoice->issue_date->format('Y-m-d');
         $this->due_date = $invoice->due_date->format('Y-m-d');
-        $this->billing_address = is_array($invoice->billing_address) 
-            ? implode("\n", $invoice->billing_address) 
+        $this->billing_address = is_array($invoice->billing_address)
+            ? implode("\n", $invoice->billing_address)
             : ($invoice->billing_address ?? '');
         $this->notes = $invoice->notes;
     }
@@ -92,7 +103,7 @@ class InvoiceEdit extends Component
     public function calculateTotal()
     {
         if (is_numeric($this->amount) && is_numeric($this->tax_amount)) {
-            $this->total_amount = number_format((float)$this->amount + (float)$this->tax_amount, 2, '.', '');
+            $this->total_amount = number_format((float) $this->amount + (float) $this->tax_amount, 2, '.', '');
         }
     }
 
@@ -100,13 +111,13 @@ class InvoiceEdit extends Component
     {
         // Validation unique pour invoice_number (exclure la facture actuelle)
         $rules = $this->rules;
-        $rules['invoice_number'] .= '|unique:invoices,invoice_number,' . $this->invoice->id;
+        $rules['invoice_number'] .= '|unique:invoices,invoice_number,'.$this->invoice->id;
 
         $this->validate($rules);
 
         try {
             // Préparer l'adresse de facturation
-            $billingAddress = !empty($this->billing_address) 
+            $billingAddress = ! empty($this->billing_address)
                 ? array_filter(explode("\n", $this->billing_address))
                 : null;
 
@@ -127,10 +138,11 @@ class InvoiceEdit extends Component
             ]);
 
             session()->flash('success', 'Facture modifiée avec succès !');
+
             return $this->redirect(route('admin.invoices.show', $this->invoice));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la modification de la facture : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la modification de la facture : '.$e->getMessage());
         }
     }
 

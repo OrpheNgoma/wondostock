@@ -27,10 +27,10 @@ class CacheUserPermissions
         // Pre-cache user permissions if user is authenticated
         if (Auth::check()) {
             $user = Auth::user();
-            
+
             // Warmup cache for the current user
             $this->permissionCacheService->warmupUserCache($user->id);
-            
+
             // Optionally, warmup company cache for admin users
             if ($user->hasRole(['Admin', 'Super-Administrateur']) && $user->company_id) {
                 $this->permissionCacheService->warmupCompanyCache($user->company_id);

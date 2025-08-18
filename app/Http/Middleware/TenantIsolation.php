@@ -30,7 +30,7 @@ class TenantIsolation
         }
 
         // Pour les admins globaux qui accèdent aux routes normales (sauf dashboard qui a son propre middleware)
-        if ($user->is_global_admin && !$request->is('admin/*') && !$request->is('dashboard')) {
+        if ($user->is_global_admin && ! $request->is('admin/*') && ! $request->is('dashboard')) {
             return redirect()->route('admin.dashboard');
         }
 

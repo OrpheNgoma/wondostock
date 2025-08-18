@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\BillingPayment;
 use App\Models\Invoice;
 use App\Models\Subscription;
-use App\Models\BillingPayment;
-use Carbon\Carbon;
 
 /**
  * Service pour la gestion automatique des factures SaaS.
@@ -58,7 +57,7 @@ class InvoiceService
     public function generateMonthlyInvoices(): array
     {
         $generatedInvoices = [];
-        
+
         // Récupérer tous les abonnements actifs
         $subscriptions = Subscription::where('status', 'active')
             ->with(['company', 'plan'])
@@ -71,7 +70,7 @@ class InvoiceService
                 ->whereMonth('issue_date', now()->month)
                 ->first();
 
-            if (!$existingInvoice) {
+            if (! $existingInvoice) {
                 $invoice = $this->generateInvoiceForSubscription($subscription);
                 $generatedInvoices[] = $invoice;
             }
@@ -114,13 +113,14 @@ class InvoiceService
         try {
             // Mettre à jour le statut
             $invoice->update(['status' => 'sent']);
-            
+
             // TODO: Implémenter l'envoi d'email avec PDF
             // Mail::to($invoice->company->email)->send(new InvoiceMail($invoice));
-            
+
             return true;
         } catch (\Exception $e) {
-            \Log::error('Erreur lors de l\'envoi de la facture: ' . $e->getMessage());
+            \Log::error('Erreur lors de l\'envoi de la facture: '.$e->getMessage());
+
             return false;
         }
     }
@@ -165,19 +165,20 @@ class InvoiceService
     /**
      * Annule une facture.
      */
-    public function cancelInvoice(Invoice $invoice, string $reason = null): bool
+    public function cancelInvoice(Invoice $invoice, ?string $reason = null): bool
     {
         try {
             $invoice->update([
                 'status' => 'cancelled',
-                'notes' => ($invoice->notes ? $invoice->notes . "\n\n" : '') . 
-                          "Facture annulée le " . now()->format('d/m/Y') . 
+                'notes' => ($invoice->notes ? $invoice->notes."\n\n" : '').
+                          'Facture annulée le '.now()->format('d/m/Y').
                           ($reason ? " - Raison: {$reason}" : ''),
             ]);
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Erreur lors de l\'annulation de la facture: ' . $e->getMessage());
+            \Log::error('Erreur lors de l\'annulation de la facture: '.$e->getMessage());
+
             return false;
         }
     }

@@ -91,7 +91,7 @@ class InvitationService
      */
     public function sendInvitationEmail(Invitation $invitation): void
     {
-        $anonymousNotifiable = new AnonymousNotifiable();
+        $anonymousNotifiable = new AnonymousNotifiable;
         $anonymousNotifiable->route('mail', $invitation->email);
 
         Notification::send($anonymousNotifiable, new UserInvitationNotification($invitation));
@@ -122,13 +122,13 @@ class InvitationService
     {
         $invitation = Invitation::where('token', $token)->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             throw ValidationException::withMessages([
                 'token' => 'Invitation introuvable.',
             ]);
         }
 
-        if (!$invitation->isValid()) {
+        if (! $invitation->isValid()) {
             throw ValidationException::withMessages([
                 'token' => 'Cette invitation a expiré ou n\'est plus valide.',
             ]);

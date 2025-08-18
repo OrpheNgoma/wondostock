@@ -33,7 +33,7 @@ class FixRolesTeamIds extends Command
         // 1. Mettre à jour les rôles sans company_id
         $this->info('Step 1: Updating roles without company_id');
         $rolesWithoutCompany = Role::whereNull('company_id')->get();
-        
+
         foreach ($rolesWithoutCompany as $role) {
             // Trouver le company_id basé sur les utilisateurs qui ont ce rôle
             $user = $role->users()->first();
@@ -45,7 +45,7 @@ class FixRolesTeamIds extends Command
 
         // 2. Mettre à jour model_has_roles avec les bons team_id
         $this->info('Step 2: Updating model_has_roles team_id values');
-        
+
         $modelRoles = DB::table('model_has_roles')
             ->where('model_type', 'App\\Models\\User')
             ->whereNull('team_id')
@@ -59,22 +59,22 @@ class FixRolesTeamIds extends Command
                     ->where('role_id', $modelRole->role_id)
                     ->where('model_type', 'App\\Models\\User')
                     ->update(['team_id' => $user->company_id]);
-                
+
                 $this->info("Updated model_has_roles for user {$user->name} (ID: {$user->id}) with team_id: {$user->company_id}");
             }
         }
 
         // 3. Vérifier et afficher les résultats
         $this->info('Step 3: Verification');
-        
+
         $rolesCount = Role::whereNotNull('company_id')->count();
         $modelRolesCount = DB::table('model_has_roles')->whereNotNull('team_id')->count();
-        
+
         $this->info("Roles with company_id: {$rolesCount}");
         $this->info("Model roles with team_id: {$modelRolesCount}");
-        
+
         $this->info('✅ Roles team IDs fixed successfully!');
-        
+
         return 0;
     }
 }

@@ -13,18 +13,28 @@ class CompanyCreate extends Component
 {
     // Informations de l'entreprise
     public $name = '';
+
     public $legal_name = '';
+
     public $email = '';
+
     public $phone_number = '';
+
     public $address = '';
+
     public $rccm = '';
+
     public $nif = '';
+
     public $is_active = true;
 
     // Informations du propriétaire
     public $ownerName = '';
+
     public $ownerEmail = '';
+
     public $ownerPassword = '';
+
     public $ownerPasswordConfirmation = '';
 
     protected $rules = [
@@ -36,7 +46,7 @@ class CompanyCreate extends Component
         'rccm' => 'nullable|string|max:255',
         'nif' => 'nullable|string|max:255',
         'is_active' => 'boolean',
-        
+
         'ownerName' => 'required|string|max:255',
         'ownerEmail' => 'required|email|max:255|unique:users,email',
         'ownerPassword' => 'required|min:8|confirmed',
@@ -48,7 +58,7 @@ class CompanyCreate extends Component
         'email.required' => 'L\'email de l\'entreprise est requis.',
         'email.email' => 'L\'email doit être une adresse email valide.',
         'email.unique' => 'Cette adresse email est déjà utilisée par une autre entreprise.',
-        
+
         'ownerName.required' => 'Le nom du propriétaire est requis.',
         'ownerEmail.required' => 'L\'email du propriétaire est requis.',
         'ownerEmail.email' => 'L\'email du propriétaire doit être une adresse email valide.',
@@ -89,10 +99,11 @@ class CompanyCreate extends Component
             $owner->update(['company_id' => $company->id]);
 
             session()->flash('success', 'Entreprise créée avec succès !');
+
             return $this->redirect(route('admin.companies.index'));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la création de l\'entreprise : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la création de l\'entreprise : '.$e->getMessage());
         }
     }
 

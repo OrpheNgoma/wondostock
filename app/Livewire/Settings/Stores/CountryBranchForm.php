@@ -145,7 +145,8 @@ class CountryBranchForm extends Component
 
                 $data['invoice_header_image'] = $this->header_image->store('invoice-headers', 'public');
             } catch (\Exception $e) {
-                $this->dispatch('notify', message: 'Erreur lors du téléchargement de l\'image d\'en-tête : ' . $e->getMessage());
+                $this->dispatch('notify', message: 'Erreur lors du téléchargement de l\'image d\'en-tête : '.$e->getMessage());
+
                 return;
             }
         }
@@ -160,7 +161,8 @@ class CountryBranchForm extends Component
 
                 $data['invoice_footer_image'] = $this->footer_image->store('invoice-footers', 'public');
             } catch (\Exception $e) {
-                $this->dispatch('notify', message: 'Erreur lors du téléchargement de l\'image de pied de page : ' . $e->getMessage());
+                $this->dispatch('notify', message: 'Erreur lors du téléchargement de l\'image de pied de page : '.$e->getMessage());
+
                 return;
             }
         }
@@ -181,8 +183,8 @@ class CountryBranchForm extends Component
         $this->footer_image = null;
 
         $this->dispatch('notify', message: $message);
-        
-        if (!$this->isEditing) {
+
+        if (! $this->isEditing) {
             $this->redirectRoute('stores.index');
         }
     }

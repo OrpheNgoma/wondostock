@@ -33,7 +33,7 @@ class StoreActivityDashboardTest extends TestCase
     public function test_store_activity_dashboard_requires_authentication()
     {
         $response = $this->get(route('store-activity.dashboard'));
-        
+
         $response->assertRedirect(route('login'));
     }
 

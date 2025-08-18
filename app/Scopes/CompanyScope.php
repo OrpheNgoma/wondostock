@@ -16,29 +16,32 @@ class CompanyScope implements Scope
     public function apply(Builder $builder, Model $model): void
     {
         // Vérifications de sécurité renforcées
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             // Pas d'utilisateur connecté = pas d'accès aux données
             $builder->whereRaw('1 = 0');
+
             return;
         }
 
         $user = Auth::user();
-        
+
         // Utilisateur global admin peut contourner le scope
         if ($this->isGlobalAdmin($user)) {
             return;
         }
 
         // Vérifications strictes pour les utilisateurs normaux
-        if (!$user->company_id) {
+        if (! $user->company_id) {
             // Utilisateur sans company_id = pas d'accès
             $builder->whereRaw('1 = 0');
+
             return;
         }
 
         // Vérifier que l'entreprise est active et accessible
-        if (!$this->isCompanyActiveAndAccessible($user->company_id)) {
+        if (! $this->isCompanyActiveAndAccessible($user->company_id)) {
             $builder->whereRaw('1 = 0');
+
             return;
         }
 
@@ -64,10 +67,10 @@ class CompanyScope implements Scope
     {
         return Cache::remember("company_{$companyId}_is_accessible", 900, function () use ($companyId) {
             $company = \App\Models\Company::find($companyId);
-            
-            return $company && 
-                   $company->is_active && 
-                   !$company->is_suspended &&
+
+            return $company &&
+                   $company->is_active &&
+                   ! $company->is_suspended &&
                    ($company->subscription_expires_at === null || $company->subscription_expires_at->isFuture());
         });
     }

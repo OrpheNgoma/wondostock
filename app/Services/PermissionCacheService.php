@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Role;
 class PermissionCacheService
 {
     private const CACHE_TTL = 3600; // 1 heure
+
     private const CACHE_PREFIX = 'permissions';
 
     /**
@@ -21,6 +22,7 @@ class PermissionCacheService
             self::CACHE_TTL,
             function () use ($userId) {
                 $user = \App\Models\User::find($userId);
+
                 return $user ? $user->getAllPermissions()->pluck('name')->toArray() : [];
             }
         );
@@ -36,6 +38,7 @@ class PermissionCacheService
             self::CACHE_TTL,
             function () use ($userId) {
                 $user = \App\Models\User::find($userId);
+
                 return $user ? $user->getRoleNames()->toArray() : [];
             }
         );
@@ -47,6 +50,7 @@ class PermissionCacheService
     public function userHasPermission(int $userId, string $permission): bool
     {
         $permissions = $this->getUserPermissions($userId);
+
         return in_array($permission, $permissions);
     }
 
@@ -56,15 +60,15 @@ class PermissionCacheService
     public function userHasRole(int $userId, $roles): bool
     {
         $userRoles = $this->getUserRoles($userId);
-        
+
         if (is_string($roles)) {
             return in_array($roles, $userRoles);
         }
-        
+
         if (is_array($roles)) {
-            return !empty(array_intersect($roles, $userRoles));
+            return ! empty(array_intersect($roles, $userRoles));
         }
-        
+
         return false;
     }
 
@@ -101,7 +105,7 @@ class PermissionCacheService
     public function getAllPermissions(): array
     {
         return Cache::remember(
-            self::CACHE_PREFIX . '.all_permissions',
+            self::CACHE_PREFIX.'.all_permissions',
             self::CACHE_TTL * 24, // Cache plus long car les permissions changent rarement
             function () {
                 return Permission::all()->pluck('name', 'id')->toArray();
@@ -115,7 +119,7 @@ class PermissionCacheService
     public function getAllRoles(): array
     {
         return Cache::remember(
-            self::CACHE_PREFIX . '.all_roles',
+            self::CACHE_PREFIX.'.all_roles',
             self::CACHE_TTL * 24, // Cache plus long car les rôles changent rarement
             function () {
                 return Role::all()->pluck('name', 'id')->toArray();
@@ -145,8 +149,8 @@ class PermissionCacheService
      */
     public function invalidateGlobalCache(): void
     {
-        Cache::forget(self::CACHE_PREFIX . '.all_permissions');
-        Cache::forget(self::CACHE_PREFIX . '.all_roles');
+        Cache::forget(self::CACHE_PREFIX.'.all_permissions');
+        Cache::forget(self::CACHE_PREFIX.'.all_roles');
     }
 
     /**
@@ -168,16 +172,16 @@ class PermissionCacheService
 
     private function getUserPermissionsCacheKey(int $userId): string
     {
-        return self::CACHE_PREFIX . ".user_{$userId}_permissions";
+        return self::CACHE_PREFIX.".user_{$userId}_permissions";
     }
 
     private function getUserRolesCacheKey(int $userId): string
     {
-        return self::CACHE_PREFIX . ".user_{$userId}_roles";
+        return self::CACHE_PREFIX.".user_{$userId}_roles";
     }
 
     private function getCompanyPermissionsCacheKey(int $companyId): string
     {
-        return self::CACHE_PREFIX . ".company_{$companyId}_permissions";
+        return self::CACHE_PREFIX.".company_{$companyId}_permissions";
     }
 }

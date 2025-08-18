@@ -76,6 +76,4 @@ class User extends Authenticatable
     {
         return $this->company_id;
     }
-
-
 }

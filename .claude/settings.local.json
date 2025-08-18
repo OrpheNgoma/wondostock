@@ -29,8 +29,20 @@
       "Bash(php:*)",
       "Bash(rm:*)",
       "Bash(mv:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__database-query",
+      "mcp__laravel-boost__browser-logs",
+      "mcp__laravel-boost__tinker",
+      "WebSearch",
+      "mcp__laravel-boost__database-schema",
+      "mcp__laravel-boost__application-info",
+      "mcp__laravel-boost__list-routes"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
 }

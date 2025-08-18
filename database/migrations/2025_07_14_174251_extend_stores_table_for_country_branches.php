@@ -12,32 +12,76 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stores', function (Blueprint $table) {
-            // Indicateur si ce magasin est une branche pays
-            $table->boolean('is_country_branch')->default(false);
+            // Vérifier si les colonnes n'existent pas déjà
+            if (! Schema::hasColumn('stores', 'is_country_branch')) {
+                $table->boolean('is_country_branch')->default(false);
+            }
 
-            // Informations du pays
-            $table->string('country_code', 3)->nullable(); // GAB, CMR, CG, CD
-            $table->string('country_name')->nullable();
+            if (! Schema::hasColumn('stores', 'country_code')) {
+                $table->string('country_code', 3)->nullable();
+            }
 
-            // Informations légales spécifiques au pays
-            $table->string('nif')->nullable();
-            $table->string('rccm')->nullable();
-            $table->string('business_permit')->nullable();
-            $table->string('tax_id')->nullable();
+            if (! Schema::hasColumn('stores', 'country_name')) {
+                $table->string('country_name')->nullable();
+            }
 
-            // Contact spécifique au pays
-            $table->string('email')->nullable();
-            $table->string('website')->nullable();
-            $table->string('postal_box')->nullable(); // BP
+            if (! Schema::hasColumn('stores', 'nif')) {
+                $table->string('nif')->nullable();
+            }
 
-            // Champs pour les images d'en-tête et pied de page
-            $table->string('invoice_header_image')->nullable();
-            $table->string('invoice_footer_image')->nullable();
+            if (! Schema::hasColumn('stores', 'rccm')) {
+                $table->string('rccm')->nullable();
+            }
 
-            // Indexation pour les requêtes
-            $table->index('is_country_branch');
-            $table->index('country_code');
+            if (! Schema::hasColumn('stores', 'business_permit')) {
+                $table->string('business_permit')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'tax_id')) {
+                $table->string('tax_id')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'email')) {
+                $table->string('email')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'website')) {
+                $table->string('website')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'postal_box')) {
+                $table->string('postal_box')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'invoice_header_image')) {
+                $table->string('invoice_header_image')->nullable();
+            }
+
+            if (! Schema::hasColumn('stores', 'invoice_footer_image')) {
+                $table->string('invoice_footer_image')->nullable();
+            }
         });
+
+        // Ajouter les index séparément en gérant les erreurs
+        try {
+            Schema::table('stores', function (Blueprint $table) {
+                if (Schema::hasColumn('stores', 'is_country_branch')) {
+                    $table->index('is_country_branch');
+                }
+            });
+        } catch (\Exception $e) {
+            // Index existe déjà, continuer
+        }
+
+        try {
+            Schema::table('stores', function (Blueprint $table) {
+                if (Schema::hasColumn('stores', 'country_code')) {
+                    $table->index('country_code');
+                }
+            });
+        } catch (\Exception $e) {
+            // Index existe déjà, continuer
+        }
     }
 
     /**

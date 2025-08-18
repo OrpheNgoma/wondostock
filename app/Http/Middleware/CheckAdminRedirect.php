@@ -17,12 +17,12 @@ class CheckAdminRedirect
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        
+
         // Si c'est un admin global, rediriger vers l'interface admin
         if ($user && $user->is_global_admin) {
             return redirect()->route('admin.dashboard');
         }
-        
+
         return $next($request);
     }
 }

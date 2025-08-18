@@ -32,7 +32,7 @@ class Plan extends Model
     // mais Eloquent la traitera comme un tableau PHP.
     protected $casts = [
         'features' => 'json',
-        'price' => 'decimal:2',
+        'price' => 'integer',
         'user_limit' => 'integer',
         'unlimited_users' => 'boolean',
     ];

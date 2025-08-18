@@ -12,7 +12,7 @@ class DocumentItem extends Model
 
     protected $fillable = ['document_id', 'product_id', 'description', 'quantity', 'unit_price', 'tax_rate', 'total_amount'];
 
-    protected $casts = ['quantity' => 'decimal:3', 'unit_price' => 'decimal:3', 'tax_rate' => 'decimal:3', 'total_amount' => 'decimal:3'];
+    protected $casts = ['quantity' => 'integer', 'unit_price' => 'integer', 'tax_rate' => 'decimal:3', 'total_amount' => 'integer'];
 
     public function document(): BelongsTo
     {

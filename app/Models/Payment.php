@@ -13,7 +13,7 @@ class Payment extends Model
 
     protected $fillable = ['company_id', 'invoice_id', 'user_id', 'amount', 'payment_date', 'payment_method', 'reference', 'notes'];
 
-    protected $casts = ['amount' => 'decimal:3', 'payment_date' => 'date', 'payment_method' => PaymentMethod::class];
+    protected $casts = ['amount' => 'integer', 'payment_date' => 'date', 'payment_method' => PaymentMethod::class];
 
     public function company(): BelongsTo
     {

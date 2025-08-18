@@ -12,8 +12,11 @@ class PaymentNotifications extends Component
     use WithPagination;
 
     public $search = '';
+
     public $typeFilter = '';
+
     public $statusFilter = '';
+
     public $perPage = 15;
 
     protected $queryString = [
@@ -40,9 +43,9 @@ class PaymentNotifications extends Component
     public function generateNotifications(PaymentNotificationService $notificationService)
     {
         $stats = $notificationService->generateNotificationsForExistingInvoices();
-        
+
         $total = array_sum($stats);
-        
+
         if ($total > 0) {
             session()->flash('success', "✅ {$total} nouvelle(s) notification(s) générée(s) avec succès.");
         } else {
@@ -53,7 +56,7 @@ class PaymentNotifications extends Component
     public function processNotifications(PaymentNotificationService $notificationService)
     {
         $sentCount = $notificationService->processPendingNotifications();
-        
+
         if ($sentCount > 0) {
             session()->flash('success', "✅ {$sentCount} notification(s) envoyée(s) avec succès.");
         } else {
@@ -64,7 +67,7 @@ class PaymentNotifications extends Component
     public function resendNotification($notificationId, PaymentNotificationService $notificationService)
     {
         $notification = PaymentNotification::findOrFail($notificationId);
-        
+
         if ($notification->status === PaymentNotification::STATUS_FAILED) {
             $notification->update(['status' => PaymentNotification::STATUS_PENDING]);
             session()->flash('success', 'La notification a été reprogrammée pour un nouvel envoi.');
@@ -74,7 +77,7 @@ class PaymentNotifications extends Component
     public function cancelNotification($notificationId)
     {
         $notification = PaymentNotification::findOrFail($notificationId);
-        
+
         if ($notification->isPending()) {
             $notification->update(['status' => PaymentNotification::STATUS_CANCELLED]);
             session()->flash('success', 'La notification a été annulée.');
@@ -88,11 +91,11 @@ class PaymentNotifications extends Component
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('message', 'like', '%' . $this->search . '%')
-                  ->orWhereHas('company', function ($companyQuery) {
-                      $companyQuery->where('name', 'like', '%' . $this->search . '%');
-                  });
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('message', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('company', function ($companyQuery) {
+                        $companyQuery->where('name', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 

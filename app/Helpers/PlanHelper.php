@@ -20,7 +20,7 @@ class PlanHelper
             'transferts_de_stock' => 'Transferts de stock',
             'support_prioritaire' => 'Support prioritaire',
             'api_integration' => 'API d\'intégration',
-            'onboarding_personnalise' => 'Onboarding personnalisé'
+            'onboarding_personnalise' => 'Onboarding personnalisé',
         ];
     }
 
@@ -30,6 +30,7 @@ class PlanHelper
     public static function translateFeature(string $feature): string
     {
         $labels = self::getFeatureLabels();
+
         return $labels[$feature] ?? ucfirst(str_replace('_', ' ', $feature));
     }
 
@@ -41,8 +42,8 @@ class PlanHelper
         if ($price <= 0) {
             return 'Sur Devis';
         }
-        
-        return number_format($price, 0, ',', ' ') . ' XAF';
+
+        return number_format($price, 0, ',', ' ').' XAF';
     }
 
     /**
@@ -53,8 +54,8 @@ class PlanHelper
         if ($unlimited) {
             return 'Utilisateurs illimités';
         }
-        
-        return 'Jusqu\'à ' . $userLimit . ' utilisateur' . ($userLimit > 1 ? 's' : '');
+
+        return 'Jusqu\'à '.$userLimit.' utilisateur'.($userLimit > 1 ? 's' : '');
     }
 
     /**
@@ -102,28 +103,28 @@ class PlanHelper
                     'monthly' => 25000,
                     'quarterly' => 70000,
                     'yearly' => 250000,
-                    'yearly_discount' => '2 mois offerts'
+                    'yearly_discount' => '2 mois offerts',
                 ];
             case 'pro':
                 return [
                     'monthly' => 55000,
                     'quarterly' => 155000,
                     'yearly' => 550000,
-                    'yearly_discount' => '2 mois offerts'
+                    'yearly_discount' => '2 mois offerts',
                 ];
             case 'entreprise':
                 return [
                     'monthly' => 0,
                     'quarterly' => 0,
                     'yearly' => 0,
-                    'yearly_discount' => null
+                    'yearly_discount' => null,
                 ];
             default:
                 return [
                     'monthly' => 0,
                     'quarterly' => 0,
                     'yearly' => 0,
-                    'yearly_discount' => null
+                    'yearly_discount' => null,
                 ];
         }
     }

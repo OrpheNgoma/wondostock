@@ -2,11 +2,9 @@
 
 namespace App\Providers;
 
-use App\Helpers\CurrencyHelper;
 use App\Listeners\InvalidateDashboardCacheListener;
 use App\Listeners\InvalidateSecurityCacheListener;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -42,10 +40,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('feature-roles-permissions', function (User $user) {
             // Les propriétaires d'entreprise ont toujours accès aux rôles et permissions
             $isCompanyOwner = $user->company && $user->company->owner_id === $user->id;
-            
+
             // Ou si le plan inclut cette fonctionnalité
             $hasFeatureInPlan = $user->company && $user->company->hasFeature('roles_permissions');
-            
+
             return $isCompanyOwner || $hasFeatureInPlan;
         });
 

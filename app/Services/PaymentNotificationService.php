@@ -5,11 +5,8 @@ namespace App\Services;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\PaymentNotification;
-use App\Models\Subscription;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Service pour gérer les notifications de paiement automatiques.
@@ -29,9 +26,9 @@ class PaymentNotificationService
             'invoice_id' => $invoice->id,
             'type' => PaymentNotification::TYPE_REMINDER,
             'title' => 'Rappel de paiement',
-            'message' => "Votre facture {$invoice->invoice_number} d'un montant de " . 
-                        number_format($invoice->total_amount, 0, ',', ' ') . 
-                        " FCFA arrive à échéance le " . $dueDate->format('d/m/Y') . ".",
+            'message' => "Votre facture {$invoice->invoice_number} d'un montant de ".
+                        number_format($invoice->total_amount, 0, ',', ' ').
+                        ' FCFA arrive à échéance le '.$dueDate->format('d/m/Y').'.',
             'scheduled_for' => $scheduledFor,
             'notification_data' => [
                 'invoice_number' => $invoice->invoice_number,
@@ -54,8 +51,8 @@ class PaymentNotificationService
             'invoice_id' => $invoice->id,
             'type' => PaymentNotification::TYPE_OVERDUE,
             'title' => 'Facture en retard',
-            'message' => "Votre facture {$invoice->invoice_number} d'un montant de " . 
-                        number_format($invoice->total_amount, 0, ',', ' ') . 
+            'message' => "Votre facture {$invoice->invoice_number} d'un montant de ".
+                        number_format($invoice->total_amount, 0, ',', ' ').
                         " FCFA est en retard de {$daysPastDue} jour(s). Veuillez procéder au paiement rapidement.",
             'scheduled_for' => now(),
             'notification_data' => [
@@ -101,7 +98,7 @@ class PaymentNotificationService
             'company_id' => $company->id,
             'type' => PaymentNotification::TYPE_SUSPENSION_WARNING,
             'title' => 'Avertissement de suspension',
-            'message' => "Attention ! Vous avez {$overdueInvoices} facture(s) en retard. " .
+            'message' => "Attention ! Vous avez {$overdueInvoices} facture(s) en retard. ".
                         "Votre compte sera suspendu dans {$daysBeforeSuspension} jour(s) si aucun paiement n'est effectué.",
             'scheduled_for' => now(),
             'notification_data' => [
@@ -202,9 +199,9 @@ class PaymentNotificationService
 
         // Créer des avertissements de suspension pour les entreprises avec plusieurs factures en retard
         $companiesWithOverdueInvoices = Company::whereHas('invoices', function ($query) {
-                $query->where('status', '!=', 'paid')
-                    ->where('due_date', '<', now()->subDays(15));
-            })
+            $query->where('status', '!=', 'paid')
+                ->where('due_date', '<', now()->subDays(15));
+        })
             ->whereDoesntHave('paymentNotifications', function ($query) {
                 $query->where('type', PaymentNotification::TYPE_SUSPENSION_WARNING)
                     ->where('created_at', '>=', now()->subDays(7));
@@ -238,7 +235,7 @@ class PaymentNotificationService
     {
         $notificationData = $notification->notification_data ?? [];
         $notificationData['read_at'] = now()->toISOString();
-        
+
         $notification->update([
             'notification_data' => $notificationData,
         ]);

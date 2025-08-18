@@ -15,7 +15,7 @@ return new class extends Migration
             // Ajouter les colonnes manquantes du modèle Plan
             $table->text('description')->nullable()->after('slug');
             $table->decimal('price', 10, 2)->default(0)->after('description');
-            
+
             // Ajouter les colonnes pour les limites d'utilisateurs SaaS
             $table->integer('user_limit')->default(1)->after('price');
             $table->boolean('unlimited_users')->default(false)->after('user_limit');
@@ -33,7 +33,7 @@ return new class extends Migration
                 'unlimited_users',
                 'user_limit',
                 'price',
-                'description'
+                'description',
             ]);
         });
     }

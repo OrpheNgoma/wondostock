@@ -11,7 +11,7 @@ class GlobalAdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || !Auth::user()->is_global_admin) {
+        if (! Auth::check() || ! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé. Seuls les administrateurs globaux peuvent accéder à cette section.');
         }
 

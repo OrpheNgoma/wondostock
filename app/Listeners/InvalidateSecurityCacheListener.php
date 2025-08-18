@@ -17,8 +17,8 @@ class InvalidateSecurityCacheListener implements ShouldQueue
     public function handle($event): void
     {
         $model = $this->extractModelFromEvent($event);
-        
-        if (!$model) {
+
+        if (! $model) {
             return;
         }
 
@@ -46,11 +46,11 @@ class InvalidateSecurityCacheListener implements ShouldQueue
             case 'App\Models\User':
                 $this->handleUserChange($model);
                 break;
-                
+
             case 'App\Models\Company':
                 $this->handleCompanyChange($model);
                 break;
-                
+
             case 'Spatie\Permission\Models\Role':
             case 'Spatie\Permission\Models\Permission':
                 $this->handleRolePermissionChange($model);
@@ -62,7 +62,7 @@ class InvalidateSecurityCacheListener implements ShouldQueue
     {
         // Invalider le cache de l'utilisateur
         $this->securityCacheService->invalidateAllUserCache($user->id);
-        
+
         // Si le company_id a changé, invalider aussi l'ancien
         if ($user->isDirty('company_id') && $user->getOriginal('company_id')) {
             $this->securityCacheService->invalidateCompanyCache($user->getOriginal('company_id'));

@@ -13,7 +13,7 @@ class LanguageController extends Controller
     public function switch(Request $request, string $locale)
     {
         $availableLocales = array_keys(config('app.available_locales'));
-        
+
         if (in_array($locale, $availableLocales)) {
             Session::put('locale', $locale);
         }

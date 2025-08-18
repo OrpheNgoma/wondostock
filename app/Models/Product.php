@@ -24,8 +24,8 @@ class Product extends Model implements HasMedia
     protected $casts = [
         'type' => ProductType::class,
         'attributes' => 'array',
-        'purchase_price' => 'decimal:3',
-        'selling_price' => 'decimal:3',
+        'purchase_price' => 'integer',
+        'selling_price' => 'integer',
         'is_active' => 'boolean',
     ];
 

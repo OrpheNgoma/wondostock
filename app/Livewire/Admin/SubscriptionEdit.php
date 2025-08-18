@@ -12,14 +12,19 @@ use Livewire\Component;
 class SubscriptionEdit extends Component
 {
     public Subscription $subscription;
-    
+
     public $company_id = '';
+
     public $plan_id = '';
+
     public $starts_at = '';
+
     public $ends_at = '';
+
     public $status = '';
 
     public $companies = [];
+
     public $plans = [];
 
     protected $rules = [
@@ -47,10 +52,10 @@ class SubscriptionEdit extends Component
     public function mount(Subscription $subscription)
     {
         $this->subscription = $subscription->load(['company', 'plan']);
-        
+
         $this->companies = Company::orderBy('name')->get();
         $this->plans = Plan::orderBy('name')->get();
-        
+
         // Charger les valeurs actuelles
         $this->company_id = $subscription->company_id;
         $this->plan_id = $subscription->plan_id;
@@ -73,10 +78,11 @@ class SubscriptionEdit extends Component
             ]);
 
             session()->flash('success', 'Abonnement modifié avec succès !');
+
             return $this->redirect(route('admin.subscriptions.index'));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la modification de l\'abonnement : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la modification de l\'abonnement : '.$e->getMessage());
         }
     }
 

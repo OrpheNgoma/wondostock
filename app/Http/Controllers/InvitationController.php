@@ -20,11 +20,11 @@ class InvitationController extends Controller
     {
         $invitation = Invitation::where('token', $token)->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             abort(404, 'Invitation introuvable.');
         }
 
-        if (!$invitation->isValid()) {
+        if (! $invitation->isValid()) {
             return view('invitations.expired', compact('invitation'));
         }
 
@@ -38,7 +38,7 @@ class InvitationController extends Controller
     {
         try {
             $userData = $this->invitationService->validateAcceptanceData($request->all());
-            
+
             $user = $this->invitationService->acceptInvitation($token, $userData);
 
             // Connecter automatiquement l'utilisateur

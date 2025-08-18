@@ -36,11 +36,11 @@ class DocumentForm extends Component
     // --- Line Items & Totals ---
     public array $items = [];
 
-    public float $sub_total = 0;
+    public int $sub_total = 0;
 
-    public float $tax_amount = 0;
+    public int $tax_amount = 0;
 
-    public float $total_amount = 0;
+    public int $total_amount = 0;
 
     // --- Helpers ---
     public string $customer_search = '';
@@ -111,6 +111,28 @@ class DocumentForm extends Component
 
     // --- Real-time Search ---
 
+    public function updatedStoreId()
+    {
+        // Recalculer le stock pour tous les produits affichés quand on change de magasin
+        if (! empty($this->products_list)) {
+            $this->refreshProductsStock();
+        }
+    }
+
+    public function refreshProductsStock()
+    {
+        if ($this->store_id && ! empty($this->products_list)) {
+            $this->products_list = collect($this->products_list)->map(function ($product) {
+                $product->stock_quantity = DB::table('product_store')
+                    ->where('product_id', $product->id)
+                    ->where('store_id', $this->store_id)
+                    ->value('quantity') ?? 0;
+
+                return $product;
+            })->toArray();
+        }
+    }
+
     public function updatedCustomerSearch()
     {
         if (strlen($this->customer_search) < 2) {
@@ -130,9 +152,24 @@ class DocumentForm extends Component
 
             return;
         }
-        $this->products_list = Product::where('company_id', Auth::user()->company_id)
+        $this->products_list = Product::with(['category'])
+            ->where('company_id', Auth::user()->company_id)
             ->where('name', 'like', '%'.$this->product_search.'%')
-            ->limit(5)->get();
+            ->limit(5)
+            ->get()
+            ->map(function ($product) {
+                // Ajouter les informations de stock pour le magasin sélectionné
+                if ($this->store_id) {
+                    $product->stock_quantity = DB::table('product_store')
+                        ->where('product_id', $product->id)
+                        ->where('store_id', $this->store_id)
+                        ->value('quantity') ?? 0;
+                } else {
+                    $product->stock_quantity = 0;
+                }
+
+                return $product;
+            });
     }
 
     // --- Actions ---
@@ -188,9 +225,10 @@ class DocumentForm extends Component
         $this->tax_amount = 0;
 
         foreach ($this->items as $item) {
-            $lineTotal = $item['quantity'] * $item['unit_price'];
+            $lineTotal = (int) ($item['quantity'] * $item['unit_price']);
             $this->sub_total += $lineTotal;
-            $this->tax_amount += $lineTotal * ($item['tax_rate'] / 100);
+            // Calcul des taxes en arrondissant à l'entier le plus proche
+            $this->tax_amount += (int) round($lineTotal * ($item['tax_rate'] / 100));
         }
 
         $this->total_amount = $this->sub_total + $this->tax_amount;

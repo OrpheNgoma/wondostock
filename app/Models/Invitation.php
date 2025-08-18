@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Invitation extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -94,13 +94,13 @@ class Invitation extends Model
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<', now())
-                    ->where('status', 'pending');
+            ->where('status', 'pending');
     }
 
     public function scopeValid($query)
     {
         return $query->where('status', 'pending')
-                    ->where('expires_at', '>', now());
+            ->where('expires_at', '>', now());
     }
 
     // --- Methods ---

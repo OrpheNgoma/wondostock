@@ -31,13 +31,14 @@ class GenerateMonthlyInvoices extends Command
         try {
             // Générer les factures
             $invoices = $invoiceService->generateMonthlyInvoices();
-            
+
             if (empty($invoices)) {
                 $this->info('Aucune nouvelle facture à générer.');
+
                 return;
             }
 
-            $this->info(count($invoices) . ' facture(s) générée(s) avec succès.');
+            $this->info(count($invoices).' facture(s) générée(s) avec succès.');
 
             // Afficher les détails des factures générées
             $this->table(
@@ -47,7 +48,7 @@ class GenerateMonthlyInvoices extends Command
                         $invoice->invoice_number,
                         $invoice->company->name,
                         $invoice->subscription->plan->name,
-                        number_format($invoice->total_amount, 2) . ' €',
+                        number_format($invoice->total_amount, 2).' €',
                         $invoice->due_date->format('d/m/Y'),
                     ];
                 })
@@ -57,24 +58,25 @@ class GenerateMonthlyInvoices extends Command
             if ($this->option('send')) {
                 $this->info('Envoi des factures par email...');
                 $sent = 0;
-                
+
                 foreach ($invoices as $invoice) {
                     if ($invoiceService->sendInvoice($invoice)) {
                         $sent++;
                     }
                 }
-                
+
                 $this->info("{$sent} facture(s) envoyée(s) par email.");
             }
 
             // Vérifier les factures en retard
             $overdueInvoices = $invoiceService->checkOverdueInvoices();
-            if (!empty($overdueInvoices)) {
-                $this->warn(count($overdueInvoices) . ' facture(s) en retard détectée(s).');
+            if (! empty($overdueInvoices)) {
+                $this->warn(count($overdueInvoices).' facture(s) en retard détectée(s).');
             }
 
         } catch (\Exception $e) {
-            $this->error('Erreur lors de la génération des factures: ' . $e->getMessage());
+            $this->error('Erreur lors de la génération des factures: '.$e->getMessage());
+
             return 1;
         }
 

@@ -20,30 +20,46 @@ class CompanyShow extends Component
     use WithPagination;
 
     public Company $company;
+
     public bool $showSubscriptionForm = false;
+
     public bool $showUserForm = false;
+
     public bool $showEditForm = false;
-    
+
     // Subscription form fields
     public ?int $plan_id = null;
+
     public ?string $starts_at = null;
+
     public ?string $ends_at = null;
+
     public string $status = 'active';
 
     // User form fields
     public string $userName = '';
+
     public string $userEmail = '';
+
     public string $userPassword = '';
+
     public ?int $editingUserId = null;
 
     // Company edit form fields
     public string $companyName = '';
+
     public string $companyLegalName = '';
+
     public string $companyEmail = '';
+
     public string $companyPhone = '';
+
     public string $companyAddress = '';
+
     public string $companyRccm = '';
+
     public string $companyNif = '';
+
     public bool $companyIsActive = true;
 
     protected function rules()
@@ -54,16 +70,16 @@ class CompanyShow extends Component
             'starts_at' => 'required|date',
             'ends_at' => 'nullable|date|after:starts_at',
             'status' => 'required|in:active,expired,cancelled',
-            
+
             // User rules
             'userName' => 'required|string|max:255',
-            'userEmail' => 'required|email|unique:users,email,' . $this->editingUserId,
+            'userEmail' => 'required|email|unique:users,email,'.$this->editingUserId,
             'userPassword' => $this->editingUserId ? 'nullable|min:8' : 'required|min:8',
-            
+
             // Company rules
             'companyName' => 'required|string|max:255',
             'companyLegalName' => 'nullable|string|max:255',
-            'companyEmail' => 'required|email|unique:companies,email,' . $this->company->id,
+            'companyEmail' => 'required|email|unique:companies,email,'.$this->company->id,
             'companyPhone' => 'nullable|string|max:50',
             'companyAddress' => 'nullable|string',
             'companyRccm' => 'nullable|string|max:100',
@@ -75,12 +91,12 @@ class CompanyShow extends Component
 
     public function mount(Company $company)
     {
-        if (!Auth::user()->is_global_admin) {
+        if (! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé.');
         }
 
         $this->company = $company->load(['owner', 'users.roles', 'stores', 'subscription.plan']);
-        
+
         // Pre-fill subscription form
         if ($this->company->subscription) {
             $this->plan_id = $this->company->subscription->plan_id;
@@ -142,7 +158,7 @@ class CompanyShow extends Component
     public function toggleCompanyStatus()
     {
         $this->company->update([
-            'is_active' => !$this->company->is_active
+            'is_active' => ! $this->company->is_active,
         ]);
 
         $status = $this->company->is_active ? 'activée' : 'désactivée';
@@ -166,7 +182,7 @@ class CompanyShow extends Component
     {
         $this->validate([
             'userName' => 'required|string|max:255',
-            'userEmail' => 'required|email|unique:users,email,' . $this->editingUserId,
+            'userEmail' => 'required|email|unique:users,email,'.$this->editingUserId,
             'userPassword' => $this->editingUserId ? 'nullable|min:8' : 'required|min:8',
         ]);
 
@@ -209,11 +225,12 @@ class CompanyShow extends Component
     {
         if ($user->id === $this->company->owner_id) {
             $this->dispatch('notify', message: 'Impossible de supprimer le propriétaire de l\'entreprise.', type: 'error');
+
             return;
         }
 
         $user->delete();
-        
+
         // Recharger les données
         $this->company->refresh();
         $this->company->load(['users.roles']);
@@ -230,7 +247,7 @@ class CompanyShow extends Component
     {
         $this->showEditForm = false;
         $this->resetErrorBag();
-        
+
         // Restaurer les valeurs originales
         $this->companyName = $this->company->name;
         $this->companyLegalName = $this->company->legal_name ?? '';
@@ -247,7 +264,7 @@ class CompanyShow extends Component
         $this->validate([
             'companyName' => 'required|string|max:255',
             'companyLegalName' => 'nullable|string|max:255',
-            'companyEmail' => 'required|email|unique:companies,email,' . $this->company->id,
+            'companyEmail' => 'required|email|unique:companies,email,'.$this->company->id,
             'companyPhone' => 'nullable|string|max:50',
             'companyAddress' => 'nullable|string',
             'companyRccm' => 'nullable|string|max:100',

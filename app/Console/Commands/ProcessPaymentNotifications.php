@@ -31,9 +31,9 @@ class ProcessPaymentNotifications extends Command
 
         if ($this->option('generate')) {
             $this->info('Génération de nouvelles notifications...');
-            
+
             $stats = $notificationService->generateNotificationsForExistingInvoices();
-            
+
             $this->table(
                 ['Type', 'Nombre créé'],
                 [
@@ -45,11 +45,11 @@ class ProcessPaymentNotifications extends Command
         }
 
         $this->info('Envoi des notifications programmées...');
-        
+
         $sentCount = $notificationService->processPendingNotifications();
-        
+
         $this->info("✅ {$sentCount} notification(s) envoyée(s) avec succès.");
-        
+
         return 0;
     }
 }

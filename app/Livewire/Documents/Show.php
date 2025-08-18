@@ -54,8 +54,8 @@ class Show extends Component
 
     /**
      * Génère et télécharge le document au format PDF.
-     * 
-     * @param string $printMode Mode d'impression ('standard' ou 'content_only')
+     *
+     * @param  string  $printMode  Mode d'impression ('standard' ou 'content_only')
      */
     public function downloadPdf($printMode = 'standard')
     {
@@ -97,7 +97,7 @@ class Show extends Component
             $pdf->setPaper('A4', 'portrait')
                 ->setOptions([
                     'defaultFont' => 'sans-serif',
-                    'isPhpEnabled' => true
+                    'isPhpEnabled' => true,
                 ]);
         }
 

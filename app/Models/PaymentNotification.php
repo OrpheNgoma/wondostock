@@ -45,16 +45,22 @@ class PaymentNotification extends Model
      * Types de notifications disponibles.
      */
     const TYPE_REMINDER = 'reminder';
+
     const TYPE_OVERDUE = 'overdue';
+
     const TYPE_PAYMENT_RECEIVED = 'payment_received';
+
     const TYPE_SUSPENSION_WARNING = 'suspension_warning';
 
     /**
      * Statuts des notifications.
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_FAILED = 'failed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     /**

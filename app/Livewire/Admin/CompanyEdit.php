@@ -10,15 +10,22 @@ use Livewire\Component;
 class CompanyEdit extends Component
 {
     public Company $company;
-    
+
     // Informations de l'entreprise
     public $name = '';
+
     public $legal_name = '';
+
     public $email = '';
+
     public $phone_number = '';
+
     public $address = '';
+
     public $rccm = '';
+
     public $nif = '';
+
     public $is_active = true;
 
     protected $rules = [
@@ -55,7 +62,7 @@ class CompanyEdit extends Component
     {
         // Validation unique pour l'email (exclure l'entreprise actuelle)
         $rules = $this->rules;
-        $rules['email'] .= ',email,' . $this->company->id;
+        $rules['email'] .= ',email,'.$this->company->id;
 
         $this->validate($rules);
 
@@ -72,10 +79,11 @@ class CompanyEdit extends Component
             ]);
 
             session()->flash('success', 'Entreprise modifiée avec succès !');
+
             return $this->redirect(route('admin.companies.index'));
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la modification de l\'entreprise : ' . $e->getMessage());
+            session()->flash('error', 'Erreur lors de la modification de l\'entreprise : '.$e->getMessage());
         }
     }
 

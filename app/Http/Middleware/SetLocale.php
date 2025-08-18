@@ -25,7 +25,7 @@ class SetLocale
 
         // Ensure the locale is supported
         $availableLocales = array_keys(config('app.available_locales'));
-        if (!in_array($locale, $availableLocales)) {
+        if (! in_array($locale, $availableLocales)) {
             $locale = config('app.locale');
         }
 

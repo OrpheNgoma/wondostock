@@ -38,7 +38,7 @@ class BillingPayment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'payment_details' => 'array',
-        'amount' => 'decimal:2',
+        'amount' => 'integer',
     ];
 
     /**
