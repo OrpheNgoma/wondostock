@@ -18,28 +18,40 @@ class SubscriptionsIndex extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $statusFilter = '';
+
     public string $planFilter = '';
+
     public string $sortBy = 'created_at';
+
     public string $sortDirection = 'desc';
-    
+
     // Modal de création/édition d'abonnement
     public bool $showModal = false;
+
     public ?int $editingSubscription = null;
+
     public ?int $company_id = null;
+
     public ?int $plan_id = null;
+
     public ?string $starts_at = null;
+
     public ?string $ends_at = null;
+
     public string $status = 'active';
 
     // Modal de création d'abonnement rapide
     public bool $showQuickCreateModal = false;
+
     public string $companySearch = '';
+
     public ?int $selectedCompanyId = null;
 
     public function mount()
     {
-        if (!Auth::user()->is_global_admin) {
+        if (! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé.');
         }
     }
@@ -122,19 +134,19 @@ class SubscriptionsIndex extends Component
 
         if ($this->editingSubscription) {
             $subscription = Subscription::find($this->editingSubscription);
-            
+
             // Désactiver l'ancien abonnement de l'entreprise s'il change
             if ($subscription->company_id !== $this->company_id) {
                 $oldCompanySubscriptions = Subscription::where('company_id', $subscription->company_id)
                     ->where('id', '!=', $subscription->id)
                     ->where('status', 'active')
                     ->get();
-                
+
                 foreach ($oldCompanySubscriptions as $oldSub) {
                     $oldSub->update(['status' => 'cancelled']);
                 }
             }
-            
+
             // Désactiver les autres abonnements de la nouvelle entreprise
             if ($this->status === 'active') {
                 Subscription::where('company_id', $this->company_id)
@@ -142,7 +154,7 @@ class SubscriptionsIndex extends Component
                     ->where('status', 'active')
                     ->update(['status' => 'cancelled']);
             }
-            
+
             $subscription->update($data);
             $message = 'Abonnement mis à jour avec succès.';
         } else {
@@ -152,15 +164,12 @@ class SubscriptionsIndex extends Component
                     ->where('status', 'active')
                     ->update(['status' => 'cancelled']);
             }
-            
+
             Subscription::create($data);
             $message = 'Abonnement créé avec succès.';
         }
 
-        $this->dispatch('notify', [
-            'message' => $message,
-            'type' => 'success'
-        ]);
+        $this->dispatch('notify', message: $message, type: 'success');
 
         $this->closeModal();
     }
@@ -168,44 +177,35 @@ class SubscriptionsIndex extends Component
     public function cancelSubscription(Subscription $subscription)
     {
         $subscription->update(['status' => 'cancelled']);
-        
-        $this->dispatch('notify', [
-            'message' => 'Abonnement annulé avec succès.',
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', message: 'Abonnement annulé avec succès.', type: 'success');
     }
 
     public function renewSubscription(Subscription $subscription)
     {
         // Désactiver d'abord l'ancien abonnement et tous les autres abonnements actifs
         $subscription->update(['status' => 'cancelled']);
-        
+
         Subscription::where('company_id', $subscription->company_id)
             ->where('id', '!=', $subscription->id)
             ->where('status', 'active')
             ->update(['status' => 'cancelled']);
-        
+
         // Créer un nouvel abonnement basé sur l'ancien
         $newSubscription = $subscription->replicate();
         $newSubscription->starts_at = now();
         $newSubscription->ends_at = $subscription->ends_at ? now()->addYear() : null;
         $newSubscription->status = 'active';
         $newSubscription->save();
-        
-        $this->dispatch('notify', [
-            'message' => 'Abonnement renouvelé avec succès.',
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', message: 'Abonnement renouvelé avec succès.', type: 'success');
     }
 
     public function deleteSubscription(Subscription $subscription)
     {
         $subscription->delete();
-        
-        $this->dispatch('notify', [
-            'message' => 'Abonnement supprimé avec succès.',
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', message: 'Abonnement supprimé avec succès.', type: 'success');
     }
 
     public function selectCompany($companyId)
@@ -257,8 +257,8 @@ class SubscriptionsIndex extends Component
             return collect();
         }
 
-        return Company::where('name', 'like', '%' . $this->companySearch . '%')
-            ->orWhere('email', 'like', '%' . $this->companySearch . '%')
+        return Company::where('name', 'like', '%'.$this->companySearch.'%')
+            ->orWhere('email', 'like', '%'.$this->companySearch.'%')
             ->limit(10)
             ->get();
     }
@@ -268,10 +268,10 @@ class SubscriptionsIndex extends Component
         $subscriptions = Subscription::with(['company', 'plan'])
             ->when($this->search, function ($query) {
                 $query->whereHas('company', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%');
                 })->orWhereHas('plan', function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%');
                 });
             })
             ->when($this->statusFilter, function ($query) {

@@ -127,10 +127,7 @@ class StockEntry extends Component
     {
         // Vérification de sécurité multi-tenant
         if ($product->company_id !== Auth::user()->company_id) {
-            $this->dispatch('notify', [
-                'message' => 'Produit non autorisé.',
-                'type' => 'error',
-            ]);
+            $this->dispatch('notify', message: 'Produit non autorisé.', type: 'error');
 
             return;
         }
@@ -142,10 +139,7 @@ class StockEntry extends Component
         foreach ($this->items as $key => $item) {
             if ($item['product_id'] === $product->id) {
                 $this->items[$key]['quantity'] = (int) $this->items[$key]['quantity'] + 1;
-                $this->dispatch('notify', [
-                    'message' => "Quantité mise à jour pour {$product->name}",
-                    'type' => 'success',
-                ]);
+                $this->dispatch('notify', message: "Quantité mise à jour pour {$product->name}", type: 'success');
 
                 return;
             }
@@ -153,10 +147,7 @@ class StockEntry extends Component
 
         // Vérifier la limite de produits
         if (count($this->items) >= 50) {
-            $this->dispatch('notify', [
-                'message' => 'Maximum 50 produits par entrée de stock.',
-                'type' => 'error',
-            ]);
+            $this->dispatch('notify', message: 'Maximum 50 produits par entrée de stock.', type: 'error');
 
             return;
         }
@@ -168,10 +159,7 @@ class StockEntry extends Component
             'quantity' => 1,
         ];
 
-        $this->dispatch('notify', [
-            'message' => "Produit {$product->name} ajouté avec succès",
-            'type' => 'success',
-        ]);
+        $this->dispatch('notify', message: "Produit {$product->name} ajouté avec succès", type: 'success');
     }
 
     public function removeItem($index)

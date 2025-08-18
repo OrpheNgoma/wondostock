@@ -16,19 +16,30 @@ class PlansIndex extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $sortBy = 'name';
+
     public string $sortDirection = 'asc';
-    
+
     // Propriétés pour le modal de création/édition
     public bool $showModal = false;
+
     public ?int $editingPlan = null;
+
     public string $name = '';
+
     public string $slug = '';
+
     public string $description = '';
+
     public float $price = 0.00;
+
     public int $user_limit = 1;
+
     public bool $unlimited_users = false;
+
     public array $features = [];
+
     public string $newFeature = '';
 
     // Liste des fonctionnalités disponibles
@@ -51,7 +62,7 @@ class PlansIndex extends Component
 
     public function mount()
     {
-        if (!Auth::user()->is_global_admin) {
+        if (! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé.');
         }
     }
@@ -81,7 +92,7 @@ class PlansIndex extends Component
     public function updatedName()
     {
         // Auto-générer le slug basé sur le nom si on est en création
-        if (!$this->editingPlan && $this->name) {
+        if (! $this->editingPlan && $this->name) {
             $this->slug = \Illuminate\Support\Str::slug($this->name);
         }
     }
@@ -103,14 +114,14 @@ class PlansIndex extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:plans,slug,' . $this->editingPlan,
+            'slug' => 'required|string|max:255|unique:plans,slug,'.$this->editingPlan,
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'features' => 'array',
         ];
 
         // Ajouter la validation pour user_limit seulement si unlimited_users est false
-        if (!$this->unlimited_users) {
+        if (! $this->unlimited_users) {
             $rules['user_limit'] = 'required|integer|min:1';
         }
 
@@ -134,10 +145,7 @@ class PlansIndex extends Component
             $message = 'Plan créé avec succès.';
         }
 
-        $this->dispatch('notify', [
-            'message' => $message,
-            'type' => 'success'
-        ]);
+        $this->dispatch('notify', message: $message, type: 'success');
 
         $this->resetForm();
         $this->showModal = false;
@@ -148,43 +156,33 @@ class PlansIndex extends Component
         try {
             // Vérifier s'il y a des abonnements actifs
             $activeSubscriptions = $plan->subscriptions()->where('status', 'active')->count();
-            
+
             if ($activeSubscriptions > 0) {
-                $this->dispatch('notify', [
-                    'message' => "Impossible de supprimer ce plan. Il y a {$activeSubscriptions} abonnement(s) actif(s).",
-                    'type' => 'error'
-                ]);
+                $this->dispatch('notify', message: "Impossible de supprimer ce plan. Il y a {$activeSubscriptions} abonnement(s) actif(s).", type: 'error');
+
                 return;
             }
 
             // Vérifier s'il y a des abonnements en général
             $totalSubscriptions = $plan->subscriptions()->count();
-            
+
             if ($totalSubscriptions > 0) {
-                $this->dispatch('notify', [
-                    'message' => "Impossible de supprimer ce plan. Il y a {$totalSubscriptions} abonnement(s) associé(s). Supprimez d'abord les abonnements.",
-                    'type' => 'error'
-                ]);
+                $this->dispatch('notify', message: "Impossible de supprimer ce plan. Il y a {$totalSubscriptions} abonnement(s) associé(s). Supprimez d'abord les abonnements.", type: 'error');
+
                 return;
             }
 
             $plan->delete();
-            
-            $this->dispatch('notify', [
-                'message' => 'Plan supprimé avec succès.',
-                'type' => 'success'
-            ]);
+
+            $this->dispatch('notify', message: 'Plan supprimé avec succès.', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'message' => 'Erreur lors de la suppression du plan: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            $this->dispatch('notify', message: 'Erreur lors de la suppression du plan: '.$e->getMessage(), type: 'error');
         }
     }
 
     public function addFeature()
     {
-        if ($this->newFeature && !in_array($this->newFeature, $this->features)) {
+        if ($this->newFeature && ! in_array($this->newFeature, $this->features)) {
             $this->features[] = $this->newFeature;
             $this->newFeature = '';
         }
@@ -240,13 +238,13 @@ class PlansIndex extends Component
 
     public function render()
     {
-        $plans = Plan::withCount(['subscriptions' => function($query) {
-                $query->where('status', 'active');
-            }])
+        $plans = Plan::withCount(['subscriptions' => function ($query) {
+            $query->where('status', 'active');
+        }])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('description', 'like', '%'.$this->search.'%');
                 });
             })
             ->orderBy($this->sortBy, $this->sortDirection)

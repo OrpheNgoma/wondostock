@@ -103,27 +103,27 @@ class Register extends Component
 
                 // 4. Créer et assigner le rôle de "Propriétaire" pour cette entreprise
                 setPermissionsTeamId($company->id);
-                
+
                 // Utiliser le nom de l'entreprise pour un affichage professionnel
                 $sanitizedCompanyName = preg_replace('/[^a-zA-Z0-9\s]/', '', $company->name);
                 $sanitizedCompanyName = preg_replace('/\s+/', '-', trim($sanitizedCompanyName));
-                $roleName = 'Propriétaire-' . $sanitizedCompanyName;
-                
+                $roleName = 'Propriétaire-'.$sanitizedCompanyName;
+
                 // Vérifier si le rôle existe déjà
                 $ownerRole = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
-                
-                if (!$ownerRole) {
+
+                if (! $ownerRole) {
                     $ownerRole = \Spatie\Permission\Models\Role::create([
                         'name' => $roleName,
                         'guard_name' => 'web',
                         'company_id' => $company->id,
                     ]);
-                    
+
                     // Assigner toutes les permissions au rôle Propriétaire
                     $allPermissions = \Spatie\Permission\Models\Permission::all();
                     $ownerRole->syncPermissions($allPermissions);
                 }
-                
+
                 // Assigner le rôle à l'utilisateur
                 $user->assignRole($ownerRole);
 
@@ -155,20 +155,17 @@ class Register extends Component
                     'companyName' => $this->companyName,
                     'email' => $this->email,
                     'userName' => $this->userName,
-                ]
+                ],
             ]);
-            
-            $this->dispatch('notify', [
-                'message' => 'Une erreur est survenue lors de la création de votre compte: ' . $e->getMessage(),
-                'type' => 'error',
-            ]);
+
+            $this->dispatch('notify', message: 'Une erreur est survenue lors de la création de votre compte: '.$e->getMessage(), type: 'error');
         }
     }
 
     public function render()
     {
         $plans = Plan::orderBy('price')->get();
-        
+
         return view('livewire.auth.register', [
             'plans' => $plans,
         ]);

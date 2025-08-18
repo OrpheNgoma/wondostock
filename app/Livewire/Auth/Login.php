@@ -32,10 +32,7 @@ class Login extends Component
             $this->validate();
 
             if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-                $this->dispatch('notify', [
-                    'message' => 'Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.',
-                    'type' => 'error',
-                ]);
+                $this->dispatch('notify', message: 'Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.', type: 'error');
 
                 throw ValidationException::withMessages([
                     'email' => 'Ces identifiants ne correspondent à aucun compte.',
@@ -44,10 +41,7 @@ class Login extends Component
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'message' => 'Une erreur est survenue. Veuillez réessayer.',
-                'type' => 'error',
-            ]);
+            $this->dispatch('notify', message: 'Une erreur est survenue. Veuillez réessayer.', type: 'error');
 
             return;
         }

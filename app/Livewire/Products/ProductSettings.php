@@ -17,35 +17,53 @@ class ProductSettings extends Component
 {
     // --- State for Modal/Form ---
     public bool $showForm = false;
+
     public string $formType = ''; // 'category' or 'tax'
+
     public string $activeTab = 'categories'; // 'categories' or 'taxes'
 
     // --- UI State ---
     public bool $isLoading = false;
+
     public string $searchCategories = '';
+
     public string $searchTaxes = '';
+
     public string $categoryFilter = 'all'; // 'all', 'parent', 'child'
+
     public string $taxFilter = 'all'; // 'all', 'default', 'custom'
 
     // --- Category Properties ---
     public ?Category $editingCategory;
+
     public string $categoryName = '';
+
     public ?int $categoryParentId = null;
+
     public string $categoryDescription = '';
+
     public string $categoryColor = '#3B82F6';
+
     public string $categoryIcon = '';
 
     // --- Tax Properties ---
     public ?Tax $editingTax;
+
     public string $taxName = '';
+
     public string $taxRate = '';
+
     public bool $taxIsDefault = false;
+
     public string $taxDescription = '';
 
     // --- Bulk Actions ---
     public array $selectedCategories = [];
+
     public array $selectedTaxes = [];
+
     public bool $selectAllCategories = false;
+
     public bool $selectAllTaxes = false;
 
     protected function rules()
@@ -104,11 +122,8 @@ class ProductSettings extends Component
 
         $this->selectedCategories = [];
         $this->selectAllCategories = false;
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => "Suppression de {$count} catégorie(s) réussie"
-        ]);
+
+        $this->dispatch('notify', type: 'success', message: "Suppression de {$count} catégorie(s) réussie");
     }
 
     public function bulkDeleteTaxes()
@@ -123,11 +138,8 @@ class ProductSettings extends Component
 
         $this->selectedTaxes = [];
         $this->selectAllTaxes = false;
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => "Suppression de {$count} taxe(s) réussie"
-        ]);
+
+        $this->dispatch('notify', type: 'success', message: "Suppression de {$count} taxe(s) réussie");
     }
 
     // ========== CATEGORY METHODS ==========
@@ -261,7 +273,7 @@ class ProductSettings extends Component
 
         // Search filter
         if ($this->searchCategories) {
-            $query->where('name', 'like', '%' . $this->searchCategories . '%');
+            $query->where('name', 'like', '%'.$this->searchCategories.'%');
         }
 
         // Type filter
@@ -284,7 +296,7 @@ class ProductSettings extends Component
 
         // Search filter
         if ($this->searchTaxes) {
-            $query->where('name', 'like', '%' . $this->searchTaxes . '%');
+            $query->where('name', 'like', '%'.$this->searchTaxes.'%');
         }
 
         // Type filter
@@ -303,7 +315,7 @@ class ProductSettings extends Component
     public function render()
     {
         $companyId = Auth::user()->company_id;
-        
+
         $categories = $this->getFilteredCategories();
         $taxes = $this->getFilteredTaxes();
         $categoryOptions = Category::where('company_id', $companyId)->pluck('name', 'id');

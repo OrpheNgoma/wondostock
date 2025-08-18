@@ -20,25 +20,36 @@ class Index extends Component
 
     // --- Profile Information Properties ---
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public string $position = '';
+
     public $avatar;
+
     public string $current_avatar = '';
 
     // --- Password Properties ---
     public string $current_password = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     // --- UI State ---
     public string $activeTab = 'profile';
+
     public bool $showPasswordFields = false;
+
     public bool $isUpdatingProfile = false;
+
     public bool $isUpdatingPassword = false;
 
     // --- Security Info ---
     public array $loginSessions = [];
+
     public bool $twoFactorEnabled = false;
 
     public function mount()
@@ -49,7 +60,7 @@ class Index extends Component
         $this->phone = $user->phone ?? '';
         $this->position = $user->position ?? '';
         $this->current_avatar = $user->avatar ?? '';
-        
+
         $this->loadSecurityInfo();
     }
 
@@ -60,8 +71,8 @@ class Index extends Component
 
     public function togglePasswordFields()
     {
-        $this->showPasswordFields = !$this->showPasswordFields;
-        if (!$this->showPasswordFields) {
+        $this->showPasswordFields = ! $this->showPasswordFields;
+        if (! $this->showPasswordFields) {
             $this->reset(['current_password', 'password', 'password_confirmation']);
         }
     }
@@ -72,7 +83,7 @@ class Index extends Component
     public function updateProfile()
     {
         $this->isUpdatingProfile = true;
-        
+
         try {
             $user = Auth::user();
 
@@ -90,7 +101,7 @@ class Index extends Component
                 if ($user->avatar) {
                     Storage::disk('public')->delete($user->avatar);
                 }
-                
+
                 $avatarPath = $this->avatar->store('avatars', 'public');
                 $validated['avatar'] = $avatarPath;
                 $this->current_avatar = $avatarPath;
@@ -98,16 +109,10 @@ class Index extends Component
 
             $user->update($validated);
 
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => __('app.messages.success.updated')
-            ]);
-            
+            $this->dispatch('notify', type: 'success', message: __('app.messages.success.updated'));
+
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error', 
-                'message' => __('app.messages.error.general')
-            ]);
+            $this->dispatch('notify', type: 'error', message: __('app.messages.error.general'));
         } finally {
             $this->isUpdatingProfile = false;
             $this->avatar = null;
@@ -120,7 +125,7 @@ class Index extends Component
     public function updatePassword()
     {
         $this->isUpdatingPassword = true;
-        
+
         try {
             $user = Auth::user();
 
@@ -142,19 +147,13 @@ class Index extends Component
 
             $this->reset(['current_password', 'password', 'password_confirmation']);
             $this->showPasswordFields = false;
-            
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => __('Mot de passe mis à jour avec succès.')
-            ]);
-            
+
+            $this->dispatch('notify', type: 'success', message: __('Mot de passe mis à jour avec succès.'));
+
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => __('app.messages.error.general')
-            ]);
+            $this->dispatch('notify', type: 'error', message: __('app.messages.error.general'));
         } finally {
             $this->isUpdatingPassword = false;
         }
@@ -169,28 +168,25 @@ class Index extends Component
                 'location' => 'Paris, France',
                 'last_active' => 'Il y a 2 minutes',
                 'current' => true,
-                'ip' => '192.168.1.1'
+                'ip' => '192.168.1.1',
             ],
             [
                 'device' => 'Safari sur iPhone',
-                'location' => 'Lyon, France', 
+                'location' => 'Lyon, France',
                 'last_active' => 'Il y a 2 heures',
                 'current' => false,
-                'ip' => '192.168.1.25'
-            ]
+                'ip' => '192.168.1.25',
+            ],
         ];
     }
 
     public function terminateSession($index)
     {
-        if (isset($this->loginSessions[$index]) && !$this->loginSessions[$index]['current']) {
+        if (isset($this->loginSessions[$index]) && ! $this->loginSessions[$index]['current']) {
             unset($this->loginSessions[$index]);
             $this->loginSessions = array_values($this->loginSessions);
-            
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Session terminée avec succès'
-            ]);
+
+            $this->dispatch('notify', type: 'success', message: 'Session terminée avec succès');
         }
     }
 

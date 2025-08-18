@@ -20,28 +20,42 @@ class TransferForm extends Component
 {
     // --- Form Properties ---
     public ?int $from_store_id = null;
+
     public ?int $to_store_id = null;
+
     public $transfer_date;
+
     public $notes = '';
+
     public string $reference = '';
+
     public string $transfer_reason = 'Réapprovisionnement';
 
     // --- Line Items ---
     public array $items = [];
+
     public float $total_items = 0;
+
     public float $estimated_value = 0;
 
     // --- UI State ---
     public string $product_search = '';
+
     public $products_list = [];
+
     public bool $isSearching = false;
+
     public bool $isSaving = false;
+
     public string $current_step = 'transfer_info'; // transfer_info, products, review
+
     public bool $showProductModal = false;
+
     public bool $showConfirmModal = false;
 
     // --- Selected Product for Modal ---
     public ?Product $selectedProduct = null;
+
     public int $modalQuantity = 1;
 
     protected function rules()
@@ -74,7 +88,7 @@ class TransferForm extends Component
     public function mount()
     {
         $this->transfer_date = now()->format('Y-m-d');
-        $this->reference = 'TRF-' . strtoupper(substr(uniqid(), -6));
+        $this->reference = 'TRF-'.strtoupper(substr(uniqid(), -6));
         $stores = Auth::user()->company->stores;
         $this->from_store_id = $stores->first()?->id;
         $this->to_store_id = $stores->skip(1)->first()?->id;
@@ -85,13 +99,14 @@ class TransferForm extends Component
     public function updatedProductSearch()
     {
         $this->isSearching = true;
-        
+
         if (strlen($this->product_search) < 2 || ! $this->from_store_id) {
             $this->products_list = [];
             $this->isSearching = false;
+
             return;
         }
-        
+
         // On ne cherche que les produits qui ont du stock dans le magasin d'origine
         $this->products_list = Product::where('company_id', Auth::user()->company_id)
             ->where(function ($query) {
@@ -106,7 +121,7 @@ class TransferForm extends Component
                 $query->where('stores.id', $this->from_store_id);
             }, 'category', 'unit'])
             ->limit(8)->get();
-            
+
         $this->isSearching = false;
     }
 
@@ -123,10 +138,8 @@ class TransferForm extends Component
             $this->current_step = 'products';
         } elseif ($this->current_step === 'products') {
             if (empty($this->items)) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'Vous devez ajouter au moins un produit au transfert.'
-                ]);
+                $this->dispatch('notify', type: 'error', message: 'Vous devez ajouter au moins un produit au transfert.');
+
                 return;
             }
             $this->current_step = 'review';
@@ -154,15 +167,15 @@ class TransferForm extends Component
 
     public function addProductFromModal()
     {
-        if (!$this->selectedProduct) return;
+        if (! $this->selectedProduct) {
+            return;
+        }
 
         $stockInStore = $this->selectedProduct->stores->first()->pivot->quantity;
-        
+
         if ($this->modalQuantity > $stockInStore) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Quantité demandée supérieure au stock disponible.'
-            ]);
+            $this->dispatch('notify', type: 'error', message: 'Quantité demandée supérieure au stock disponible.');
+
             return;
         }
 
@@ -171,10 +184,8 @@ class TransferForm extends Component
                 $this->items[$key]['quantity'] += $this->modalQuantity;
                 $this->calculateTotals();
                 $this->showProductModal = false;
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Quantité mise à jour avec succès.'
-                ]);
+                $this->dispatch('notify', type: 'success', message: 'Quantité mise à jour avec succès.');
+
                 return;
             }
         }
@@ -189,13 +200,10 @@ class TransferForm extends Component
             'quantity' => $this->modalQuantity,
             'max_quantity' => $stockInStore,
         ];
-        
+
         $this->calculateTotals();
         $this->showProductModal = false;
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Produit ajouté avec succès.'
-        ]);
+        $this->dispatch('notify', type: 'success', message: 'Produit ajouté avec succès.');
     }
 
     public function addProduct(Product $product)
@@ -209,10 +217,7 @@ class TransferForm extends Component
             unset($this->items[$index]);
             $this->items = array_values($this->items);
             $this->calculateTotals();
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Produit retiré du transfert.'
-            ]);
+            $this->dispatch('notify', type: 'success', message: 'Produit retiré du transfert.');
         }
     }
 
@@ -221,17 +226,14 @@ class TransferForm extends Component
         if (isset($this->items[$index])) {
             $quantity = max(1, (int) $quantity);
             $maxQuantity = $this->items[$index]['max_quantity'];
-            
+
             if ($quantity > $maxQuantity) {
                 $this->items[$index]['quantity'] = $maxQuantity;
-                $this->dispatch('notify', [
-                    'type' => 'warning',
-                    'message' => "Quantité limitée au stock disponible ({$maxQuantity})."
-                ]);
+                $this->dispatch('notify', type: 'warning', message: "Quantité limitée au stock disponible ({$maxQuantity}).");
             } else {
                 $this->items[$index]['quantity'] = $quantity;
             }
-            
+
             $this->calculateTotals();
         }
     }
@@ -239,7 +241,7 @@ class TransferForm extends Component
     public function calculateTotals()
     {
         $this->total_items = array_sum(array_column($this->items, 'quantity'));
-        $this->estimated_value = array_sum(array_map(function($item) {
+        $this->estimated_value = array_sum(array_map(function ($item) {
             return ($item['price'] ?? 0) * $item['quantity'];
         }, $this->items));
     }
@@ -319,21 +321,16 @@ class TransferForm extends Component
             });
         } catch (ValidationException $e) {
             // Attrape l'exception de stock insuffisant
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => $e->getMessage()
-            ]);
+            $this->dispatch('notify', type: 'error', message: $e->getMessage());
+
             return;
         } finally {
             $this->isSaving = false;
             $this->showConfirmModal = false;
         }
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Transfert de stock enregistré avec succès.'
-        ]);
-        
+        $this->dispatch('notify', type: 'success', message: 'Transfert de stock enregistré avec succès.');
+
         return $this->redirectRoute('stock.movements.index');
     }
 
@@ -360,7 +357,7 @@ class TransferForm extends Component
             'Retour produit' => 'Retour produit',
             'Équilibrage stock' => 'Équilibrage stock',
             'Promotion' => 'Promotion',
-            'Autre' => 'Autre'
+            'Autre' => 'Autre',
         ];
     }
 

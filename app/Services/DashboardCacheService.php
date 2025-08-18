@@ -13,12 +13,13 @@ use Illuminate\Support\Facades\DB;
 class DashboardCacheService
 {
     private const CACHE_TTL = 900; // 15 minutes
+
     private const CACHE_PREFIX = 'dashboard_kpis';
 
     public function getKPIs(int $companyId, int $period, ?int $storeId = null): array
     {
         $cacheKey = $this->buildCacheKey($companyId, $period, $storeId);
-        
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($companyId, $period, $storeId) {
             return $this->calculateKPIs($companyId, $period, $storeId);
         });
@@ -27,7 +28,7 @@ class DashboardCacheService
     public function invalidateKPIs(int $companyId): void
     {
         $patterns = [
-            self::CACHE_PREFIX . ".company_{$companyId}_*",
+            self::CACHE_PREFIX.".company_{$companyId}_*",
         ];
 
         foreach ($patterns as $pattern) {
@@ -37,16 +38,16 @@ class DashboardCacheService
 
     private function buildCacheKey(int $companyId, int $period, ?int $storeId = null): string
     {
-        $key = self::CACHE_PREFIX . ".company_{$companyId}_period_{$period}";
-        
+        $key = self::CACHE_PREFIX.".company_{$companyId}_period_{$period}";
+
         if ($storeId) {
             $key .= "_store_{$storeId}";
         }
-        
+
         // Ajouter l'heure pour un cache qui se rafraîchit toutes les 15 minutes
         $timeSlot = floor(now()->timestamp / self::CACHE_TTL);
         $key .= "_slot_{$timeSlot}";
-        
+
         return $key;
     }
 
@@ -85,7 +86,7 @@ class DashboardCacheService
             'p.sku as product_sku',
             'p.purchase_price',
             'c.name as category_name',
-            DB::raw('(di.quantity * (di.unit_price - COALESCE(p.purchase_price, 0))) as item_profit')
+            DB::raw('(di.quantity * (di.unit_price - COALESCE(p.purchase_price, 0))) as item_profit'),
         ])->get();
 
         // Calculs optimisés à partir des données récupérées
@@ -138,7 +139,7 @@ class DashboardCacheService
         $salesData = $kpiData->pluck('total_revenue', 'date');
         $chartData = [];
         $date = clone $startDate;
-        
+
         while ($date <= now()) {
             $formattedDate = $date->format('Y-m-d');
             $chartData[$formattedDate] = $salesData->get($formattedDate, 0);
@@ -210,12 +211,12 @@ class DashboardCacheService
     {
         $chartData = [];
         $date = clone $startDate;
-        
+
         // Regrouper les ventes par date
         $salesByDate = $uniqueDocuments->mapToGroups(function ($items, $documentId) {
             return [$items->first()->date => $items->first()->document_total];
         })->map->sum();
-        
+
         while ($date <= now()) {
             $formattedDate = $date->format('Y-m-d');
             $chartData[$formattedDate] = $salesByDate->get($formattedDate, 0);
@@ -250,7 +251,8 @@ class DashboardCacheService
             ->groupBy('product_id')
             ->map(function ($items) {
                 $firstItem = $items->first();
-                return (object) [
+
+                return [
                     'name' => $firstItem->product_name,
                     'sku' => $firstItem->product_sku,
                     'total_quantity' => $items->sum('quantity'),
@@ -258,7 +260,8 @@ class DashboardCacheService
             })
             ->sortByDesc('total_quantity')
             ->take(5)
-            ->values();
+            ->values()
+            ->toArray();
     }
 
     private function forgetCachePattern(string $pattern): void
@@ -266,7 +269,7 @@ class DashboardCacheService
         // Pour Redis/Memcached, vous pouvez utiliser des patterns
         // Pour simplifier ici, on utilise un système basique
         $cacheStore = Cache::getStore();
-        
+
         if (method_exists($cacheStore, 'flush')) {
             // Option simple : vider tout le cache (seulement en développement)
             // En production, implementer une solution plus sophistiquée

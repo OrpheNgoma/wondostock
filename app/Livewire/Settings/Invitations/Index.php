@@ -20,22 +20,33 @@ class Index extends Component
 
     // --- UI State ---
     public bool $showInviteModal = false;
+
     public bool $showBulkInviteModal = false;
+
     public bool $showDetailsModal = false;
+
     public string $activeTab = 'pending';
+
     public string $search = '';
+
     public string $filterRole = '';
+
     public string $filterStore = '';
 
     // --- Single Invitation Form ---
     public string $email = '';
+
     public ?int $role_id = null;
+
     public ?int $store_id = null;
+
     public string $message = '';
+
     public bool $isSending = false;
 
     // --- Bulk Invitation Form ---
     public array $bulkInvitations = [];
+
     public bool $isSendingBulk = false;
 
     // --- Selected Invitation for Details ---
@@ -66,7 +77,7 @@ class Index extends Component
     public function initializeBulkInvitations()
     {
         $this->bulkInvitations = [
-            ['email' => '', 'role_id' => null, 'store_id' => null, 'message' => '']
+            ['email' => '', 'role_id' => null, 'store_id' => null, 'message' => ''],
         ];
     }
 
@@ -81,10 +92,10 @@ class Index extends Component
     public function sendInvitation()
     {
         $this->isSending = true;
-        
+
         try {
             $this->validate();
-            
+
             $invitationService = app(InvitationService::class);
             $invitationService->createInvitation([
                 'email' => $this->email,
@@ -93,10 +104,7 @@ class Index extends Component
                 'message' => $this->message,
             ]);
 
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Invitation envoyée avec succès !'
-            ]);
+            $this->dispatch('notify', type: 'success', message: 'Invitation envoyée avec succès !');
 
             $this->showInviteModal = false;
             $this->resetForm();
@@ -104,10 +112,7 @@ class Index extends Component
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Erreur lors de l\'envoi de l\'invitation.'
-            ]);
+            $this->dispatch('notify', type: 'error', message: 'Erreur lors de l\'envoi de l\'invitation.');
         } finally {
             $this->isSending = false;
         }
@@ -127,7 +132,7 @@ class Index extends Component
             'email' => '',
             'role_id' => null,
             'store_id' => null,
-            'message' => ''
+            'message' => '',
         ];
     }
 
@@ -142,18 +147,16 @@ class Index extends Component
     public function sendBulkInvitations()
     {
         $this->isSendingBulk = true;
-        
+
         try {
             // Filtrer les invitations vides
-            $validInvitations = array_filter($this->bulkInvitations, function($invitation) {
-                return !empty($invitation['email']);
+            $validInvitations = array_filter($this->bulkInvitations, function ($invitation) {
+                return ! empty($invitation['email']);
             });
 
             if (empty($validInvitations)) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'Veuillez remplir au moins une invitation.'
-                ]);
+                $this->dispatch('notify', type: 'error', message: 'Veuillez remplir au moins une invitation.');
+
                 return;
             }
 
@@ -164,27 +167,18 @@ class Index extends Component
             $errorCount = count($result['errors']);
 
             if ($successCount > 0) {
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => "{$successCount} invitation(s) envoyée(s) avec succès !"
-                ]);
+                $this->dispatch('notify', type: 'success', message: "{$successCount} invitation(s) envoyée(s) avec succès !");
             }
 
             if ($errorCount > 0) {
-                $this->dispatch('notify', [
-                    'type' => 'warning',
-                    'message' => "{$errorCount} invitation(s) ont échoué."
-                ]);
+                $this->dispatch('notify', type: 'warning', message: "{$errorCount} invitation(s) ont échoué.");
             }
 
             $this->showBulkInviteModal = false;
             $this->initializeBulkInvitations();
 
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Erreur lors de l\'envoi des invitations.'
-            ]);
+            $this->dispatch('notify', type: 'error', message: 'Erreur lors de l\'envoi des invitations.');
         } finally {
             $this->isSendingBulk = false;
         }
@@ -204,16 +198,10 @@ class Index extends Component
             $invitationService = app(InvitationService::class);
             $invitationService->resendInvitation($invitation);
 
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Invitation renvoyée avec succès !'
-            ]);
+            $this->dispatch('notify', type: 'success', message: 'Invitation renvoyée avec succès !');
 
         } catch (ValidationException $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => $e->getMessage()
-            ]);
+            $this->dispatch('notify', type: 'error', message: $e->getMessage());
         }
     }
 
@@ -223,16 +211,10 @@ class Index extends Component
             $invitationService = app(InvitationService::class);
             $invitationService->cancelInvitation($invitation);
 
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Invitation annulée avec succès !'
-            ]);
+            $this->dispatch('notify', type: 'success', message: 'Invitation annulée avec succès !');
 
         } catch (ValidationException $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => $e->getMessage()
-            ]);
+            $this->dispatch('notify', type: 'error', message: $e->getMessage());
         }
     }
 
@@ -240,10 +222,7 @@ class Index extends Component
     {
         $invitation->delete();
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Invitation supprimée avec succès !'
-        ]);
+        $this->dispatch('notify', type: 'success', message: 'Invitation supprimée avec succès !');
     }
 
     // --- UI Actions ---
@@ -306,7 +285,7 @@ class Index extends Component
 
         // Search filter
         if ($this->search) {
-            $query->where('email', 'like', '%' . $this->search . '%');
+            $query->where('email', 'like', '%'.$this->search.'%');
         }
 
         // Role filter
@@ -335,6 +314,7 @@ class Index extends Component
     public function getStatsProperty()
     {
         $invitationService = app(InvitationService::class);
+
         return $invitationService->getInvitationStats(Auth::user()->company_id);
     }
 

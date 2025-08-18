@@ -19,31 +19,46 @@ class CompaniesIndex extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $statusFilter = '';
+
     public string $planFilter = '';
+
     public string $sortBy = 'created_at';
+
     public string $sortDirection = 'desc';
-    
+
     // Modal de création/édition d'entreprise
     public bool $showModal = false;
+
     public ?int $editingCompany = null;
+
     public string $companyName = '';
+
     public string $companyLegalName = '';
+
     public string $companyEmail = '';
+
     public string $companyPhone = '';
+
     public string $companyAddress = '';
+
     public string $companyRccm = '';
+
     public string $companyNif = '';
+
     public bool $companyIsActive = true;
-    
+
     // Champs propriétaire
     public string $ownerName = '';
+
     public string $ownerEmail = '';
+
     public string $ownerPassword = '';
 
     public function mount()
     {
-        if (!Auth::user()->is_global_admin) {
+        if (! Auth::user()->is_global_admin) {
             abort(403, 'Accès non autorisé.');
         }
     }
@@ -77,36 +92,27 @@ class CompaniesIndex extends Component
     public function toggleCompanyStatus(Company $company)
     {
         $company->update([
-            'is_active' => !$company->is_active
+            'is_active' => ! $company->is_active,
         ]);
 
         $status = $company->is_active ? 'activée' : 'désactivée';
-        $this->dispatch('notify', [
-            'message' => "Entreprise {$status} avec succès.",
-            'type' => 'success'
-        ]);
+        $this->dispatch('notify', message: "Entreprise {$status} avec succès.", type: 'success');
     }
 
     public function deleteCompany(Company $company)
     {
         // Soft delete de l'entreprise
         $company->delete();
-        
-        $this->dispatch('notify', [
-            'message' => "Entreprise supprimée avec succès.",
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', message: 'Entreprise supprimée avec succès.', type: 'success');
     }
 
     public function restoreCompany($companyId)
     {
         $company = Company::withTrashed()->findOrFail($companyId);
         $company->restore();
-        
-        $this->dispatch('notify', [
-            'message' => "Entreprise restaurée avec succès.",
-            'type' => 'success'
-        ]);
+
+        $this->dispatch('notify', message: 'Entreprise restaurée avec succès.', type: 'success');
     }
 
     public function createCompany()
@@ -126,13 +132,13 @@ class CompaniesIndex extends Component
         $this->companyRccm = $company->rccm ?? '';
         $this->companyNif = $company->nif ?? '';
         $this->companyIsActive = $company->is_active;
-        
+
         // Charger les infos du propriétaire
         if ($company->owner) {
             $this->ownerName = $company->owner->name;
             $this->ownerEmail = $company->owner->email;
         }
-        
+
         $this->showModal = true;
     }
 
@@ -141,7 +147,7 @@ class CompaniesIndex extends Component
         $rules = [
             'companyName' => 'required|string|max:255',
             'companyLegalName' => 'nullable|string|max:255',
-            'companyEmail' => 'required|email|unique:companies,email,' . $this->editingCompany,
+            'companyEmail' => 'required|email|unique:companies,email,'.$this->editingCompany,
             'companyPhone' => 'nullable|string|max:50',
             'companyAddress' => 'nullable|string',
             'companyRccm' => 'nullable|string|max:100',
@@ -149,13 +155,13 @@ class CompaniesIndex extends Component
         ];
 
         // Pour la création, valider aussi les champs propriétaire
-        if (!$this->editingCompany) {
+        if (! $this->editingCompany) {
             $rules['ownerName'] = 'required|string|max:255';
             $rules['ownerEmail'] = 'required|email|unique:users,email';
             $rules['ownerPassword'] = 'required|min:8';
         } else {
             $rules['ownerName'] = 'required|string|max:255';
-            $rules['ownerEmail'] = 'required|email|unique:users,email,' . ($this->editingCompany ? Company::find($this->editingCompany)->owner_id : '');
+            $rules['ownerEmail'] = 'required|email|unique:users,email,'.($this->editingCompany ? Company::find($this->editingCompany)->owner_id : '');
             $rules['ownerPassword'] = 'nullable|min:8';
         }
 
@@ -209,17 +215,11 @@ class CompaniesIndex extends Component
                 $message = 'Entreprise créée avec succès.';
             }
 
-            $this->dispatch('notify', [
-                'message' => $message,
-                'type' => 'success'
-            ]);
+            $this->dispatch('notify', message: $message, type: 'success');
 
             $this->closeModal();
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'message' => 'Erreur lors de la sauvegarde: ' . $e->getMessage(),
-                'type' => 'error'
-            ]);
+            $this->dispatch('notify', message: 'Erreur lors de la sauvegarde: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -252,7 +252,7 @@ class CompaniesIndex extends Component
             'total' => Company::count(),
             'active' => Company::where('is_active', true)->count(),
             'inactive' => Company::where('is_active', false)->count(),
-            'with_subscription' => Company::whereHas('subscription', function($q) {
+            'with_subscription' => Company::whereHas('subscription', function ($q) {
                 $q->where('status', 'active');
             })->count(),
         ];
@@ -265,13 +265,13 @@ class CompaniesIndex extends Component
             ->withCount(['users', 'products', 'documents'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('legal_name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('owner', function($subQuery) {
-                          $subQuery->where('name', 'like', '%' . $this->search . '%')
-                                   ->orWhere('email', 'like', '%' . $this->search . '%');
-                      });
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('legal_name', 'like', '%'.$this->search.'%')
+                        ->orWhere('email', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('owner', function ($subQuery) {
+                            $subQuery->where('name', 'like', '%'.$this->search.'%')
+                                ->orWhere('email', 'like', '%'.$this->search.'%');
+                        });
                 });
             })
             ->when($this->statusFilter, function ($query) {
@@ -284,7 +284,7 @@ class CompaniesIndex extends Component
                 }
             })
             ->when($this->planFilter, function ($query) {
-                $query->whereHas('subscription.plan', function($q) {
+                $query->whereHas('subscription.plan', function ($q) {
                     $q->where('slug', $this->planFilter);
                 });
             })

@@ -22,36 +22,58 @@ class PurchaseOrderForm extends Component
 
     // --- Form Properties ---
     public ?int $supplier_id = null;
+
     public ?int $store_id = null;
+
     public $document_date;
+
     public string $reference = '';
+
     public string $notes = '';
+
     public string $delivery_date = '';
+
     public string $priority = 'normal';
 
     // --- Line Items ---
     public array $items = [];
+
     public float $sub_total = 0;
+
     public float $tax_amount = 0;
+
     public float $total_amount = 0;
+
     public int $total_items = 0;
 
     // --- UI State ---
     public string $supplier_search = '';
+
     public $suppliers_list = [];
+
     public string $product_search = '';
+
     public $products_list = [];
+
     public bool $isSearchingSuppliers = false;
+
     public bool $isSearchingProducts = false;
+
     public bool $isSaving = false;
+
     public string $current_step = 'basic_info'; // basic_info, products, review
+
     public bool $showProductModal = false;
+
     public bool $showConfirmModal = false;
 
     // --- Selected Product for Modal ---
     public ?Product $selectedProduct = null;
+
     public int $modalQuantity = 1;
+
     public float $modalUnitPrice = 0;
+
     public string $modalDescription = '';
 
     // --- Supplier Info ---
@@ -84,37 +106,38 @@ class PurchaseOrderForm extends Component
         $this->document = $document;
         $this->document_date = now()->format('Y-m-d');
         $this->delivery_date = now()->addDays(7)->format('Y-m-d');
-        $this->reference = 'BC-' . strtoupper(substr(uniqid(), -6));
-        
+        $this->reference = 'BC-'.strtoupper(substr(uniqid(), -6));
+
         // Pré-remplir le premier magasin par défaut
         $this->store_id = Auth::user()->company->stores()->first()?->id;
-        
+
         // Si c'est une édition, charger les données existantes
         if ($document->exists) {
             $this->loadDocumentData();
         }
-        
+
         $this->calculateTotals();
     }
 
     public function updatedSupplierSearch()
     {
         $this->isSearchingSuppliers = true;
-        
+
         if (strlen($this->supplier_search) < 2) {
             $this->suppliers_list = [];
             $this->isSearchingSuppliers = false;
+
             return;
         }
-        
+
         $this->suppliers_list = Supplier::where('company_id', Auth::user()->company_id)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('name', 'like', '%'.$this->supplier_search.'%')
-                      ->orWhere('email', 'like', '%'.$this->supplier_search.'%')
-                      ->orWhere('phone_number', 'like', '%'.$this->supplier_search.'%');
+                    ->orWhere('email', 'like', '%'.$this->supplier_search.'%')
+                    ->orWhere('phone_number', 'like', '%'.$this->supplier_search.'%');
             })
             ->limit(8)->get();
-            
+
         $this->isSearchingSuppliers = false;
     }
 
@@ -123,32 +146,30 @@ class PurchaseOrderForm extends Component
         $this->supplier_id = $supplier->id;
         $this->supplier_search = $supplier->name;
         $this->suppliers_list = [];
-        
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Fournisseur sélectionné: ' . $supplier->name
-        ]);
+
+        $this->dispatch('notify', type: 'success', message: 'Fournisseur sélectionné: '.$supplier->name);
     }
 
     public function updatedProductSearch()
     {
         $this->isSearchingProducts = true;
-        
+
         if (strlen($this->product_search) < 2) {
             $this->products_list = [];
             $this->isSearchingProducts = false;
+
             return;
         }
-        
+
         $this->products_list = Product::where('company_id', Auth::user()->company_id)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('name', 'like', '%'.$this->product_search.'%')
-                      ->orWhere('sku', 'like', '%'.$this->product_search.'%')
-                      ->orWhere('description', 'like', '%'.$this->product_search.'%');
+                    ->orWhere('sku', 'like', '%'.$this->product_search.'%')
+                    ->orWhere('description', 'like', '%'.$this->product_search.'%');
             })
             ->with(['category', 'unit'])
             ->limit(8)->get();
-            
+
         $this->isSearchingProducts = false;
     }
 
@@ -165,10 +186,8 @@ class PurchaseOrderForm extends Component
             $this->current_step = 'products';
         } elseif ($this->current_step === 'products') {
             if (empty($this->items)) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => 'Vous devez ajouter au moins un produit au bon de commande.'
-                ]);
+                $this->dispatch('notify', type: 'error', message: 'Vous devez ajouter au moins un produit au bon de commande.');
+
                 return;
             }
             $this->current_step = 'review';
@@ -198,17 +217,17 @@ class PurchaseOrderForm extends Component
 
     public function addProductFromModal()
     {
-        if (!$this->selectedProduct) return;
+        if (! $this->selectedProduct) {
+            return;
+        }
 
         foreach ($this->items as $key => $item) {
             if ($item['product_id'] === $this->selectedProduct->id) {
                 $this->items[$key]['quantity'] += $this->modalQuantity;
                 $this->calculateTotals();
                 $this->showProductModal = false;
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => 'Quantité mise à jour avec succès.'
-                ]);
+                $this->dispatch('notify', type: 'success', message: 'Quantité mise à jour avec succès.');
+
                 return;
             }
         }
@@ -224,13 +243,10 @@ class PurchaseOrderForm extends Component
             'unit_price' => $this->modalUnitPrice,
             'tax_rate' => 0,
         ];
-        
+
         $this->calculateTotals();
         $this->showProductModal = false;
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Produit ajouté avec succès.'
-        ]);
+        $this->dispatch('notify', type: 'success', message: 'Produit ajouté avec succès.');
     }
 
     public function addProduct(Product $product)
@@ -244,10 +260,7 @@ class PurchaseOrderForm extends Component
             unset($this->items[$index]);
             $this->items = array_values($this->items);
             $this->calculateTotals();
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Produit retiré du bon de commande.'
-            ]);
+            $this->dispatch('notify', type: 'success', message: 'Produit retiré du bon de commande.');
         }
     }
 
@@ -277,14 +290,14 @@ class PurchaseOrderForm extends Component
         $this->sub_total = 0;
         $this->tax_amount = 0;
         $this->total_items = 0;
-        
+
         foreach ($this->items as $item) {
             $lineTotal = $item['quantity'] * $item['unit_price'];
             $this->sub_total += $lineTotal;
             $this->tax_amount += $lineTotal * (($item['tax_rate'] ?? 0) / 100);
             $this->total_items += $item['quantity'];
         }
-        
+
         $this->total_amount = $this->sub_total + $this->tax_amount;
     }
 
@@ -295,14 +308,14 @@ class PurchaseOrderForm extends Component
         $this->document_date = $this->document->document_date->format('Y-m-d');
         $this->notes = $this->document->notes ?? '';
         $this->reference = $this->document->document_number;
-        
+
         if ($this->document->supplier) {
             $this->supplier_id = $this->document->supplier->id;
             $this->supplier_search = $this->document->supplier->name;
         }
-        
+
         // Charger les items
-        $this->items = $this->document->items->map(function($item) {
+        $this->items = $this->document->items->map(function ($item) {
             return [
                 'product_id' => $item->product_id,
                 'name' => $item->description,
@@ -325,7 +338,7 @@ class PurchaseOrderForm extends Component
         $this->isSaving = true;
         $this->current_step = 'review'; // Force validation rules
         $this->validate();
-        
+
         try {
             DB::transaction(function () {
                 $this->document->fill([
@@ -347,7 +360,7 @@ class PurchaseOrderForm extends Component
                 } else {
                     $this->document->document_number = $this->reference;
                 }
-                
+
                 $this->document->save();
 
                 $this->document->items()->delete();
@@ -357,19 +370,13 @@ class PurchaseOrderForm extends Component
                     $this->document->items()->create($item);
                 }
             });
-            
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Bon de commande sauvegardé avec succès.'
-            ]);
-            
+
+            $this->dispatch('notify', type: 'success', message: 'Bon de commande sauvegardé avec succès.');
+
             return $this->redirectRoute('purchases.index');
-            
+
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Erreur lors de la sauvegarde du bon de commande.'
-            ]);
+            $this->dispatch('notify', type: 'error', message: 'Erreur lors de la sauvegarde du bon de commande.');
         } finally {
             $this->isSaving = false;
             $this->showConfirmModal = false;
@@ -387,7 +394,7 @@ class PurchaseOrderForm extends Component
             'low' => 'Faible',
             'normal' => 'Normale',
             'high' => 'Élevée',
-            'urgent' => 'Urgente'
+            'urgent' => 'Urgente',
         ];
     }
 

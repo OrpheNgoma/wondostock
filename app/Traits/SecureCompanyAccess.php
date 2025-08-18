@@ -72,9 +72,6 @@ trait SecureCompanyAccess
      */
     protected function dispatchSecureError(string $message = 'Accès non autorisé.', string $type = 'error'): void
     {
-        $this->dispatch('notify', [
-            'message' => $message,
-            'type' => $type,
-        ]);
+        $this->dispatch('notify', message: $message, type: $type);
     }
 }

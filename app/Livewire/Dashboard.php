@@ -40,19 +40,19 @@ class Dashboard extends Component
         $user = $userCompany['user'];
         $company = $userCompany['company'];
         $isGlobalView = Gate::allows('view_global_reports');
-        $storeId = !$isGlobalView && $user->store_id ? $user->store_id : null;
+        $storeId = ! $isGlobalView && $user->store_id ? $user->store_id : null;
 
         // Utilisation du service de cache pour récupérer les KPIs
         $dashboardService = app(DashboardCacheService::class);
         $kpis = $dashboardService->getKPIs($company->id, (int) $this->period, $storeId);
 
         // Dispatch des données pour les graphiques
-        $this->dispatch('update-charts', [
-            'lineLabels' => $kpis['lineChartLabels'],
-            'lineValues' => $kpis['lineChartValues'],
-            'donutLabels' => $kpis['donutChartLabels'],
-            'donutValues' => $kpis['donutChartValues'],
-        ]);
+        $this->dispatch('update-charts',
+            $kpis['lineChartLabels'],
+            $kpis['lineChartValues'],
+            $kpis['donutChartLabels'],
+            $kpis['donutChartValues']
+        );
 
         return view('livewire.saas.dashboard', $kpis);
     }

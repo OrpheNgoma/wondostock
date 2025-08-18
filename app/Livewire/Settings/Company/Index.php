@@ -86,23 +86,15 @@ class Index extends Component
                     // Reset la propriété logo pour éviter les problèmes d'affichage
                     $this->logo = null;
                 } catch (\Exception $logoException) {
-                    $this->dispatch('notify', [
-                        'message' => 'Erreur lors du téléchargement du logo : ' . $logoException->getMessage(),
-                        'type' => 'error',
-                    ]);
+                    $this->dispatch('notify', message: 'Erreur lors du téléchargement du logo : '.$logoException->getMessage(), type: 'error');
+
                     return;
                 }
             }
 
-            $this->dispatch('notify', [
-                'message' => 'Informations de l\'entreprise mises à jour avec succès !',
-                'type' => 'success',
-            ]);
+            $this->dispatch('notify', message: 'Informations de l\'entreprise mises à jour avec succès !', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('notify', [
-                'message' => 'Erreur lors de la sauvegarde : '.$e->getMessage(),
-                'type' => 'error',
-            ]);
+            $this->dispatch('notify', message: 'Erreur lors de la sauvegarde : '.$e->getMessage(), type: 'error');
         }
     }
 
