@@ -50,28 +50,30 @@ class CompanyScope implements Scope
     }
 
     /**
-     * Vérifie si l'utilisateur est un administrateur global
+     * Vérifie si l'utilisateur est un administrateur global.
+     * Vérifie l'attribut booléen is_global_admin OU le rôle Spatie 'Global-Admin'.
+     * Cache mis en mémoire pour 5 min — invalider avec Cache::forget("user_{id}_is_global_admin").
      */
     private function isGlobalAdmin($user): bool
     {
-        // Cache le statut global admin pour éviter les requêtes répétitives
+        if ($user->is_global_admin) {
+            return true;
+        }
+
         return Cache::remember("user_{$user->id}_is_global_admin", 300, function () use ($user) {
-            return $user->hasRole(['Global-Admin', 'Super-Administrateur']);
+            return $user->hasRole('Global-Admin');
         });
     }
 
     /**
-     * Vérifie que l'entreprise est active et accessible
+     * Vérifie que l'entreprise est active.
      */
     private function isCompanyActiveAndAccessible(int $companyId): bool
     {
         return Cache::remember("company_{$companyId}_is_accessible", 900, function () use ($companyId) {
             $company = \App\Models\Company::find($companyId);
 
-            return $company &&
-                   $company->is_active &&
-                   ! $company->is_suspended &&
-                   ($company->subscription_expires_at === null || $company->subscription_expires_at->isFuture());
+            return $company && $company->is_active;
         });
     }
 }

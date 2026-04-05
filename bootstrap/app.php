@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'global_admin' => \App\Http\Middleware\GlobalAdminMiddleware::class,
             'check_admin_redirect' => \App\Http\Middleware\CheckAdminRedirect::class,
+            'feature' => \App\Http\Middleware\FeatureGuard::class,
+            'feature_lock' => \App\Http\Middleware\CheckFeatureLock::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

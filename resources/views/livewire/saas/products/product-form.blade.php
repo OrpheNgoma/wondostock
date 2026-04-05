@@ -23,8 +23,8 @@
                         </svg>
                         Retour
                     </a>
-                    <button type="submit" 
-                            form="product-form"
+                    <button type="button"
+                            wire:click="save"
                             class="inline-flex items-center gap-2 rounded-xl bg-white text-emerald-600 px-6 py-3 text-sm font-semibold shadow-lg hover:bg-gray-50 transition-all duration-200">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -114,22 +114,87 @@
 
                             <!-- Unité de mesure -->
                             <div>
-                                <label for="unit_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    <span class="flex items-center gap-2">
-                                        <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.254 48.254 0 0112 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.012-.568 1.314l-2.436 1.596c-.905.593-2.07.593-2.975 0l-2.436-1.596a1.125 1.125 0 01-.568-1.314L8.25 5.5" />
-                                        </svg>
-                                        Unité de mesure
-                                    </span>
-                                </label>
-                                <select wire:model="formData.unit_id" 
-                                        id="unit_id" 
+                                <div class="flex items-center justify-between mb-2">
+                                    <label for="unit_id" class="block text-sm font-semibold text-gray-700">
+                                        <span class="flex items-center gap-2">
+                                            <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.254 48.254 0 0112 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52l2.62 10.726c.122.499-.106 1.012-.568 1.314l-2.436 1.596c-.905.593-2.07.593-2.975 0l-2.436-1.596a1.125 1.125 0 01-.568-1.314L8.25 5.5" />
+                                            </svg>
+                                            Unité de mesure
+                                        </span>
+                                    </label>
+                                    <button type="button"
+                                            wire:click="$set('showUnitForm', {{ $showUnitForm ? 'false' : 'true' }})"
+                                            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-200 {{ $showUnitForm ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}">
+                                        @if($showUnitForm)
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Annuler
+                                        @else
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            Nouvelle unité
+                                        @endif
+                                    </button>
+                                </div>
+
+                                <select wire:model="formData.unit_id"
+                                        id="unit_id"
                                         class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200">
                                     <option value="">Sélectionner une unité</option>
                                     @foreach($units as $unit)
                                         <option value="{{ $unit->id }}">{{ $unit->name }} ({{ $unit->symbol }})</option>
                                     @endforeach
                                 </select>
+                                @error('formData.unit_id')
+                                    <div class="mt-2 flex items-center gap-2 text-red-600 text-sm">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                        </svg>
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+
+                                @if($showUnitForm)
+                                    <div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                                        <p class="text-xs font-semibold text-emerald-800 mb-3 uppercase tracking-wide">Créer une nouvelle unité</p>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Nom <span class="text-red-500">*</span></label>
+                                                <input type="text"
+                                                       wire:model="newUnit.name"
+                                                       placeholder="ex: Kilogramme"
+                                                       class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 transition-all duration-200">
+                                                @error('newUnit.name')
+                                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Symbole <span class="text-red-500">*</span></label>
+                                                <input type="text"
+                                                       wire:model="newUnit.symbol"
+                                                       placeholder="ex: kg"
+                                                       maxlength="10"
+                                                       class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 transition-all duration-200">
+                                                @error('newUnit.symbol')
+                                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 flex justify-end">
+                                            <button type="button"
+                                                    wire:click="createUnit"
+                                                    class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors duration-200">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+                                                Créer et sélectionner
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             <!-- Type de produit -->
                             <div class="sm:col-span-2">
@@ -146,8 +211,18 @@
                                         id="type" 
                                         class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200">
                                     <option value="simple">Simple</option>
-                                    <option value="variable">Variable (avec variantes)</option>
+                                    @featureAccessible('variable_products')
+                                        <option value="variable">Variable (avec variantes)</option>
+                                    @endfeatureAccessible
                                 </select>
+                                @featureLocked('variable_products')
+                                    <p class="mt-2 text-sm text-red-600">
+                                        <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                        </svg>
+                                        @featureLockMessage('variable_products')
+                                    </p>
+                                @endfeatureLocked
                             </div>
 
                             <!-- Prix -->
@@ -212,6 +287,7 @@
                 </div>
 
                 <!-- Section : Variantes (conditionnelle) -->
+                @featureAccessible('variable_products')
                 <div x-data="{ type: @entangle('formData.type') }" x-show="type === 'variable'" x-transition class="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100"
 >
                     <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
@@ -396,6 +472,7 @@
                         </div>
                     </div>
                 </div>
+                @endfeatureAccessible
                 <!-- Section : Images -->
                 <div class="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
                     <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4">

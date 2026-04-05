@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Tax;
 use App\Models\Unit;
+use App\Traits\ChecksFeatureLocks;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,7 @@ use Livewire\WithFileUploads;
 #[Layout('components.layouts.saas')]
 class ProductForm extends Component
 {
-    use WithFileUploads;
+    use ChecksFeatureLocks, WithFileUploads;
 
     public Product $product;
 
@@ -39,6 +40,10 @@ class ProductForm extends Component
     // Propriétés d'interface - uniquement ce qui doit être réactif
     public $newImages = [];
 
+    public bool $showUnitForm = false;
+
+    public array $newUnit = ['name' => '', 'symbol' => ''];
+
     public $existingImages = [];
 
     public array $product_attributes = [];
@@ -59,6 +64,9 @@ class ProductForm extends Component
     public function mount(?Product $product = null)
     {
         try {
+            // Vérifier si les produits variables sont autorisés
+            $this->requireFeatureAccess('variable_products');
+
             $this->product = $product ?? new Product;
 
             // Remplir formData avec les données du produit
@@ -110,6 +118,33 @@ class ProductForm extends Component
             Log::error('Erreur lors du chargement du produit: '.$e->getMessage());
             $this->dispatch('notify', message: 'Erreur lors du chargement du produit.', type: 'error');
         }
+    }
+
+    public function createUnit(): void
+    {
+        $this->validate([
+            'newUnit.name' => 'required|string|max:50',
+            'newUnit.symbol' => 'required|string|max:10',
+        ], [
+            'newUnit.name.required' => 'Le nom de l\'unité est obligatoire.',
+            'newUnit.symbol.required' => 'Le symbole est obligatoire.',
+        ]);
+
+        $name = trim($this->newUnit['name']);
+        $symbol = strtolower(trim($this->newUnit['symbol']));
+        $companyId = Auth::user()->company_id;
+
+        $unit = Unit::withoutGlobalScopes()->firstOrCreate(
+            ['name' => $name],
+            ['company_id' => $companyId, 'symbol' => $symbol],
+        );
+
+        $this->formData['unit_id'] = $unit->id;
+        $this->newUnit = ['name' => '', 'symbol' => ''];
+        $this->showUnitForm = false;
+
+        $message = $unit->wasRecentlyCreated ? 'Unité créée et sélectionnée.' : 'Unité existante sélectionnée.';
+        $this->dispatch('notify', message: $message, type: 'success');
     }
 
     // --- Logique des Variantes ---
@@ -190,7 +225,7 @@ class ProductForm extends Component
             'formData.purchase_price' => 'nullable|numeric|min:0',
             'formData.category_id' => 'nullable|exists:categories,id',
             'formData.tax_id' => 'nullable|exists:taxes,id',
-            'formData.unit_id' => 'required|exists:units,id',
+            'formData.unit_id' => 'nullable|exists:units,id',
             'newImages.*' => 'nullable|image|max:1024', // 1MB Max par image
         ];
     }
@@ -306,7 +341,7 @@ class ProductForm extends Component
         $companyId = Auth::user()->company_id;
         $categories = Category::where('company_id', $companyId)->get();
         $taxes = Tax::where('company_id', $companyId)->get();
-        $units = Unit::all(); // Les unités sont globales
+        $units = Unit::withoutGlobalScopes()->orderBy('name')->get();
 
         return view('livewire.saas.products.product-form', [
             'categories' => $categories, 'taxes' => $taxes, 'units' => $units,

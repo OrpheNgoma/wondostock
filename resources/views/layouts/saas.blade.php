@@ -341,18 +341,18 @@
                         </li>
                         @endif
 
-                        <!-- Administration Globale -->
+                        <!-- Administration Globale (Filament) -->
                         @if(auth()->user()->is_global_admin)
                         <li>
                             <div class="text-xs font-medium leading-6 text-gray-500 uppercase tracking-wide mb-3">Administration</div>
                             <ul role="list" class="space-y-1">
                                 <li>
-                                    <a href="{{ route('admin.companies.index') }}" 
-                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('admin.companies.*') ? 'bg-red-50 text-red-700 border-r-2 border-red-600' : 'text-gray-700 hover:text-red-700 hover:bg-gray-50' }} transition-all duration-200">
+                                    <a href="/admin" target="_blank"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 text-gray-700 hover:text-red-700 hover:bg-gray-50 transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m2.25-18v18m13.5-18v18M6.75 9.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.75m-.75 3h.75"/>
                                         </svg>
-                                        Gestion Entreprises
+                                        Panel Admin Filament
                                     </a>
                                 </li>
                             </ul>
@@ -738,14 +738,14 @@
                                 </a>
                                 
                                 @if(auth()->user()->is_global_admin)
-                                    <a href="{{ route('admin.dashboard') }}" 
+                                    <a href="/admin" target="_blank"
                                        class="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-xl transition-colors duration-200 group">
                                         <div class="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors duration-200">
                                             <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3.75 5.25a8.25 8.25 0 01-16.5 0 8.25 8.25 0 0116.5 0z" />
                                             </svg>
                                         </div>
-                                        <span>Administration Globale</span>
+                                        <span>Panel Admin Filament</span>
                                     </a>
                                 @endif
                             </div>

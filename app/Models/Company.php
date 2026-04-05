@@ -69,6 +69,11 @@ class Company extends Model implements HasMedia
         return $this->hasMany(PaymentNotification::class);
     }
 
+    public function featureLocks(): HasMany
+    {
+        return $this->hasMany(FeatureLock::class);
+    }
+
     public function hasFeature(string $featureSlug): bool
     {
         if (! $this->subscription || ! $this->subscription->plan) {
@@ -183,7 +188,7 @@ class Company extends Model implements HasMedia
         };
 
         return "<span class=\"inline-flex items-center rounded-full {$config['bg']} px-2 py-1 text-xs font-medium {$config['text']} ring-1 {$config['ring']}\">
-                    {$plan->name}
-                </span>";
+                    ".e($plan->name).'
+                </span>';
     }
 }

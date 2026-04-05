@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckAdminRedirect
@@ -12,16 +11,15 @@ class CheckAdminRedirect
     /**
      * Handle an incoming request.
      *
+     * Ce middleware peut être utilisé pour des vérifications futures
+     * liées aux administrateurs globaux sans redirection automatique.
+     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
-
-        // Si c'est un admin global, rediriger vers l'interface admin
-        if ($user && $user->is_global_admin) {
-            return redirect()->route('admin.dashboard');
-        }
+        // Middleware désactivé - pas de redirection automatique
+        // Les administrateurs globaux peuvent naviguer librement
 
         return $next($request);
     }

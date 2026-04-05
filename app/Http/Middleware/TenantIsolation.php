@@ -24,15 +24,19 @@ class TenantIsolation
 
         $user = Auth::user();
 
-        // Exclure complètement les routes d'administration globale
-        if ($request->is('admin/*')) {
-            return $next($request);
+        // Les routes Filament /admin/* sont réservées aux admins globaux uniquement
+        if ($request->is('admin/*') || $request->is('admin')) {
+            if ($user->is_global_admin || $user->hasRole('Global-Admin')) {
+                return $next($request);
+            }
+
+            abort(403, 'Accès réservé aux administrateurs globaux.');
         }
 
         // Pour les admins globaux qui accèdent aux routes normales (sauf dashboard qui a son propre middleware)
-        if ($user->is_global_admin && ! $request->is('admin/*') && ! $request->is('dashboard')) {
-            return redirect()->route('admin.dashboard');
-        }
+        // if ($user->is_global_admin && ! $request->is('admin/*') && ! $request->is('dashboard')) {
+        //     return redirect('admin'); // Redirection vers le panel Filament
+        // }
 
         // Vérifier si l'utilisateur a une company_id
         if (! $user->company_id) {

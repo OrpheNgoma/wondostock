@@ -74,6 +74,9 @@ Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('l
 // Routes pour les utilisateurs non connectés
 Route::middleware('guest')->group(function () {
     Route::get('/', Login::class)->name('home');
+    Route::post('/', function () {
+        return redirect()->route('login');
+    })->name('home.post'); // Handle POST to root
     Route::get('/register', Register::class)->name('register');
     Route::get('/login', Login::class)->name('login');
 
@@ -103,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/product-settings', ProductSettings::class)->name('products.settings');
     Route::get('/products', ProductIndex::class)->name('products.index');
     Route::get('/products/{product}/edit', ProductForm::class)->name('products.edit')->where('product', '[0-9]+');
+    Route::get('/products/advanced-features', ProductForm::class)->name('products.advanced')->middleware('feature_lock:variable_products');
     Route::get('/products/print-labels', ProductLabels::class)->name('products.print-labels');
     Route::get('/products/{sku}/barcode', ProductBarcodeController::class)->name('products.barcode');
 
@@ -162,39 +166,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ============================================================================
-// ROUTES ADMIN GLOBAL (Gestion plateforme SaaS - Sans tenant isolation)
+// ROUTES ADMIN GLOBAL SUPPRIMÉES - Remplacées par Filament Admin Panel (/admin)
 // ============================================================================
-
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'global_admin'])->group(function () {
-    // Dashboard de l'administration globale
-    Route::get('/dashboard', \App\Livewire\Admin\Dashboard::class)->name('dashboard');
-
-    // Gestion des entreprises clientes
-    Route::get('/companies', \App\Livewire\Admin\CompaniesIndex::class)->name('companies.index');
-    Route::get('/companies/create', \App\Livewire\Admin\CompanyCreate::class)->name('companies.create');
-    Route::get('/companies/{company}', \App\Livewire\Admin\CompanyShow::class)->name('companies.show');
-    Route::get('/companies/{company}/edit', \App\Livewire\Admin\CompanyEdit::class)->name('companies.edit');
-
-    // Gestion des plans tarifaires
-    Route::get('/plans', \App\Livewire\Admin\PlansIndex::class)->name('plans.index');
-    Route::get('/plans/create', \App\Livewire\Admin\PlanCreate::class)->name('plans.create');
-    Route::get('/plans/{plan}/edit', \App\Livewire\Admin\PlanEdit::class)->name('plans.edit');
-
-    // Gestion des abonnements
-    Route::get('/subscriptions', \App\Livewire\Admin\SubscriptionsIndex::class)->name('subscriptions.index');
-    Route::get('/subscriptions/create', \App\Livewire\Admin\SubscriptionCreate::class)->name('subscriptions.create');
-    Route::get('/subscriptions/{subscription}/edit', \App\Livewire\Admin\SubscriptionEdit::class)->name('subscriptions.edit');
-
-    // Gestion de la facturation et paiements
-    Route::get('/invoices', \App\Livewire\Admin\InvoicesIndex::class)->name('invoices.index');
-    Route::get('/invoices/{invoice}', \App\Livewire\Admin\InvoiceShow::class)->name('invoices.show');
-    Route::get('/invoices/{invoice}/edit', \App\Livewire\Admin\InvoiceEdit::class)->name('invoices.edit');
-
-    // Gestion des notifications de paiement
-    Route::get('/payment-notifications', \App\Livewire\GlobalAdmin\PaymentNotifications::class)->name('payment-notifications.index');
-
-    // PDF des factures
-    Route::get('/invoices/{invoice}/pdf', function (\App\Models\Invoice $invoice, \App\Services\InvoicePdfService $pdfService) {
-        return $pdfService->streamPdf($invoice);
-    })->name('invoices.pdf');
-});
+// L'ancien back-office admin Laravel a été remplacé par Filament v4
+// Toute l'administration se fait maintenant via le panel Filament : /admin

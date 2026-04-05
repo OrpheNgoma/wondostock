@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProductType;
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Spatie\MediaLibrary\InteractsWithMedia; // spatie/laravel-medialibrary
 
 class Product extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, SoftDeletes;
+    use BelongsToCompany, HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'parent_id', 'category_id', 'tax_id', 'type', 'name', 'sku',
@@ -32,11 +33,6 @@ class Product extends Model implements HasMedia
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
-    }
-
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
     }
 
     public function category(): BelongsTo

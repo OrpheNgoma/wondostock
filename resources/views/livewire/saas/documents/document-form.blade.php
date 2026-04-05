@@ -122,12 +122,30 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Client Search -->
                             <div class="relative" x-data="{ focused: false }">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Client <span class="text-red-500">*</span>
-                                </label>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        Client <span class="text-red-500">*</span>
+                                    </label>
+                                    <button type="button"
+                                            wire:click="$set('showCustomerForm', {{ $showCustomerForm ? 'false' : 'true' }})"
+                                            class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-200 {{ $showCustomerForm ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-blue-50 text-blue-700 hover:bg-blue-100' }}">
+                                        @if($showCustomerForm)
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Annuler
+                                        @else
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            Nouveau client
+                                        @endif
+                                    </button>
+                                </div>
+
                                 <div class="relative">
-                                    <input type="text" 
-                                           wire:model.live.debounce.300ms="customer_search" 
+                                    <input type="text"
+                                           wire:model.live.debounce.300ms="customer_search"
                                            data-search-customer
                                            @focus="focused = true"
                                            @blur="setTimeout(() => focused = false, 200)"
@@ -137,17 +155,17 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                     </svg>
                                 </div>
-                                
+
                                 <!-- Dropdown clients -->
                                 @if(count($customers_list) > 0)
                                 <div class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
                                     @foreach($customers_list as $customer)
-                                    <div wire:click="selectCustomer({{ $customer->id }})" 
+                                    <div wire:click="selectCustomer({{ $customer->id }})"
                                          class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center justify-between">
                                         <div>
                                             <div class="font-medium text-gray-900">{{ $customer->name }}</div>
-                                            @if($customer->email)
-                                            <div class="text-sm text-gray-500">{{ $customer->email }}</div>
+                                            @if($customer->phone_number)
+                                            <div class="text-sm text-gray-500">{{ $customer->phone_number }}</div>
                                             @endif
                                         </div>
                                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,10 +175,56 @@
                                     @endforeach
                                 </div>
                                 @endif
-                                
-                                @error('customer_id') 
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p> 
+
+                                @error('customer_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
+
+                                <!-- Formulaire rapide de création client -->
+                                @if($showCustomerForm)
+                                <div class="mt-3 rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+                                    <p class="text-xs font-semibold text-blue-800 mb-3 uppercase tracking-wide">Créer un nouveau client</p>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Nom <span class="text-red-500">*</span></label>
+                                            <input type="text"
+                                                   wire:model="newCustomer.name"
+                                                   placeholder="Nom complet ou raison sociale"
+                                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                                            @error('newCustomer.name')
+                                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Téléphone</label>
+                                                <input type="text"
+                                                       wire:model="newCustomer.phone_number"
+                                                       placeholder="ex: 074 00 00 00"
+                                                       class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                                                <select wire:model="newCustomer.type"
+                                                        class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                                                    <option value="individual">Particulier</option>
+                                                    <option value="professional">Professionnel</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex justify-end">
+                                        <button type="button"
+                                                wire:click="createCustomer"
+                                                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors duration-200">
+                                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                            Créer et sélectionner
+                                        </button>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
 
                             <!-- Store Selection -->

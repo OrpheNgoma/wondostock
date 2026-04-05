@@ -47,6 +47,14 @@ class DocumentForm extends Component
 
     public $customers_list = [];
 
+    public bool $showCustomerForm = false;
+
+    public array $newCustomer = [
+        'name' => '',
+        'phone_number' => '',
+        'type' => 'individual',
+    ];
+
     public string $product_search = '';
 
     public $products_list = [];
@@ -173,6 +181,31 @@ class DocumentForm extends Component
     }
 
     // --- Actions ---
+
+    public function createCustomer(): void
+    {
+        $this->validate([
+            'newCustomer.name' => 'required|string|max:255',
+            'newCustomer.phone_number' => 'nullable|string|max:50',
+            'newCustomer.type' => 'required|in:individual,professional',
+        ], [
+            'newCustomer.name.required' => 'Le nom du client est obligatoire.',
+        ]);
+
+        $customer = Customer::create([
+            'company_id' => Auth::user()->company_id,
+            'name' => $this->newCustomer['name'],
+            'phone_number' => $this->newCustomer['phone_number'] ?: null,
+            'type' => $this->newCustomer['type'],
+        ]);
+
+        $this->customer_id = $customer->id;
+        $this->customer_search = $customer->name;
+        $this->customers_list = [];
+        $this->newCustomer = ['name' => '', 'phone_number' => '', 'type' => 'individual'];
+        $this->showCustomerForm = false;
+        $this->dispatch('notify', message: 'Client créé et sélectionné.', type: 'success');
+    }
 
     public function selectCustomer(Customer $customer)
     {

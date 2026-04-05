@@ -37,7 +37,12 @@
       "WebSearch",
       "mcp__laravel-boost__database-schema",
       "mcp__laravel-boost__application-info",
-      "mcp__laravel-boost__list-routes"
+      "mcp__laravel-boost__list-routes",
+      "mcp__laravel-boost__get-absolute-url",
+      "WebFetch(domain:filamentphp.com)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(head -5 grep -rn \"addNamespace\\\\|hint\" /home/orphe-ngoma/Bureau/APPS/WondoStock/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php)"
     ],
     "deny": []
   },
