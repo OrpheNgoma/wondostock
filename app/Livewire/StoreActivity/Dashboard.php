@@ -48,6 +48,10 @@ class Dashboard extends Component
 
         $user = $userCompany['user'];
 
+        if (! $user->can('view_store_reports')) {
+            return;
+        }
+
         // Auto-sélectionner un magasin
         if ($storeId) {
             $this->selectedStoreId = $storeId;
@@ -95,8 +99,8 @@ class Dashboard extends Component
     public function render()
     {
         $userCompany = $this->getSecureUserAndCompany();
-        if (! $userCompany['valid']) {
-            return view('livewire.saas.store-activity.dashboard', []);
+        if (! $userCompany['valid'] || ! $userCompany['user']->can('view_store_reports')) {
+            return view('livewire.saas.store-activity.dashboard', ['unauthorized' => true]);
         }
 
         $user = $userCompany['user'];

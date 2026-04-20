@@ -56,9 +56,6 @@ class TenantIsolation
             abort(403, 'Votre abonnement a expiré. Contactez l\'administrateur.');
         }
 
-        // Définir la company dans le contexte global pour Spatie Permission
-        setPermissionsTeamId($user->company_id);
-
         // Ajouter la company_id au contexte de la requête
         $request->attributes->set('company_id', $user->company_id);
         $request->attributes->set('company', $company);

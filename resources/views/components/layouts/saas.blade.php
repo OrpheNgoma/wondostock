@@ -97,9 +97,9 @@
                                 </li>
                                 @endcan
                                 
-                                @can('view_dashboard_stats')
+                                @can('view_store_reports')
                                 <li>
-                                    <a href="{{ route('store-activity.dashboard') }}" 
+                                    <a href="{{ route('store-activity.dashboard') }}"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('store-activity.*') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605"/>
@@ -177,7 +177,7 @@
                                 @endif
 
                                 <!-- Stock Dropdown -->
-                                @if(auth()->user()->can('manage_inventory') || auth()->user()->can('transfer_stock'))
+                                @if(auth()->user()->can('view_stock') || auth()->user()->can('create_stock_entries') || auth()->user()->can('adjust_stock') || auth()->user()->can('transfer_stock'))
                                 <li x-data="{ open: false }">
                                     <button @click="open = !open" 
                                             type="button"
@@ -203,20 +203,20 @@
                                         x-transition:leave-end="transform opacity-0 scale-95 -translate-y-2"
                                         class="mt-2 space-y-1 pl-8"
                                         style="display: none;">
-                                        @can('manage_inventory')
+                                        @if(auth()->user()->can('view_stock') || auth()->user()->can('create_stock_entries') || auth()->user()->can('adjust_stock'))
                                         <li>
-                                            <a href="{{ route('stock.entry') }}" 
+                                            <a href="{{ route('stock.entry') }}"
                                                class="block rounded-md py-2 px-3 text-sm leading-6 {{ request()->routeIs('stock.entry') ? 'text-emerald-700 bg-emerald-50' : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                                 Entrée de Stock
                                             </a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('stock.movements.index') }}" 
+                                            <a href="{{ route('stock.movements.index') }}"
                                                class="block rounded-md py-2 px-3 text-sm leading-6 {{ request()->routeIs('stock.movements.*') ? 'text-emerald-700 bg-emerald-50' : 'text-gray-600 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                                 Mouvements
                                             </a>
                                         </li>
-                                        @endcan
+                                        @endif
                                         @can('transfer_stock')
                                         <li>
                                             <a href="{{ route('stock.transfer') }}" 
@@ -241,9 +241,9 @@
                                 </li>
                                 @endcan
 
-                                @hasrole('Super-Administrateur|Administrateur|Gérant de Magasin')
+                                @can('manage_suppliers')
                                 <li>
-                                    <a href="{{ route('suppliers.index') }}" 
+                                    <a href="{{ route('suppliers.index') }}"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('suppliers.*') ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m6-3a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125C17.25 11.25 18 10.5 18 9.375v-2.25M6 10.5a.75.75 0 01-.75-.75V6.75a.75.75 0 01.75-.75h2.25a.75.75 0 01.75.75v3a.75.75 0 01-.75.75H6zM6 21.75a.75.75 0 01-.75-.75v-3a.75.75 0 01.75-.75h2.25a.75.75 0 01.75.75v3a.75.75 0 01-.75.75H6z"/>
@@ -251,9 +251,9 @@
                                         Fournisseurs
                                     </a>
                                 </li>
-                                @endhasrole
+                                @endcan
 
-                                @if(auth()->user()->can('create_sales_documents') || auth()->user()->can('view_all_sales_documents'))
+                                @if(auth()->user()->can('view_documents') || auth()->user()->can('view_all_sales_documents'))
                                 <li>
                                     <a href="{{ route('documents.index') }}" 
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('documents.*') ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
@@ -265,9 +265,9 @@
                                 </li>
                                 @endif
 
-                                @hasrole('Super-Administrateur|Administrateur|Gérant de Magasin')
+                                @can('view_purchases')
                                 <li>
-                                    <a href="{{ route('purchases.index') }}" 
+                                    <a href="{{ route('purchases.index') }}"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('purchases.*') ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119.993zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
@@ -275,11 +275,85 @@
                                         Achats
                                     </a>
                                 </li>
-                                @endhasrole
+                                @endcan
+
+                                @can('view_deliveries')
+                                <li>
+                                    <a href="{{ route('deliveries.index') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('deliveries.index') || request()->routeIs('deliveries.show') || request()->routeIs('deliveries.create') || request()->routeIs('deliveries.edit') ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-600' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                                        </svg>
+                                        Livraisons
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('manage_settings')
+                                <li>
+                                    <a href="{{ route('deliveries.settings') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('deliveries.settings') ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-600' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                        </svg>
+                                        Paramètres livraisons
+                                    </a>
+                                </li>
+                                @endcan
+
+                                {{-- Finance Section --}}
+                                @can('view_expenses')
+                                <li>
+                                    <a href="{{ route('expenses.index') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('expenses.*') ? 'bg-red-50 text-red-700 border-r-2 border-red-600' : 'text-gray-700 hover:text-red-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                        </svg>
+                                        Dépenses
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_salaries')
+                                <li>
+                                    <a href="{{ route('salaries.index') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('salaries.*') ? 'bg-purple-50 text-purple-700 border-r-2 border-purple-600' : 'text-gray-700 hover:text-purple-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+                                        </svg>
+                                        Salaires
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_employees')
+                                <li>
+                                    <a href="{{ route('employees.index') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('employees.*') ? 'bg-indigo-50 text-indigo-700 border-r-2 border-indigo-600' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                        </svg>
+                                        Employés
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_financial_reports')
+                                <li>
+                                    <a href="{{ route('finance.dashboard') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.*') ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                        </svg>
+                                        Dashboard Financier
+                                    </a>
+                                </li>
+                                @endcan
 
                                 @if(auth()->user()->can('view_store_reports') || auth()->user()->can('view_global_reports'))
                                 <li>
-                                    <a href="{{ route('reports.index') }}" 
+                                    <a href="{{ route('reports.index') }}"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('reports.*') ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
@@ -290,6 +364,48 @@
                                 @endif
                             </ul>
                         </li>
+
+                        <!-- Boutique Section -->
+                        @if(auth()->user()->can('view_cash_sessions') || auth()->user()->can('manage_cash_sessions') || auth()->user()->can('view_financial_reports'))
+                        <li>
+                            <div class="text-xs font-medium leading-6 text-gray-500 uppercase tracking-wide mb-3">Boutique</div>
+                            <ul role="list" class="space-y-1">
+                                @can('view_cash_sessions')
+                                <li>
+                                    <a href="{{ route('caisse.index') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('caisse.*') ? 'bg-teal-50 text-teal-700 border-r-2 border-teal-600' : 'text-gray-700 hover:text-teal-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                        </svg>
+                                        Caisse
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('manage_cash_sessions')
+                                <li>
+                                    <a href="{{ route('finance.remittances') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.remittances') ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-600' : 'text-gray-700 hover:text-orange-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                        </svg>
+                                        Versements DG
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('view_financial_reports')
+                                <li>
+                                    <a href="{{ route('finance.monthly-accounting') }}"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.monthly-accounting') ? 'bg-slate-100 text-slate-700 border-r-2 border-slate-600' : 'text-gray-700 hover:text-slate-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                        </svg>
+                                        Point de Comptabilité
+                                    </a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endif
 
                         <!-- Settings Section -->
                         @if(auth()->user()->can('manage_settings') || auth()->user()->can('manage_users') || auth()->user()->can('manage_subscriptions'))
@@ -418,9 +534,9 @@
                                 </li>
                                 @endcan
                                 
-                                @can('view_dashboard_stats')
+                                @can('view_store_reports')
                                 <li>
-                                    <a href="{{ route('store-activity.dashboard') }}" 
+                                    <a href="{{ route('store-activity.dashboard') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('store-activity.*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:text-blue-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -458,9 +574,9 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @can('manage_inventory')
+                                @if(auth()->user()->can('view_stock') || auth()->user()->can('create_stock_entries') || auth()->user()->can('adjust_stock'))
                                 <li>
-                                    <a href="{{ route('stock.entry') }}" 
+                                    <a href="{{ route('stock.entry') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('stock.*') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -469,7 +585,7 @@
                                         Inventaire
                                     </a>
                                 </li>
-                                @endcan
+                                @endif
                                 @can('manage_customers')
                                 <li>
                                     <a href="{{ route('customers.index') }}" 
@@ -482,9 +598,9 @@
                                     </a>
                                 </li>
                                 @endcan
-                                @hasrole('Super-Administrateur|Administrateur|Gérant de Magasin')
+                                @can('manage_suppliers')
                                 <li>
-                                    <a href="{{ route('suppliers.index') }}" 
+                                    <a href="{{ route('suppliers.index') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('suppliers.*') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -493,8 +609,8 @@
                                         Fournisseurs
                                     </a>
                                 </li>
-                                @endhasrole
-                                @if(auth()->user()->can('create_sales_documents') || auth()->user()->can('view_all_sales_documents'))
+                                @endcan
+                                @if(auth()->user()->can('view_documents') || auth()->user()->can('view_all_sales_documents'))
                                 <li>
                                     <a href="{{ route('documents.index') }}" 
                                        @click="sidebarOpen = false"
@@ -506,9 +622,9 @@
                                     </a>
                                 </li>
                                 @endif
-                                @hasrole('Super-Administrateur|Administrateur|Gérant de Magasin')
+                                @can('view_purchases')
                                 <li>
-                                    <a href="{{ route('purchases.index') }}" 
+                                    <a href="{{ route('purchases.index') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('purchases.*') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -517,10 +633,91 @@
                                         Achats
                                     </a>
                                 </li>
-                                @endhasrole
+                                @endcan
+
+                                @can('view_deliveries')
+                                <li>
+                                    <a href="{{ route('deliveries.index') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('deliveries.index') || request()->routeIs('deliveries.show') || request()->routeIs('deliveries.create') || request()->routeIs('deliveries.edit') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                                        </svg>
+                                        Livraisons
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('manage_settings')
+                                <li>
+                                    <a href="{{ route('deliveries.settings') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('deliveries.settings') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                                        </svg>
+                                        Paramètres livraisons
+                                    </a>
+                                </li>
+                                @endcan
+
+                                {{-- Finance Section Mobile --}}
+                                @can('view_expenses')
+                                <li>
+                                    <a href="{{ route('expenses.index') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('expenses.*') ? 'bg-red-50 text-red-700' : 'text-gray-700 hover:text-red-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                        </svg>
+                                        Dépenses
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_salaries')
+                                <li>
+                                    <a href="{{ route('salaries.index') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('salaries.*') ? 'bg-purple-50 text-purple-700' : 'text-gray-700 hover:text-purple-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" />
+                                        </svg>
+                                        Salaires
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_employees')
+                                <li>
+                                    <a href="{{ route('employees.index') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('employees.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:text-indigo-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                        </svg>
+                                        Employés
+                                    </a>
+                                </li>
+                                @endcan
+
+                                @can('view_financial_reports')
+                                <li>
+                                    <a href="{{ route('finance.dashboard') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.*') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                                        </svg>
+                                        Dashboard Financier
+                                    </a>
+                                </li>
+                                @endcan
+
                                 @if(auth()->user()->can('view_store_reports') || auth()->user()->can('view_global_reports'))
                                 <li>
-                                    <a href="{{ route('reports.index') }}" 
+                                    <a href="{{ route('reports.index') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('reports.*') ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:text-emerald-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -533,6 +730,51 @@
                             </ul>
                         </li>
 
+                        <!-- Boutique Section Mobile -->
+                        @if(auth()->user()->can('view_cash_sessions') || auth()->user()->can('manage_cash_sessions') || auth()->user()->can('view_financial_reports'))
+                        <li>
+                            <div class="text-xs font-medium leading-6 text-gray-500 uppercase tracking-wide mb-3">Boutique</div>
+                            <ul role="list" class="space-y-1">
+                                @can('view_cash_sessions')
+                                <li>
+                                    <a href="{{ route('caisse.index') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('caisse.*') ? 'bg-teal-50 text-teal-700' : 'text-gray-700 hover:text-teal-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                                        </svg>
+                                        Caisse
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('manage_cash_sessions')
+                                <li>
+                                    <a href="{{ route('finance.remittances') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.remittances') ? 'bg-orange-50 text-orange-700' : 'text-gray-700 hover:text-orange-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                        </svg>
+                                        Versements DG
+                                    </a>
+                                </li>
+                                @endcan
+                                @can('view_financial_reports')
+                                <li>
+                                    <a href="{{ route('finance.monthly-accounting') }}"
+                                       @click="sidebarOpen = false"
+                                       class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('finance.monthly-accounting') ? 'bg-slate-100 text-slate-700' : 'text-gray-700 hover:text-slate-700 hover:bg-gray-50' }} transition-all duration-200">
+                                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                        </svg>
+                                        Point de Comptabilité
+                                    </a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endif
+
                         <!-- Settings Section Mobile -->
                         @if(auth()->user()->can('manage_settings') || auth()->user()->can('manage_users') || auth()->user()->can('manage_subscriptions'))
                         <li>
@@ -540,11 +782,11 @@
                             <ul role="list" class="space-y-1">
                                 @can('manage_settings')
                                 <li>
-                                    <a href="{{ route('settings.company.index') }}" 
+                                    <a href="{{ route('settings.company.index') }}"
                                        @click="sidebarOpen = false"
                                        class="group flex gap-x-3 rounded-lg p-3 text-sm font-medium leading-6 {{ request()->routeIs('settings.company.*') ? 'bg-violet-50 text-violet-700' : 'text-gray-700 hover:text-violet-700 hover:bg-gray-50' }} transition-all duration-200">
                                         <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m2.25-18v18m13.5-18v18M6.75 9.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.75m-.75 3h.75"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m2.25-18v18m13.5-18v18M6.75 9.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3  3h12m-.75 4.5H21m-3.75 3.75h.75m-.75 3h.75"/>
                                         </svg>
                                         Entreprise
                                     </a>
@@ -621,7 +863,7 @@
                                 </a>
                             </div>
                         </li>
-                        @if(!request()->routeIs('dashboard'))
+                        @if(!request()->routeIs('dashboard') && request()->route())
                         <li>
                             <div class="flex items-center">
                                 <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
@@ -629,7 +871,7 @@
                                 </svg>
                                 <span class="ml-4 text-sm font-medium text-gray-700 capitalize">
                                     @php
-                                        $routeName = request()->route()->getName();
+                                        $routeName = request()->route()->getName() ?? '';
                                         $cleanRoute = str_replace(['admin.', 'settings.'], '', $routeName);
                                         $cleanRoute = str_replace(['.', '-', '_'], ' ', $cleanRoute);
                                         echo $cleanRoute;

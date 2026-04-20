@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\TenantIsolation::class,
+            \App\Http\Middleware\InitializePermissionsTeam::class,
         ]);
 
         $middleware->alias([
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check_admin_redirect' => \App\Http\Middleware\CheckAdminRedirect::class,
             'feature' => \App\Http\Middleware\FeatureGuard::class,
             'feature_lock' => \App\Http\Middleware\CheckFeatureLock::class,
+            'module' => \App\Http\Middleware\CheckModuleAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

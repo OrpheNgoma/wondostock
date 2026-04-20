@@ -5,6 +5,7 @@ namespace App\Livewire\Auth;
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\ModuleService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -109,8 +110,10 @@ class Register extends Component
                 $sanitizedCompanyName = preg_replace('/\s+/', '-', trim($sanitizedCompanyName));
                 $roleName = 'Propriétaire-'.$sanitizedCompanyName;
 
-                // Vérifier si le rôle existe déjà
-                $ownerRole = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+                // Vérifier si le rôle existe déjà pour cette entreprise
+                $ownerRole = \Spatie\Permission\Models\Role::where('name', $roleName)
+                    ->where('company_id', $company->id)
+                    ->first();
 
                 if (! $ownerRole) {
                     $ownerRole = \Spatie\Permission\Models\Role::create([
@@ -126,6 +129,9 @@ class Register extends Component
 
                 // Assigner le rôle à l'utilisateur
                 $user->assignRole($ownerRole);
+
+                // 5b. Initialiser les modules du tenant (tous désactivés par défaut)
+                app(ModuleService::class)->syncDefaults($company);
 
                 // 6. Création de l'abonnement
                 $company->subscription()->create([

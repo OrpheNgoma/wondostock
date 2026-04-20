@@ -4,16 +4,25 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Service pour la gestion des rôles et permissions avec isolation par entreprise
+ * Service pour la gestion des rôles et permissions avec isolation par entreprise.
  */
 class RolePermissionService
 {
     /**
-     * Vérifie si l'utilisateur actuel peut gérer les rôles et permissions
+     * Rôles système protégés : ne peuvent pas être renommés ni supprimés.
+     *
+     * @var array<string>
+     */
+    public const PROTECTED_ROLES = ['Super-Administrateur'];
+
+    /**
+     * Vérifie si l'utilisateur actuel peut gérer les rôles et permissions.
      */
     public function canManageRoles(): bool
     {
@@ -23,12 +32,11 @@ class RolePermissionService
             return false;
         }
 
-        // Seuls les propriétaires d'entreprise peuvent gérer les rôles
         return $user->can('feature-roles-permissions') || $this->isCompanyOwner($user);
     }
 
     /**
-     * Vérifie si l'utilisateur est propriétaire de l'entreprise
+     * Vérifie si l'utilisateur est propriétaire de l'entreprise.
      */
     public function isCompanyOwner(User $user): bool
     {
@@ -36,7 +44,7 @@ class RolePermissionService
     }
 
     /**
-     * Récupère tous les rôles de l'entreprise actuelle
+     * Récupère tous les rôles de l'entreprise actuelle.
      */
     public function getCompanyRoles(?int $companyId = null): \Illuminate\Database\Eloquent\Collection
     {
@@ -48,7 +56,7 @@ class RolePermissionService
     }
 
     /**
-     * Récupère toutes les permissions disponibles
+     * Récupère toutes les permissions disponibles.
      */
     public function getAvailablePermissions(): \Illuminate\Database\Eloquent\Collection
     {
@@ -56,70 +64,98 @@ class RolePermissionService
     }
 
     /**
-     * Crée un nouveau rôle pour l'entreprise
+     * Crée un nouveau rôle pour l'entreprise.
      */
     public function createRole(string $name, ?string $description = null, ?int $companyId = null): Role
     {
         $companyId = $companyId ?? Auth::user()->company_id;
 
-        return Role::create([
-            'name' => $name,
-            'description' => $description,
-            'guard_name' => 'web',
-            'company_id' => $companyId,
-        ]);
-    }
+        $role = DB::transaction(function () use ($name, $description, $companyId): Role {
+            return Role::create([
+                'name' => $name,
+                'description' => $description,
+                'guard_name' => 'web',
+                'company_id' => $companyId,
+            ]);
+        });
 
-    /**
-     * Met à jour un rôle existant
-     */
-    public function updateRole(Role $role, string $name, ?string $description = null): Role
-    {
-        // Vérifier que le rôle appartient à l'entreprise actuelle
-        $this->ensureRoleBelongsToCompany($role);
-
-        $role->update([
-            'name' => $name,
-            'description' => $description,
-        ]);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $role;
     }
 
     /**
-     * Supprime un rôle
+     * Met à jour un rôle existant.
+     *
+     * @throws \Exception
+     */
+    public function updateRole(Role $role, string $name, ?string $description = null): Role
+    {
+        $this->ensureRoleBelongsToCompany($role);
+        $this->ensureRoleIsNotProtected($role);
+
+        DB::transaction(function () use ($role, $name, $description): void {
+            $role->update([
+                'name' => $name,
+                'description' => $description,
+            ]);
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $role;
+    }
+
+    /**
+     * Supprime un rôle.
+     *
+     * @throws \Exception
      */
     public function deleteRole(Role $role): bool
     {
-        // Vérifier que le rôle appartient à l'entreprise actuelle
         $this->ensureRoleBelongsToCompany($role);
+        $this->ensureRoleIsNotProtected($role);
 
-        // Vérifier qu'aucun utilisateur n'a ce rôle
         if ($role->users()->count() > 0) {
             throw new \Exception('Ce rôle ne peut pas être supprimé car il est assigné à des utilisateurs.');
         }
 
-        return $role->delete();
+        $deleted = DB::transaction(function () use ($role): bool {
+            return (bool) $role->delete();
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return $deleted;
     }
 
     /**
-     * Assigne des permissions à un rôle
+     * Synchronise les permissions d'un rôle (remplace les permissions existantes).
+     *
+     * @param  array<int>  $permissionIds
+     *
+     * @throws \Exception
      */
     public function syncRolePermissions(Role $role, array $permissionIds): void
     {
-        // Vérifier que le rôle appartient à l'entreprise actuelle
         $this->ensureRoleBelongsToCompany($role);
 
         $permissions = Permission::whereIn('id', $permissionIds)->get();
-        $role->syncPermissions($permissions);
+
+        DB::transaction(function () use ($role, $permissions): void {
+            $role->syncPermissions($permissions);
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
-     * Assigne un rôle à un utilisateur
+     * Assigne un rôle à un utilisateur (cumul — n'efface pas les rôles existants).
+     *
+     * @throws \Exception
      */
     public function assignRoleToUser(User $user, Role $role): void
     {
-        // Vérifier que l'utilisateur et le rôle appartiennent à la même entreprise
         $this->ensureUserBelongsToCompany($user);
         $this->ensureRoleBelongsToCompany($role);
 
@@ -127,37 +163,75 @@ class RolePermissionService
             throw new \Exception('L\'utilisateur et le rôle doivent appartenir à la même entreprise.');
         }
 
-        $user->assignRole($role);
+        DB::transaction(function () use ($user, $role): void {
+            setPermissionsTeamId($user->company_id);
+            $user->assignRole($role);
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
-     * Retire un rôle d'un utilisateur
+     * Remplace tous les rôles d'un utilisateur par un seul rôle (sync).
+     * Utilisé lors de la création/édition d'un utilisateur depuis le formulaire.
+     *
+     * @throws \Exception
      */
-    public function removeRoleFromUser(User $user, Role $role): void
+    public function syncUserRole(User $user, Role $role): void
     {
-        // Vérifier que l'utilisateur et le rôle appartiennent à la même entreprise
         $this->ensureUserBelongsToCompany($user);
         $this->ensureRoleBelongsToCompany($role);
 
-        $user->removeRole($role);
+        if ($user->company_id !== $role->company_id) {
+            throw new \Exception('L\'utilisateur et le rôle doivent appartenir à la même entreprise.');
+        }
+
+        DB::transaction(function () use ($user, $role): void {
+            setPermissionsTeamId($user->company_id);
+            $user->syncRoles([$role]);
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
-     * Récupère les utilisateurs de l'entreprise qui n'ont pas un rôle spécifique
+     * Retire un rôle d'un utilisateur.
+     *
+     * @throws \Exception
+     */
+    public function removeRoleFromUser(User $user, Role $role): void
+    {
+        $this->ensureUserBelongsToCompany($user);
+        $this->ensureRoleBelongsToCompany($role);
+
+        DB::transaction(function () use ($user, $role): void {
+            setPermissionsTeamId($user->company_id);
+            $user->removeRole($role);
+        });
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /**
+     * Récupère les utilisateurs de l'entreprise qui n'ont pas encore un rôle spécifique.
+     *
+     * @throws \Exception
      */
     public function getUsersWithoutRole(Role $role): \Illuminate\Database\Eloquent\Collection
     {
         $this->ensureRoleBelongsToCompany($role);
 
         return User::where('company_id', $role->company_id)
-            ->whereDoesntHave('roles', function ($query) use ($role) {
+            ->whereDoesntHave('roles', function ($query) use ($role): void {
                 $query->where('roles.id', $role->id);
             })
             ->get();
     }
 
     /**
-     * Récupère les statistiques des rôles pour l'entreprise
+     * Récupère les statistiques des rôles pour l'entreprise.
+     *
+     * @return array{total_roles: int, total_users: int, users_with_roles: int, users_without_roles: int}
      */
     public function getRoleStats(?int $companyId = null): array
     {
@@ -168,18 +242,88 @@ class RolePermissionService
         $usersWithRoles = User::where('company_id', $companyId)
             ->whereHas('roles')
             ->count();
-        $usersWithoutRoles = $totalUsers - $usersWithRoles;
 
         return [
             'total_roles' => $totalRoles,
             'total_users' => $totalUsers,
             'users_with_roles' => $usersWithRoles,
-            'users_without_roles' => $usersWithoutRoles,
+            'users_without_roles' => $totalUsers - $usersWithRoles,
         ];
     }
 
     /**
-     * S'assure qu'un rôle appartient à l'entreprise actuelle
+     * Grouper les permissions par catégorie avec des libellés explicites.
+     * Seules les permissions connues du seeder sont exposées dans l'UI.
+     *
+     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection>
+     */
+    public function getPermissionsByGroup(): \Illuminate\Support\Collection
+    {
+        $groups = [
+            'Tableau de bord' => ['view_dashboard_stats'],
+            'Produits' => ['view_products', 'create_products', 'edit_products', 'delete_products'],
+            'Stock' => ['view_stock', 'create_stock_entries', 'adjust_stock', 'transfer_stock'],
+            'Ventes' => ['view_documents', 'create_documents', 'edit_documents', 'delete_documents', 'validate_documents', 'record_payments', 'view_all_sales_documents'],
+            'Achats' => ['view_purchases', 'create_purchases', 'edit_purchases'],
+            'Clients & Fournisseurs' => ['manage_customers', 'manage_suppliers'],
+            'Dépenses' => ['view_expenses', 'create_expenses', 'edit_expenses', 'delete_expenses'],
+            'Caisse' => ['view_cash_sessions', 'manage_cash_sessions', 'close_cash_sessions'],
+            'Livraisons' => ['view_deliveries', 'create_deliveries', 'edit_deliveries', 'close_deliveries'],
+            'Salaires & RH' => ['view_salaries', 'manage_salaries', 'validate_salaries', 'approve_salary_advances'],
+            'Employés' => ['view_employees', 'manage_employees'],
+            'Finance & Rapports' => ['view_financial_reports', 'view_global_reports', 'view_store_reports'],
+            'Administration' => ['manage_users', 'manage_stores', 'manage_settings', 'manage_subscriptions', 'view_all_sales_documents', 'manage.roles'],
+            'Audit' => ['view_audit_log'],
+        ];
+
+        $allPermissions = Permission::all()->keyBy('name');
+        $result = collect();
+
+        foreach ($groups as $groupLabel => $permissionNames) {
+            $groupPerms = collect();
+            foreach ($permissionNames as $name) {
+                if ($allPermissions->has($name)) {
+                    $groupPerms->push($allPermissions->get($name));
+                }
+            }
+            if ($groupPerms->isNotEmpty()) {
+                $result->put($groupLabel, $groupPerms);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Vérifie si un nom de rôle est unique dans l'entreprise.
+     */
+    public function isRoleNameUnique(string $name, ?int $excludeRoleId = null, ?int $companyId = null): bool
+    {
+        $companyId = $companyId ?? Auth::user()->company_id;
+
+        $query = Role::where('company_id', $companyId)->where('name', $name);
+
+        if ($excludeRoleId) {
+            $query->where('id', '!=', $excludeRoleId);
+        }
+
+        return $query->doesntExist();
+    }
+
+    /**
+     * Récupère un rôle de l'entreprise par son ID.
+     */
+    public function getCompanyRole(int $roleId, ?int $companyId = null): ?Role
+    {
+        $companyId = $companyId ?? Auth::user()->company_id;
+
+        return Role::where('company_id', $companyId)->where('id', $roleId)->first();
+    }
+
+    /**
+     * S'assure qu'un rôle appartient à l'entreprise actuelle.
+     *
+     * @throws \Exception
      */
     private function ensureRoleBelongsToCompany(Role $role): void
     {
@@ -189,7 +333,9 @@ class RolePermissionService
     }
 
     /**
-     * S'assure qu'un utilisateur appartient à l'entreprise actuelle
+     * S'assure qu'un utilisateur appartient à l'entreprise actuelle.
+     *
+     * @throws \Exception
      */
     private function ensureUserBelongsToCompany(User $user): void
     {
@@ -199,43 +345,14 @@ class RolePermissionService
     }
 
     /**
-     * Grouper les permissions par catégorie
+     * S'assure qu'un rôle n'est pas dans la liste des rôles protégés.
+     *
+     * @throws \Exception
      */
-    public function getPermissionsByGroup(): \Illuminate\Support\Collection
+    private function ensureRoleIsNotProtected(Role $role): void
     {
-        return Permission::all()->groupBy(function ($permission) {
-            $parts = explode('_', $permission->name);
-
-            return $parts[1] ?? 'general';
-        });
-    }
-
-    /**
-     * Vérifie si un nom de rôle est unique dans l'entreprise
-     */
-    public function isRoleNameUnique(string $name, ?int $excludeRoleId = null, ?int $companyId = null): bool
-    {
-        $companyId = $companyId ?? Auth::user()->company_id;
-
-        $query = Role::where('company_id', $companyId)
-            ->where('name', $name);
-
-        if ($excludeRoleId) {
-            $query->where('id', '!=', $excludeRoleId);
+        if (in_array($role->name, self::PROTECTED_ROLES, strict: true)) {
+            throw new \Exception('Le rôle "'.$role->name.'" est protégé et ne peut pas être modifié ni supprimé.');
         }
-
-        return $query->count() === 0;
-    }
-
-    /**
-     * Récupère un rôle de l'entreprise par son ID
-     */
-    public function getCompanyRole(int $roleId, ?int $companyId = null): ?Role
-    {
-        $companyId = $companyId ?? Auth::user()->company_id;
-
-        return Role::where('company_id', $companyId)
-            ->where('id', $roleId)
-            ->first();
     }
 }

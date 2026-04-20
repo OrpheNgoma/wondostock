@@ -9,102 +9,220 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleAndPermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Réinitialiser le cache des rôles et permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // -----------------------------------------------------------------
-        // Création des Permissions
-        // -----------------------------------------------------------------
-
-        // Dashboard
-        Permission::firstOrCreate(['name' => 'view_dashboard_stats', 'guard_name' => 'web']);
-
-        // Gestion des Produits
-        Permission::firstOrCreate(['name' => 'view_products', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'manage_products', 'guard_name' => 'web']); // Créer, éditer, supprimer
-
-        // Gestion des Stocks
-        Permission::firstOrCreate(['name' => 'manage_inventory', 'guard_name' => 'web']); // Faire des inventaires, ajuster
-        Permission::firstOrCreate(['name' => 'transfer_stock', 'guard_name' => 'web']); // Transférer entre magasins
-
-        // Gestion des Documents de Vente
-        Permission::firstOrCreate(['name' => 'create_sales_documents', 'guard_name' => 'web']); // Devis, Factures, BL...
-        Permission::firstOrCreate(['name' => 'view_all_sales_documents', 'guard_name' => 'web']); // Voir les docs de tous les vendeurs
-        Permission::firstOrCreate(['name' => 'delete_sales_documents', 'guard_name' => 'web']); // Permission critique
-
-        // Gestion des Clients
-        Permission::firstOrCreate(['name' => 'manage_customers', 'guard_name' => 'web']);
-
-        // Gestion des Rapports
-        Permission::firstOrCreate(['name' => 'view_store_reports', 'guard_name' => 'web']); // Rapports du magasin assigné
-        Permission::firstOrCreate(['name' => 'view_global_reports', 'guard_name' => 'web']); // Rapports de toute l'entreprise
-
-        // Gestion des Utilisateurs et Magasins (Permissions d'Admin)
-        Permission::firstOrCreate(['name' => 'manage_users', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'manage_stores', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'manage_settings', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'manage_subscriptions', 'guard_name' => 'web']);
-
-        // -----------------------------------------------------------------
-        // Création des Rôles et Assignation des Permissions
-        // -----------------------------------------------------------------
-
-        // Rôle Vendeur / Caissier
-        $vendeurRole = Role::firstOrCreate(['name' => 'Vendeur', 'guard_name' => 'web']);
-        $vendeurRole->givePermissionTo([
-            'create_sales_documents',
-            'manage_customers',
-        ]);
-
-        // Rôle Gérant de Magasin
-        $gerantRole = Role::firstOrCreate(['name' => 'Gérant de Magasin', 'guard_name' => 'web']);
-        $gerantRole->givePermissionTo([
-            // Tout ce que le vendeur peut faire
-            'create_sales_documents',
-            'manage_customers',
-            // Plus des permissions étendues
+        $permissions = [
+            // Dashboard
             'view_dashboard_stats',
-            'view_products',
-            'manage_products',
-            'manage_inventory',
-            'transfer_stock',
-            'view_all_sales_documents',
-            'view_store_reports',
-            'manage_users', // Peut gérer les vendeurs de son magasin (logique à affiner dans le code)
-        ]);
 
-        // Rôle Administrateur
-        $adminRole = Role::firstOrCreate(['name' => 'Administrateur', 'guard_name' => 'web']);
-        // L'admin a la plupart des permissions, sauf les plus critiques
-        $adminRole->givePermissionTo([
-            'view_dashboard_stats',
+            // Produits
             'view_products',
-            'manage_products',
-            'manage_inventory',
+            'create_products',
+            'edit_products',
+            'delete_products',
+
+            // Stock
+            'view_stock',
+            'create_stock_entries',
+            'adjust_stock',
             'transfer_stock',
-            'create_sales_documents',
-            'view_all_sales_documents',
-            'delete_sales_documents',
+
+            // Ventes & Documents
+            'view_documents',
+            'create_documents',
+            'edit_documents',
+            'delete_documents',
+            'validate_documents',
+            'record_payments',
+
+            // Achats
+            'view_purchases',
+            'create_purchases',
+            'edit_purchases',
+
+            // Clients & Fournisseurs
             'manage_customers',
-            'view_store_reports',
+            'manage_suppliers',
+
+            // Dépenses
+            'view_expenses',
+            'create_expenses',
+            'edit_expenses',
+            'delete_expenses',
+
+            // Caisse
+            'view_cash_sessions',
+            'manage_cash_sessions',
+            'close_cash_sessions',
+
+            // Livraisons
+            'view_deliveries',
+            'create_deliveries',
+            'edit_deliveries',
+            'close_deliveries',
+
+            // Salaires & RH
+            'view_salaries',
+            'manage_salaries',
+            'validate_salaries',
+            'approve_salary_advances',
+
+            // Employés
+            'view_employees',
+            'manage_employees',
+
+            // Finance & Rapports
+            'view_financial_reports',
             'view_global_reports',
+            'view_store_reports',
+
+            // Administration
             'manage_users',
             'manage_stores',
             'manage_settings',
+            'manage_subscriptions',
+            'view_all_sales_documents',
+
+            // Audit
+            'view_audit_log',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
+        }
+
+        // ----------------------------------------------------------------
+        // Rôle : Vendeur / Caissier
+        // Peut créer des ventes et gérer les clients
+        // ----------------------------------------------------------------
+        $vendeur = Role::firstOrCreate(['name' => 'Vendeur', 'guard_name' => 'web']);
+        $vendeur->syncPermissions([
+            'view_documents',
+            'create_documents',
+            'record_payments',
+            'manage_customers',
+            'view_products',
+            'view_stock',
         ]);
 
-        // Rôle Super-Administrateur
-        // Ce rôle a toutes les permissions. On peut utiliser un Gate::before pour lui donner un accès total.
-        // C'est plus propre et plus facile à maintenir que de lui assigner toutes les permissions une par une.
+        // ----------------------------------------------------------------
+        // Rôle : Caissier
+        // Ventes + gestion de la caisse
+        // ----------------------------------------------------------------
+        $caissier = Role::firstOrCreate(['name' => 'Caissier', 'guard_name' => 'web']);
+        $caissier->syncPermissions([
+            'view_documents',
+            'create_documents',
+            'record_payments',
+            'manage_customers',
+            'view_products',
+            'view_stock',
+            'view_cash_sessions',
+            'manage_cash_sessions',
+        ]);
+
+        // ----------------------------------------------------------------
+        // Rôle : Magasinier
+        // Gestion du stock et des achats
+        // ----------------------------------------------------------------
+        $magasinier = Role::firstOrCreate(['name' => 'Magasinier', 'guard_name' => 'web']);
+        $magasinier->syncPermissions([
+            'view_products',
+            'view_stock',
+            'create_stock_entries',
+            'adjust_stock',
+            'transfer_stock',
+            'view_purchases',
+            'create_purchases',
+            'manage_suppliers',
+        ]);
+
+        // ----------------------------------------------------------------
+        // Rôle : Comptable / RH
+        // Finance, dépenses, salaires
+        // ----------------------------------------------------------------
+        $comptable = Role::firstOrCreate(['name' => 'Comptable', 'guard_name' => 'web']);
+        $comptable->syncPermissions([
+            'view_dashboard_stats',
+            'view_documents',
+            'view_all_sales_documents',
+            'view_expenses',
+            'create_expenses',
+            'edit_expenses',
+            'view_cash_sessions',
+            'close_cash_sessions',
+            'view_salaries',
+            'manage_salaries',
+            'validate_salaries',
+            'approve_salary_advances',
+            'view_employees',
+            'view_financial_reports',
+            'view_store_reports',
+            'view_global_reports',
+            'view_audit_log',
+        ]);
+
+        // ----------------------------------------------------------------
+        // Rôle : Gérant de Magasin
+        // Tout sauf administration et finance globale
+        // ----------------------------------------------------------------
+        $gerant = Role::firstOrCreate(['name' => 'Gérant de Magasin', 'guard_name' => 'web']);
+        $gerant->syncPermissions([
+            'view_dashboard_stats',
+            'view_products',
+            'create_products',
+            'edit_products',
+            'view_stock',
+            'create_stock_entries',
+            'adjust_stock',
+            'transfer_stock',
+            'view_documents',
+            'create_documents',
+            'edit_documents',
+            'validate_documents',
+            'record_payments',
+            'view_all_sales_documents',
+            'view_purchases',
+            'create_purchases',
+            'edit_purchases',
+            'manage_customers',
+            'manage_suppliers',
+            'view_expenses',
+            'create_expenses',
+            'edit_expenses',
+            'delete_expenses',
+            'view_cash_sessions',
+            'manage_cash_sessions',
+            'close_cash_sessions',
+            'view_deliveries',
+            'create_deliveries',
+            'edit_deliveries',
+            'close_deliveries',
+            'view_employees',
+            'view_store_reports',
+            'manage_users',
+        ]);
+
+        // ----------------------------------------------------------------
+        // Rôle : Administrateur
+        // Tout sauf manage_subscriptions
+        // ----------------------------------------------------------------
+        $admin = Role::firstOrCreate(['name' => 'Administrateur', 'guard_name' => 'web']);
+        $adminPerms = Permission::whereNotIn('name', ['manage_subscriptions'])->pluck('name')->toArray();
+        $admin->syncPermissions($adminPerms);
+
+        // ----------------------------------------------------------------
+        // Rôle : Super-Administrateur
+        // Accès total via Gate::before dans AppServiceProvider
+        // ----------------------------------------------------------------
         Role::firstOrCreate(['name' => 'Super-Administrateur', 'guard_name' => 'web']);
-        // $superAdminRole->givePermissionTo(Permission::all()); // La méthode simple : on donne tout
-        // NOUVEAU RÔLE : Admin Global de la plateforme SaaS
-        $globalAdminRole = Role::firstOrCreate(['name' => 'Global-Admin', 'guard_name' => 'web']);
-        $globalAdminRole->givePermissionTo(Permission::all()); // La méthode simple : on donne tout
+
+        // ----------------------------------------------------------------
+        // Rôle : Global-Admin (plateforme SaaS)
+        // ----------------------------------------------------------------
+        $globalAdmin = Role::firstOrCreate(['name' => 'Global-Admin', 'guard_name' => 'web']);
+        $globalAdmin->syncPermissions(Permission::all());
     }
 }

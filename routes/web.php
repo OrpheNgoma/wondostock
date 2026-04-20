@@ -16,23 +16,28 @@ use App\Http\Controllers\Auth\LogoutController;
 // ============================================================================
 // CONTROLLERS - Communs
 // ============================================================================
+use App\Http\Controllers\Deliveries\DeliveryPdfController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProductBarcodeController;
 use App\Http\Controllers\Settings\CountryBranchController;
-use App\Livewire\Auth\Login;
 // ============================================================================
 // LIVEWIRE - Auth & Communs
 // ============================================================================
+use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
-use App\Livewire\Customers\Index as CustomerIndex;
 // ============================================================================
 // LIVEWIRE - Dashboard SaaS (Multi-tenant)
 // ============================================================================
+use App\Livewire\Customers\Index as CustomerIndex;
 use App\Livewire\Dashboard;
+use App\Livewire\Deliveries\Index as DeliveryIndex;
+use App\Livewire\Deliveries\Settings as DeliverySettings;
+// SaaS - Produits
+use App\Livewire\Deliveries\TripForm;
+use App\Livewire\Deliveries\TripShow;
 use App\Livewire\Documents\CreditNoteForm;
 use App\Livewire\Documents\DocumentForm;
-// SaaS - Produits
 use App\Livewire\Documents\Index as DocumentIndex;
 use App\Livewire\Documents\Show as DocumentShow;
 use App\Livewire\Products\Index as ProductIndex;
@@ -150,6 +155,75 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/country-branch/{store}', [CountryBranchController::class, 'update'])->name('country-branch.update');
 
     // ----------------------------------------
+    // DÉPENSES (module optionnel)
+    // ----------------------------------------
+    Route::middleware('module:expenses')->prefix('expenses')->name('expenses.')->group(function () {
+        Route::get('/', \App\Livewire\Expenses\Index::class)->name('index');
+        Route::get('/settings', \App\Livewire\Expenses\Settings::class)->name('settings');
+    });
+
+    // ----------------------------------------
+    // SALAIRES (module optionnel)
+    // ----------------------------------------
+    Route::middleware('module:salaries')->prefix('salaries')->name('salaries.')->group(function () {
+        Route::get('/', \App\Livewire\Salaries\Index::class)->name('index');
+        Route::get('/advances', \App\Livewire\Salaries\Advances::class)->name('advances.index');
+        Route::get('/slips/{slip}/pdf', [\App\Http\Controllers\Salaries\SalaryPdfController::class, 'download'])->name('slip.pdf');
+        Route::get('/slips/{slip}', \App\Livewire\Salaries\SlipShow::class)->name('slip.show');
+        Route::get('/{period}', \App\Livewire\Salaries\PeriodShow::class)->name('period.show');
+    });
+
+    // ----------------------------------------
+    // EMPLOYÉS (module salaries)
+    // ----------------------------------------
+    Route::middleware('module:salaries')->prefix('employees')->name('employees.')->group(function () {
+        Route::get('/', \App\Livewire\Employees\Index::class)->name('index');
+    });
+
+    // ----------------------------------------
+    // DASHBOARD FINANCIER (module advanced_reports)
+    // ----------------------------------------
+    Route::middleware('module:advanced_reports')->group(function () {
+        Route::get('/finance', \App\Livewire\Finance\Dashboard::class)->name('finance.dashboard');
+    });
+
+    // ----------------------------------------
+    // MODULE CAISSE
+    // ----------------------------------------
+    Route::middleware('module:caisse')->prefix('caisse')->name('caisse.')->group(function () {
+        Route::get('/', \App\Livewire\Caisse\Index::class)->name('index');
+        Route::get('/{session}', \App\Livewire\Caisse\SessionShow::class)->name('session.show');
+    });
+
+    // ----------------------------------------
+    // VERSEMENTS DG (module cash_remittances)
+    // ----------------------------------------
+    Route::middleware('module:cash_remittances')->group(function () {
+        Route::get('/finance/remittances', \App\Livewire\Finance\Remittances::class)->name('finance.remittances');
+    });
+
+    // ----------------------------------------
+    // POINT DE COMPTABILITÉ (module monthly_accounting)
+    // ----------------------------------------
+    Route::middleware('module:monthly_accounting')->group(function () {
+        Route::get('/finance/monthly-accounting', \App\Livewire\Finance\MonthlyAccounting::class)->name('finance.monthly-accounting');
+        Route::get('/finance/monthly-accounting/pdf', [\App\Http\Controllers\Finance\MonthlyAccountingPdfController::class, 'download'])->name('finance.monthly-accounting.pdf');
+    });
+
+    // ----------------------------------------
+    // LIVRAISONS (module optionnel)
+    // ----------------------------------------
+    Route::middleware('module:deliveries')->prefix('deliveries')->name('deliveries.')->group(function () {
+        Route::get('/', DeliveryIndex::class)->name('index');
+        Route::get('/create', TripForm::class)->name('create');
+        Route::get('/settings', DeliverySettings::class)->name('settings');
+        Route::get('/{trip}/edit', TripForm::class)->name('edit');
+        Route::get('/{trip}/pdf/report', [DeliveryPdfController::class, 'report'])->name('pdf.report');
+        Route::get('/{trip}/pdf/invoice', [DeliveryPdfController::class, 'invoice'])->name('pdf.invoice');
+        Route::get('/{trip}', TripShow::class)->name('show');
+    });
+
+    // ----------------------------------------
     // RAPPORTS & ANALYSES
     // ----------------------------------------
     Route::get('/reports', ReportsIndex::class)->name('reports.index');
@@ -163,6 +237,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings/invitations', InvitationsIndex::class)->name('settings.invitations.index');
     Route::get('/settings/numbering', NumberingSettings::class)->name('settings.numbering');
     Route::get('/settings/subscription', SubscriptionIndex::class)->name('settings.subscription.index');
+    Route::get('/settings/audit-log', \App\Livewire\Settings\AuditLog::class)->name('settings.audit-log');
 });
 
 // ============================================================================

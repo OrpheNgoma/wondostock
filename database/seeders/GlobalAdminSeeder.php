@@ -10,15 +10,29 @@ class GlobalAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // Création de l'administrateur principal de la plateforme WondoStock
-        $globalAdmin = User::factory()->create([
-            'name' => 'Admin WondoStock',
-            'email' => 'admin@wondostock.com',
-            'password' => Hash::make('password'),
-            'company_id' => null, // Cet utilisateur n'appartient à aucune compagnie cliente
-            'is_global_admin' => true, // Flag pour identifier l'admin global
-        ]);
+        $name = env('ADMIN_NAME', 'Admin WondoStock');
+        $email = env('ADMIN_EMAIL', 'admin@wondostock.com');
+        $password = env('ADMIN_PASSWORD');
 
-        $globalAdmin->assignRole('Global-Admin');
+        if (! $password) {
+            $this->command->error('ADMIN_PASSWORD est absent du fichier .env — le compte Global-Admin n\'a pas été créé.');
+            $this->command->warn('Ajoutez ADMIN_PASSWORD=<mot_de_passe_fort> dans votre .env puis relancez le seeder.');
+
+            return;
+        }
+
+        $globalAdmin = User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name' => $name,
+                'password' => Hash::make($password),
+                'company_id' => null,
+                'is_global_admin' => true,
+            ]
+        );
+
+        $globalAdmin->syncRoles(['Global-Admin']);
+
+        $this->command->info("Global-Admin créé : {$email}");
     }
 }

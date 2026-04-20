@@ -4,8 +4,10 @@ namespace App\Livewire\Settings\Users;
 
 use App\Models\Store;
 use App\Models\User;
+use App\Services\RolePermissionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -36,18 +38,29 @@ class Index extends Component
 
     public ?int $role_id = null;
 
-    protected function rules()
+    protected function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.($this->editingUser?->id ?? 'NULL'),
+            'email' => [
+                'required', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($this->editingUser?->id),
+            ],
             'password' => $this->editingUser?->exists ? 'nullable|min:8' : 'required|min:8',
             'role_id' => [
                 'required',
-                'exists:roles,id,company_id,'.Auth::user()->company_id,
+                Rule::exists('roles', 'id')->where('company_id', Auth::user()->company_id),
             ],
-            'store_id' => 'nullable|exists:stores,id',
+            'store_id' => [
+                'nullable',
+                Rule::exists('stores', 'id')->where('company_id', Auth::user()->company_id),
+            ],
         ];
+    }
+
+    private function getRolePermissionService(): RolePermissionService
+    {
+        return app(RolePermissionService::class);
     }
 
     public function mount()
@@ -116,14 +129,7 @@ class Index extends Component
             return;
         }
 
-        // S'assurer que l'utilisateur a le bon company_id avant d'assigner le rôle
-        $this->editingUser->company_id = Auth::user()->company_id;
-        $this->editingUser->save();
-
-        // Assigner le rôle avec le contexte de l'équipe (company_id)
-        // La configuration utilise maintenant company_id comme team_foreign_key
-        setPermissionsTeamId(Auth::user()->company_id);
-        $this->editingUser->syncRoles([$role]);
+        $this->getRolePermissionService()->syncUserRole($this->editingUser, $role);
 
         $this->dispatch('notify', message: 'Utilisateur sauvegardé.');
         $this->closeForm();

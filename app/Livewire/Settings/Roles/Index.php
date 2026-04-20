@@ -4,6 +4,7 @@ namespace App\Livewire\Settings\Roles;
 
 use App\Models\User;
 use App\Services\RolePermissionService;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -44,14 +45,9 @@ class Index extends Component
 
     public $availableUsers = [];
 
-    protected $rules = [
-        'roleName' => 'required|string|max:255|unique:roles,name',
-        'roleDescription' => 'nullable|string|max:500',
-    ];
-
     protected $messages = [
         'roleName.required' => 'Le nom du rôle est requis.',
-        'roleName.unique' => 'Ce nom de rôle existe déjà.',
+        'roleName.unique' => 'Ce nom de rôle existe déjà dans votre entreprise.',
         'roleName.max' => 'Le nom du rôle ne peut pas dépasser 255 caractères.',
         'roleDescription.max' => 'La description ne peut pas dépasser 500 caractères.',
     ];
@@ -130,24 +126,35 @@ class Index extends Component
 
     public function saveRole()
     {
-        $this->validate();
+        $this->validate([
+            'roleName' => [
+                'required', 'string', 'max:255',
+                Rule::unique('roles', 'name')->where('company_id', auth()->user()->company_id),
+            ],
+            'roleDescription' => 'nullable|string|max:500',
+        ]);
 
         try {
             $this->getRolePermissionService()->createRole($this->roleName, $this->roleDescription);
 
             $this->resetForm();
             $this->showCreateRoleModal = false;
-            session()->flash('success', 'Rôle créé avec succès !');
+            $this->dispatch('notify', message: 'Rôle créé avec succès !', type: 'success');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la création du rôle : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
     public function updateRole()
     {
         $this->validate([
-            'roleName' => 'required|string|max:255|unique:roles,name,'.$this->selectedRole->id,
+            'roleName' => [
+                'required', 'string', 'max:255',
+                Rule::unique('roles', 'name')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($this->selectedRole->id),
+            ],
             'roleDescription' => 'nullable|string|max:500',
         ]);
 
@@ -156,10 +163,10 @@ class Index extends Component
 
             $this->resetForm();
             $this->showEditRoleModal = false;
-            session()->flash('success', 'Rôle modifié avec succès !');
+            $this->dispatch('notify', message: 'Rôle modifié avec succès !', type: 'success');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la modification du rôle : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -169,28 +176,33 @@ class Index extends Component
             $this->getRolePermissionService()->syncRolePermissions($this->selectedRole, $this->rolePermissions);
 
             $this->showPermissionsModal = false;
-            session()->flash('success', 'Permissions mises à jour pour le rôle '.$this->selectedRole->name);
+            $this->dispatch('notify', message: 'Permissions mises à jour pour le rôle '.$this->selectedRole->name, type: 'success');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la mise à jour des permissions : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
     public function assignRoleToUser()
     {
         $this->validate([
-            'selectedUser' => 'required|exists:users,id',
+            'selectedUser' => [
+                'required',
+                Rule::exists('users', 'id')->where('company_id', auth()->user()->company_id),
+            ],
         ]);
 
         try {
-            $user = User::find($this->selectedUser);
+            $user = User::where('company_id', auth()->user()->company_id)
+                ->findOrFail((int) $this->selectedUser);
+
             $this->getRolePermissionService()->assignRoleToUser($user, $this->selectedRole);
 
             $this->showAssignRoleModal = false;
-            session()->flash('success', 'Rôle assigné à '.$user->name.' avec succès !');
+            $this->dispatch('notify', message: 'Rôle assigné à '.$user->name.' avec succès !', type: 'success');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de l\'assignation du rôle : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -200,10 +212,10 @@ class Index extends Component
             $this->getRolePermissionService()->deleteRole($this->selectedRole);
 
             $this->showDeleteModal = false;
-            session()->flash('success', 'Rôle supprimé avec succès !');
+            $this->dispatch('notify', message: 'Rôle supprimé avec succès !', type: 'success');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la suppression du rôle : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -215,11 +227,11 @@ class Index extends Component
 
             if ($user && $role) {
                 $this->getRolePermissionService()->removeRoleFromUser($user, $role);
-                session()->flash('success', 'Rôle retiré de '.$user->name.' avec succès !');
+                $this->dispatch('notify', message: 'Rôle retiré de '.$user->name.' avec succès !', type: 'success');
             }
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors du retrait du rôle : '.$e->getMessage());
+            $this->dispatch('notify', message: 'Erreur : '.$e->getMessage(), type: 'error');
         }
     }
 
