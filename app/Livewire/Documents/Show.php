@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Documents;
 
+use App\Enums\CashMovementType;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Enums\StockMovementType;
 use App\Models\Document;
 use App\Models\Payment;
+use App\Services\CashMovementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -266,11 +268,41 @@ class Show extends Component
                 $this->document->status = DocumentStatus::PartiallyPaid;
             }
             $this->document->save();
+
+            // Synchroniser avec la session de caisse du magasin (si ouverte)
+            $this->syncPaymentToSession();
         });
 
         $this->dispatch('notify', message: 'Paiement enregistré avec succès.');
         $this->showPaymentForm = false;
         $this->loadDocumentData($this->document->id); // On recharge les données pour mettre à jour la vue
+    }
+
+    private function syncPaymentToSession(): void
+    {
+        if (! $this->document->store_id) {
+            return;
+        }
+
+        $paymentDate = \Illuminate\Support\Carbon::parse($this->payment_date)->toDateString();
+
+        $service = app(CashMovementService::class);
+        $session = $service->findOpenSession(
+            $this->document->company_id,
+            $this->document->store_id,
+            $paymentDate
+        );
+
+        if (! $session) {
+            return;
+        }
+
+        $service->addMovement(
+            session: $session,
+            type: CashMovementType::CashIn,
+            amount: (int) $this->payment_amount,
+            label: "Paiement — {$this->document->document_number}",
+        );
     }
 
     private function loadDocumentData($documentId)

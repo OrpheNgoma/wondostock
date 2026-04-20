@@ -125,4 +125,33 @@ INSERT INTO "migrations" ("id", "migration", "batch") VALUES
 (48,'2025_08_18_171759_convert_amounts_to_integers_for_fcfa',2),
 (49,'2025_08_18_220806_create_feature_locks_table',2),
 (50,'2025_08_19_122823_create_notifications_table',2),
-(51,'2025_08_19_191326_update_payments_table_for_saas',2);
+(51,'2025_08_19_191326_update_payments_table_for_saas',2),
+(52,'2026_04_05_010456_create_tenant_modules_table',3),
+(53,'2026_04_05_012102_create_drivers_table',3),
+(54,'2026_04_05_012103_create_vehicles_table',3),
+(55,'2026_04_05_012103_create_zones_table',3),
+(56,'2026_04_05_012104_create_delivery_trips_table',3),
+(57,'2026_04_05_012105_create_delivery_items_table',3),
+(58,'2026_04_05_012106_create_delivery_expense_categories_table',3),
+(59,'2026_04_05_012107_create_delivery_expenses_table',3);
+CREATE TABLE IF NOT EXISTS "tenant_modules" ("id" integer primary key autoincrement not null, "company_id" integer not null, "module_key" varchar not null, "is_enabled" tinyint(1) not null default '0', "config" text, "enabled_at" datetime, "enabled_by" integer, "created_at" datetime, "updated_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade, foreign key("enabled_by") references "users"("id") on delete set null);
+CREATE UNIQUE INDEX "tenant_modules_company_id_module_key_unique" on "tenant_modules" ("company_id", "module_key");
+CREATE INDEX "tenant_modules_module_key_index" on "tenant_modules" ("module_key");
+CREATE TABLE IF NOT EXISTS "drivers" ("id" integer primary key autoincrement not null, "company_id" integer not null, "name" varchar not null, "phone" varchar, "license_number" varchar, "base_salary" integer not null default '0', "is_active" tinyint(1) not null default '1', "created_at" datetime, "updated_at" datetime, "deleted_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade);
+CREATE INDEX "drivers_company_id_index" on "drivers" ("company_id");
+CREATE TABLE IF NOT EXISTS "vehicles" ("id" integer primary key autoincrement not null, "company_id" integer not null, "plate_number" varchar not null, "brand" varchar, "model" varchar, "is_active" tinyint(1) not null default '1', "created_at" datetime, "updated_at" datetime, "deleted_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade);
+CREATE INDEX "vehicles_company_id_index" on "vehicles" ("company_id");
+CREATE TABLE IF NOT EXISTS "zones" ("id" integer primary key autoincrement not null, "company_id" integer not null, "name" varchar not null, "city" varchar not null, "mission_allowance" integer not null default '5000', "created_at" datetime, "updated_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade);
+CREATE INDEX "zones_company_id_index" on "zones" ("company_id");
+CREATE TABLE IF NOT EXISTS "delivery_trips" ("id" integer primary key autoincrement not null, "company_id" integer not null, "driver_id" integer not null, "vehicle_id" integer, "zone_id" integer, "trip_date" date not null, "status" varchar not null default 'draft', "loaded_crates" integer, "returned_crates" integer, "total_revenue" integer, "total_margin" integer, "total_expenses" integer, "bank_percentage" integer not null default '80', "bank_amount" integer, "cash_amount" integer, "funds_amount" integer, "mission_allowance_amount" integer, "notes" text, "loaded_at" datetime, "departed_at" datetime, "returned_at" datetime, "closed_at" datetime, "closed_by" integer, "created_at" datetime, "updated_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade, foreign key("driver_id") references "drivers"("id") on delete cascade, foreign key("vehicle_id") references "vehicles"("id") on delete set null, foreign key("zone_id") references "zones"("id") on delete set null, foreign key("closed_by") references "users"("id") on delete set null);
+CREATE INDEX "delivery_trips_company_id_index" on "delivery_trips" ("company_id");
+CREATE INDEX "delivery_trips_driver_id_index" on "delivery_trips" ("driver_id");
+CREATE INDEX "delivery_trips_trip_date_index" on "delivery_trips" ("trip_date");
+CREATE INDEX "delivery_trips_status_index" on "delivery_trips" ("status");
+CREATE TABLE IF NOT EXISTS "delivery_items" ("id" integer primary key autoincrement not null, "trip_id" integer not null, "customer_id" integer, "product_id" integer, "product_ref" varchar, "product_designation" varchar not null, "qty_delivered" integer not null default '0', "qty_returned" integer not null default '0', "unit_price" integer not null default '0', "margin_per_unit" integer not null default '0', "notes" text, "created_at" datetime, "updated_at" datetime, foreign key("trip_id") references "delivery_trips"("id") on delete cascade, foreign key("customer_id") references "customers"("id") on delete set null, foreign key("product_id") references "products"("id") on delete set null);
+CREATE INDEX "delivery_items_trip_id_index" on "delivery_items" ("trip_id");
+CREATE INDEX "delivery_items_product_id_index" on "delivery_items" ("product_id");
+CREATE TABLE IF NOT EXISTS "delivery_expense_categories" ("id" integer primary key autoincrement not null, "company_id" integer not null, "name" varchar not null, "is_default" tinyint(1) not null default '0', "sort_order" integer not null default '0', "created_at" datetime, "updated_at" datetime, foreign key("company_id") references "companies"("id") on delete cascade);
+CREATE INDEX "delivery_expense_categories_company_id_index" on "delivery_expense_categories" ("company_id");
+CREATE TABLE IF NOT EXISTS "delivery_expenses" ("id" integer primary key autoincrement not null, "trip_id" integer not null, "category_id" integer, "label" varchar not null, "amount" integer not null, "created_at" datetime, "updated_at" datetime, foreign key("trip_id") references "delivery_trips"("id") on delete cascade, foreign key("category_id") references "delivery_expense_categories"("id") on delete set null);
+CREATE INDEX "delivery_expenses_trip_id_index" on "delivery_expenses" ("trip_id");

@@ -157,6 +157,7 @@ class InvitationService
 
             // Assigner le rôle
             if ($invitation->role) {
+                setPermissionsTeamId($user->company_id);
                 $user->assignRole($invitation->role);
             }
 

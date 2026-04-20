@@ -124,7 +124,7 @@
                                         </span>
                                     </label>
                                     <button type="button"
-                                            wire:click="$set('showUnitForm', {{ $showUnitForm ? 'false' : 'true' }})"
+                                            wire:click="$toggle('showUnitForm')"
                                             class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-200 {{ $showUnitForm ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}">
                                         @if($showUnitForm)
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">

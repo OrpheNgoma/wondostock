@@ -38,9 +38,9 @@
                         ← Retour
                     </a>
                     
-                    <button form="stock-entry-form" type="submit" 
-                            :disabled="!hasItems"
-                            :class="hasItems ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white' : 'bg-gray-400 cursor-not-allowed text-gray-200'"
+                    <button form="stock-entry-form" type="submit"
+                            :disabled="$wire.items.length === 0"
+                            :class="$wire.items.length > 0 ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white' : 'bg-gray-400 cursor-not-allowed text-gray-200'"
                             class="px-6 py-2 text-sm font-semibold rounded-lg transition-all shadow-lg">
                         <span wire:loading.remove wire:target="save">💾 Enregistrer l'Entrée</span>
                         <span wire:loading wire:target="save" class="flex items-center">
@@ -209,17 +209,15 @@
                         @if(count($products_list) > 0)
                         <div class="absolute z-50 w-full mt-2 bg-white border-2 border-emerald-200 rounded-xl shadow-2xl max-h-80 overflow-auto">
                             @foreach($products_list as $product)
-                            <div wire:click="addProduct({{ $product->id }})" 
-                                 @click="
-                                    @if(($product->stock_quantity ?? 0) <= ($product->min_stock ?? 5))
-                                        playSound('alert')
-                                    @elseif(($product->stock_quantity ?? 0) <= ($product->min_stock ?? 5) * 2)
-                                        playSound('warning')
-                                    @else
-                                        playSound('success')
-                                    @endif
-                                 "
-                                 class="px-6 py-4 hover:bg-emerald-50 cursor-pointer border-b border-emerald-100 last:border-b-0 group transition-colors {{ ($product->stock_quantity ?? 0) <= ($product->min_stock ?? 5) ? 'bg-red-50 border-red-200' : (($product->stock_quantity ?? 0) <= ($product->min_stock ?? 5) * 2 ? 'bg-orange-50 border-orange-200' : '') }}">
+                            @php
+                                $qty = $product->stock_quantity ?? 0;
+                                $min = $product->min_stock ?? 5;
+                                $stockSound = $qty <= $min ? 'alert' : ($qty <= $min * 2 ? 'warning' : 'success');
+                                $stockClass = $qty <= $min ? 'bg-red-50 border-red-200' : ($qty <= $min * 2 ? 'bg-orange-50 border-orange-200' : '');
+                            @endphp
+                            <div wire:click="addProduct({{ $product->id }})"
+                                 @click="playSound('{{ $stockSound }}')"
+                                 class="px-6 py-4 hover:bg-emerald-50 cursor-pointer border-b border-emerald-100 last:border-b-0 group transition-colors {{ $stockClass }}">
                                 <div class="flex items-center justify-between">
                                     <div class="flex-1">
                                         <div class="flex items-center space-x-3">
@@ -399,12 +397,6 @@
     <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('stockEntry', () => ({
-            hasItems: @entangle('items').live,
-            
-            get hasItems() {
-                return this.hasItems && this.hasItems.length > 0;
-            },
-            
             playSound(type) {
                 try {
                     const audio = document.getElementById(`sound-${type}`);
@@ -415,13 +407,6 @@
                     }
                 } catch (e) {}
             },
-            
-            init() {
-                // Feedback visuel au chargement
-                this.$nextTick(() => {
-                    this.playSound('focus');
-                });
-            }
         }));
     });
     </script>

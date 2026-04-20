@@ -127,7 +127,7 @@
                                         Client <span class="text-red-500">*</span>
                                     </label>
                                     <button type="button"
-                                            wire:click="$set('showCustomerForm', {{ $showCustomerForm ? 'false' : 'true' }})"
+                                            wire:click="$toggle('showCustomerForm')"
                                             class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors duration-200 {{ $showCustomerForm ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-blue-50 text-blue-700 hover:bg-blue-100' }}">
                                         @if($showCustomerForm)
                                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -283,12 +283,17 @@
                             @if(count($products_list) > 0)
                             <div class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-auto">
                                 @foreach($products_list as $product)
-                                <div wire:click="addProduct({{ $product->id }})" 
+                                <div wire:click="addProduct({{ $product->id }})"
                                      class="px-6 py-4 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 flex items-center justify-between">
                                     <div class="flex-1">
-                                        <div class="font-medium text-gray-900">{{ $product->name }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-medium text-gray-900">{{ $product->name }}</span>
+                                            @if(($product->type?->value ?? 'simple') === 'variable')
+                                                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">Variantes</span>
+                                            @endif
+                                        </div>
                                         <div class="text-sm text-gray-500">
-                                            Stock: {{ $product->stock_quantity ?? 0 }} • 
+                                            Stock: {{ $product->stock_quantity ?? 0 }} •
                                             Catégorie: {{ $product->category->name ?? 'Aucune' }}
                                         </div>
                                     </div>
@@ -303,6 +308,37 @@
                             </div>
                             @endif
                         </div>
+
+                        <!-- Modal sélection de variante -->
+                        @if($showVariantPicker)
+                        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" wire:click.self="closeVariantPicker">
+                            <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <h3 class="text-base font-semibold text-gray-900">Choisir une variante — {{ $variantPickerTitle }}</h3>
+                                    <button wire:click="closeVariantPicker" type="button" class="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="space-y-2 max-h-72 overflow-y-auto">
+                                    @foreach($variantOptions as $variant)
+                                    <div wire:click="selectVariant({{ $variant['id'] }})"
+                                         class="flex cursor-pointer items-center justify-between rounded-xl border border-gray-200 px-4 py-3 hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                                        <div>
+                                            <div class="font-medium text-gray-900 text-sm">{{ $variant['name'] }}</div>
+                                            @if($variant['attributes_label'])
+                                                <div class="text-xs text-gray-500">{{ $variant['attributes_label'] }}</div>
+                                            @endif
+                                            <div class="text-xs text-gray-400">SKU : {{ $variant['sku'] }}</div>
+                                        </div>
+                                        <div class="text-sm font-semibold text-green-600">{{ format_fcfa($variant['selling_price']) }}</div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         <!-- Table des articles -->
                         @if(count($items) > 0)

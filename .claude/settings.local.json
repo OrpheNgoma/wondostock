@@ -42,7 +42,21 @@
       "WebFetch(domain:filamentphp.com)",
       "Bash(npm run build:*)",
       "Bash(cat:*)",
-      "Bash(head -5 grep -rn \"addNamespace\\\\|hint\" /home/orphe-ngoma/Bureau/APPS/WondoStock/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php)"
+      "Bash(head -5 grep -rn \"addNamespace\\\\|hint\" /home/orphe-ngoma/Bureau/APPS/WondoStock/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php)",
+      "Bash(git -C /home/orphe-ngoma/Bureau/APPS/WondoStock diff HEAD --stat)",
+      "Bash(git -C /home/orphe-ngoma/Bureau/APPS/WondoStock diff HEAD~1 HEAD --stat)",
+      "Bash(git -C /home/orphe-ngoma/Bureau/APPS/WondoStock diff 'HEAD~1' HEAD -- app/Livewire/Products/ProductForm.php app/Livewire/Documents/DocumentForm.php resources/views/livewire/saas/products/product-form.blade.php resources/views/livewire/saas/documents/document-form.blade.php)",
+      "Bash(wc -l app/Livewire/Deliveries/*.php app/Livewire/Caisse/*.php app/Livewire/Expenses/*.php app/Livewire/Finance/*.php app/Livewire/Salaries/*.php)",
+      "Bash(mysql -h 127.0.0.1 -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT type, quantity, product_id, store_id FROM stock_movements WHERE type='sale' ORDER BY id DESC LIMIT 5;\")",
+      "Bash(mysql -h 127.0.0.1 -u phpmyadmin -prk6ZoCvq0g5K wondostock --silent -e \"SELECT type, COUNT\\(*\\) as nb FROM stock_movements GROUP BY type; SELECT COUNT\\(*\\) as docs FROM documents WHERE type IN \\('invoice','delivery_note'\\); SELECT COUNT\\(*\\) as doc_items FROM document_items;\")",
+      "Bash(mysql -h 127.0.0.1 -u phpmyadmin -prk6ZoCvq0g5K wondostock --silent -e \"SELECT status, type, COUNT\\(*\\) as nb FROM documents GROUP BY status, type; SELECT type, quantity, product_id FROM stock_movements;\")",
+      "Bash(mysql -h 127.0.0.1 -u phpmyadmin -prk6ZoCvq0g5K wondostock --silent -e \"DESCRIBE document_items; SELECT di.product_id, di.quantity, d.store_id, d.status, d.document_date FROM document_items di JOIN documents d ON d.id = di.document_id LIMIT 10;\")",
+      "Bash(mysql -h 127.0.0.1 -u phpmyadmin -prk6ZoCvq0g5K wondostock --silent -e ':*)",
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"DESCRIBE roles;\")",
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SHOW INDEX FROM roles;\")",
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT id, company_id, name, guard_name FROM roles ORDER BY company_id, name;\")",
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SHOW INDEX FROM roles WHERE Key_name LIKE '%unique%';\")",
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT name FROM permissions ORDER BY name;\")"
     ],
     "deny": []
   },

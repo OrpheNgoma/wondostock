@@ -52,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->resources([
                 \App\Filament\Resources\Companies\CompanyResource::class,
+                \App\Filament\Resources\TenantModules\TenantModuleResource::class,
                 \App\Filament\Resources\FeatureLocks\FeatureLockResource::class,
                 \App\Filament\Resources\PlanResource::class,
                 \App\Filament\Resources\SubscriptionResource::class,

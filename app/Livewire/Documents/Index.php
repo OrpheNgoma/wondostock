@@ -60,6 +60,60 @@ class Index extends Component
         }
     }
 
+    public function exportCsv(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $user = Auth::user();
+
+        $salesDocumentTypes = [
+            DocumentType::Invoice,
+            DocumentType::Quote,
+            DocumentType::CreditNote,
+            DocumentType::DeliveryNote,
+            DocumentType::Proforma,
+            DocumentType::Order,
+        ];
+
+        $documents = Document::where('company_id', $user->company_id)
+            ->whereIn('type', $salesDocumentTypes)
+            ->with(['customer:id,name', 'store:id,name'])
+            ->when($this->search, fn ($query) => $query->where(function ($q) {
+                $q->where('document_number', 'like', '%'.$this->search.'%')
+                    ->orWhereHas('customer', fn ($sq) => $sq->where('name', 'like', '%'.$this->search.'%'));
+            }))
+            ->when($this->typeFilter, fn ($q) => $q->where('type', $this->typeFilter))
+            ->when($this->statusFilter, fn ($q) => $q->where('status', $this->statusFilter))
+            ->when($this->showOverdueOnly, fn ($q) => $q->where('type', DocumentType::Invoice)
+                ->whereNotIn('status', [DocumentStatus::Draft, DocumentStatus::Paid, DocumentStatus::Cancelled])
+                ->where('due_date', '<', now()))
+            ->latest('document_date')
+            ->get();
+
+        $filename = 'documents_'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($documents) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['N° Document', 'Type', 'Statut', 'Client', 'Date', 'Échéance', 'Total (FCFA)', 'Payé (FCFA)', 'Reste (FCFA)', 'Magasin'], ';');
+
+            foreach ($documents as $doc) {
+                fputcsv($handle, [
+                    $doc->document_number,
+                    $doc->type->value,
+                    $doc->status->value,
+                    $doc->customer?->name ?? '',
+                    $doc->document_date->format('d/m/Y'),
+                    $doc->due_date?->format('d/m/Y') ?? '',
+                    $doc->total_amount,
+                    $doc->paid_amount,
+                    $doc->total_amount - $doc->paid_amount,
+                    $doc->store?->name ?? '',
+                ], ';');
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
     /**
      * Marque qu'une relance a été envoyée pour une facture.
      */

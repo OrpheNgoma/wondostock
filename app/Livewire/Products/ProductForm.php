@@ -8,6 +8,7 @@ use App\Models\Tax;
 use App\Models\Unit;
 use App\Traits\ChecksFeatureLocks;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
@@ -61,12 +62,9 @@ class ProductForm extends Component
     // On écoute un événement pour savoir quel produit charger
     // protected $listeners = ['loadProduct' => 'loadProduct'];
 
-    public function mount(?Product $product = null)
+    public function mount(?Product $product = null): void
     {
         try {
-            // Vérifier si les produits variables sont autorisés
-            $this->requireFeatureAccess('variable_products');
-
             $this->product = $product ?? new Product;
 
             // Remplir formData avec les données du produit
@@ -138,6 +136,10 @@ class ProductForm extends Component
             ['name' => $name],
             ['company_id' => $companyId, 'symbol' => $symbol],
         );
+
+        if ($unit->wasRecentlyCreated) {
+            Cache::forget('global_units_list');
+        }
 
         $this->formData['unit_id'] = $unit->id;
         $this->newUnit = ['name' => '', 'symbol' => ''];
@@ -230,8 +232,14 @@ class ProductForm extends Component
         ];
     }
 
-    public function save()
+    public function save(): void
     {
+        if ($this->formData['type'] === 'variable' && ! $this->isFeatureAccessible('variable_products')) {
+            $this->dispatch('notify', message: $this->getFeatureLockMessage('variable_products') ?? 'Les produits variables nécessitent une mise à niveau de votre abonnement.', type: 'error');
+
+            return;
+        }
+
         $this->validate();
         DB::transaction(function () {
             $this->product->fill([
@@ -341,7 +349,7 @@ class ProductForm extends Component
         $companyId = Auth::user()->company_id;
         $categories = Category::where('company_id', $companyId)->get();
         $taxes = Tax::where('company_id', $companyId)->get();
-        $units = Unit::withoutGlobalScopes()->orderBy('name')->get();
+        $units = Cache::remember('global_units_list', 300, fn () => Unit::withoutGlobalScopes()->orderBy('name')->get());
 
         return view('livewire.saas.products.product-form', [
             'categories' => $categories, 'taxes' => $taxes, 'units' => $units,

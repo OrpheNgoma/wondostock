@@ -37,8 +37,9 @@ class DocumentManagementService
             // Add items to the document
             $this->addItemsToDocument($document, $items);
 
-            // Update stock if it's an invoice
-            if ($document->type === DocumentType::Invoice && $document->status === DocumentStatus::Validated) {
+            // Update stock if it's an invoice created directly in a finalized status
+            $finalizedStatuses = [DocumentStatus::Validated, DocumentStatus::Paid, DocumentStatus::PartiallyPaid];
+            if ($document->type === DocumentType::Invoice && in_array($document->status, $finalizedStatuses)) {
                 $this->updateStockForDocument($document);
             }
 
@@ -269,13 +270,22 @@ class DocumentManagementService
 
     private function handleInvoiceStatusChange(Document $document, DocumentStatus $oldStatus, DocumentStatus $newStatus): void
     {
-        // If invoice is being validated and wasn't validated before
-        if ($newStatus === DocumentStatus::Validated && $oldStatus !== DocumentStatus::Validated) {
+        $finalizedStatuses = [
+            DocumentStatus::Validated,
+            DocumentStatus::Paid,
+            DocumentStatus::PartiallyPaid,
+        ];
+
+        $wasFinalized = in_array($oldStatus, $finalizedStatuses);
+        $isFinalized = in_array($newStatus, $finalizedStatuses);
+
+        // Décrémenter le stock lors du premier passage à un statut "finalisé"
+        if ($isFinalized && ! $wasFinalized) {
             $this->updateStockForDocument($document);
         }
 
-        // If invoice is being cancelled/reverted from validated
-        if ($oldStatus === DocumentStatus::Validated && $newStatus !== DocumentStatus::Validated) {
+        // Remettre le stock si on revient à un statut non finalisé
+        if ($wasFinalized && ! $isFinalized) {
             $this->revertStockForDocument($document);
         }
     }

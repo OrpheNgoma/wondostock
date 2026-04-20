@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Documents;
 
+use App\Enums\CustomerType;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Models\Customer;
@@ -10,6 +11,7 @@ use App\Models\Product;
 use App\Services\DocumentNumberService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -58,6 +60,13 @@ class DocumentForm extends Component
     public string $product_search = '';
 
     public $products_list = [];
+
+    // Sélecteur de variantes
+    public bool $showVariantPicker = false;
+
+    public array $variantOptions = [];
+
+    public string $variantPickerTitle = '';
 
     protected function rules()
     {
@@ -187,7 +196,7 @@ class DocumentForm extends Component
         $this->validate([
             'newCustomer.name' => 'required|string|max:255',
             'newCustomer.phone_number' => 'nullable|string|max:50',
-            'newCustomer.type' => 'required|in:individual,professional',
+            'newCustomer.type' => ['required', Rule::in(array_column(CustomerType::cases(), 'value'))],
         ], [
             'newCustomer.name.required' => 'Le nom du client est obligatoire.',
         ]);
@@ -214,11 +223,62 @@ class DocumentForm extends Component
         $this->customers_list = [];
     }
 
-    public function addProduct(Product $product)
+    public function addProduct(Product $product): void
     {
         $this->product_search = '';
         $this->products_list = [];
 
+        // Si produit variable : ouvrir le sélecteur de variantes
+        if ($product->type?->value === 'variable') {
+            $variants = $product->variants()
+                ->where('is_active', true)
+                ->get(['id', 'name', 'sku', 'selling_price', 'attributes']);
+
+            if ($variants->isEmpty()) {
+                $this->dispatch('notify', message: 'Ce produit n\'a pas de variantes disponibles.', type: 'error');
+
+                return;
+            }
+
+            $this->variantPickerTitle = $product->name;
+            $this->variantOptions = $variants->map(fn ($v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'sku' => $v->sku,
+                'selling_price' => $v->selling_price,
+                'attributes_label' => collect($v->attributes ?? [])->map(fn ($val, $key) => "{$key}: {$val}")->implode(', '),
+            ])->toArray();
+            $this->showVariantPicker = true;
+
+            return;
+        }
+
+        $this->doAddItem($product);
+    }
+
+    public function selectVariant(int $variantId): void
+    {
+        $variant = Product::where('company_id', Auth::user()->company_id)
+            ->with('tax')
+            ->find($variantId);
+
+        if (! $variant) {
+            return;
+        }
+
+        $this->showVariantPicker = false;
+        $this->variantOptions = [];
+        $this->doAddItem($variant);
+    }
+
+    public function closeVariantPicker(): void
+    {
+        $this->showVariantPicker = false;
+        $this->variantOptions = [];
+    }
+
+    private function doAddItem(Product $product): void
+    {
         // Vérifier si le produit est déjà dans le tableau
         foreach ($this->items as $key => $item) {
             if ($item['product_id'] === $product->id) {

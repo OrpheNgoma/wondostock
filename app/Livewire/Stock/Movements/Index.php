@@ -28,6 +28,45 @@ class Index extends Component
 
     public ?string $dateTo = null;
 
+    public function exportCsv(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $companyId = Auth::user()->company_id;
+
+        $movements = StockMovement::where('company_id', $companyId)
+            ->with(['product', 'store', 'user'])
+            ->when($this->search, fn ($query) => $query->whereHas('product', fn ($sq) => $sq
+                ->where('name', 'like', '%'.$this->search.'%')
+                ->orWhere('sku', 'like', '%'.$this->search.'%')))
+            ->when($this->storeFilter, fn ($q) => $q->where('store_id', $this->storeFilter))
+            ->when($this->typeFilter, fn ($q) => $q->where('type', $this->typeFilter))
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo))
+            ->latest()
+            ->get();
+
+        $filename = 'mouvements_stock_'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($movements) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['Date', 'Produit', 'SKU', 'Type', 'Quantité', 'Magasin', 'Utilisateur'], ';');
+
+            foreach ($movements as $mvt) {
+                fputcsv($handle, [
+                    $mvt->created_at->format('d/m/Y H:i'),
+                    $mvt->product?->name ?? '',
+                    $mvt->product?->sku ?? '',
+                    $mvt->type->value,
+                    $mvt->quantity,
+                    $mvt->store?->name ?? '',
+                    $mvt->user?->name ?? '',
+                ], ';');
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
     /**
      * Nouvelle méthode pour réinitialiser tous les filtres.
      */
