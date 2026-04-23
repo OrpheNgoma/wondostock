@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libonig-dev libxml2-dev libzip-dev \
     libfreetype6-dev libjpeg62-turbo-dev libwebp-dev \
     libicu-dev \
+    default-mysql-client \
     nginx supervisor \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
