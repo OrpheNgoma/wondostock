@@ -8,13 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('salary_slips', function (Blueprint $table) {
-            $table->foreignId('employee_id')->nullable()->after('driver_id')->constrained('employees')->nullOnDelete();
-        });
+        if (!Schema::hasColumn('salary_slips', 'employee_id')) {
+            Schema::table('salary_slips', function (Blueprint $table) {
+                $table->foreignId('employee_id')->nullable()->after('driver_id')->constrained('employees')->nullOnDelete();
+            });
+        }
 
-        Schema::table('salary_advances', function (Blueprint $table) {
-            $table->foreignId('employee_id')->nullable()->after('driver_id')->constrained('employees')->nullOnDelete();
-        });
+        if (!Schema::hasColumn('salary_advances', 'employee_id')) {
+            Schema::table('salary_advances', function (Blueprint $table) {
+                $table->foreignId('employee_id')->nullable()->after('driver_id')->constrained('employees')->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
