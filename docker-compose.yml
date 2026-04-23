@@ -24,6 +24,7 @@ services:
     image: mysql:8.0
     container_name: wondostock_db
     restart: unless-stopped
+    command: --skip-ssl
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_USER: ${DB_USERNAME}
