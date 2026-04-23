@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
-    && echo -e "[client]\nssl-mode=DISABLED" > /etc/mysql/conf.d/disable-ssl.cnf
+    && echo "[client]" > /root/.my.cnf \
+    && echo "ssl-mode=DISABLED" >> /root/.my.cnf
 
 # PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
