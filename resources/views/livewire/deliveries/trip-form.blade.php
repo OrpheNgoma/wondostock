@@ -39,6 +39,42 @@
         <div class="absolute -top-1 -left-1 h-24 w-24 rounded-full bg-white/10 blur-xl"></div>
     </div>
 
+    {{-- Bannière workflow --}}
+    <div class="rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-4">
+        <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            <div>
+                <p class="text-sm font-semibold text-indigo-800 mb-2">Comment fonctionne le workflow ?</p>
+                <ol class="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:items-center">
+                    @foreach([
+                        ['Créer',      'Chauffeur, zone, date'],
+                        ['Chargement', 'Nombre de cassiers'],
+                        ['Retour',     'Cassiers + recette + dépenses'],
+                        ['Clôture',    'Banque / Caisse / Fonds calculés'],
+                    ] as $i => [$titre, $desc])
+                    <li class="flex items-center gap-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full shrink-0 text-xs font-bold
+                            {{ $i === 0 ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-700 ring-1 ring-indigo-300' }}">
+                            {{ $i + 1 }}
+                        </span>
+                        <span class="text-xs text-indigo-800">
+                            <strong>{{ $titre }}</strong>
+                            <span class="text-indigo-500 hidden sm:inline"> — {{ $desc }}</span>
+                        </span>
+                    </li>
+                    @if(!$loop->last)
+                    <svg class="h-4 w-4 text-indigo-300 shrink-0 mx-2 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+                    </svg>
+                    @endif
+                    @endforeach
+                </ol>
+            </div>
+        </div>
+    </div>
+
     {{-- Corps du formulaire --}}
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
 
@@ -200,7 +236,7 @@
                         $selectedZone = $zones->firstWhere('id', $zone_id);
                     @endphp
                     @if ($selectedZone)
-                        <dl class="space-y-4">
+                        <dl class="space-y-3">
                             <div>
                                 <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Ville</dt>
                                 <dd class="mt-1 text-sm font-semibold text-gray-900">{{ $selectedZone->city }}</dd>
@@ -212,8 +248,39 @@
                                 </dd>
                             </div>
                         </dl>
+                        @php
+                            $zonePricesCount = \App\Models\ZoneProductPrice::where('zone_id', $selectedZone->id)
+                                ->where('is_active', true)->count();
+                        @endphp
+                        <div class="mt-4 rounded-lg border {{ $zonePricesCount > 0 ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50' }} px-3 py-2.5">
+                            <div class="flex items-start gap-2">
+                                @if($zonePricesCount > 0)
+                                    <svg class="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <p class="text-xs text-emerald-800">
+                                        <strong>{{ $zonePricesCount }} produits</strong> configurés pour cette zone.
+                                        Les prix et marges seront <strong>pré-remplis automatiquement</strong> lors de la saisie des lignes.
+                                    </p>
+                                @else
+                                    <svg class="h-4 w-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                                    </svg>
+                                    <p class="text-xs text-amber-800">
+                                        Aucun prix configuré pour cette zone.
+                                        <a href="{{ route('deliveries.settings') }}" class="underline font-medium hover:text-amber-900">Configurer la tarification</a>
+                                        pour que les prix soient pré-remplis automatiquement.
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
                     @else
-                        <p class="text-sm text-gray-500 text-center py-4">Sélectionnez une zone pour voir les détails</p>
+                        <div class="flex flex-col items-center justify-center py-6 gap-2 text-center">
+                            <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c-.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/>
+                            </svg>
+                            <p class="text-sm text-gray-400">Sélectionnez une zone pour voir les détails</p>
+                        </div>
                     @endif
                 </div>
             </div>

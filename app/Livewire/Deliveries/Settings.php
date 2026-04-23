@@ -3,10 +3,14 @@
 namespace App\Livewire\Deliveries;
 
 use App\Models\Driver;
+use App\Models\Product;
 use App\Models\Vehicle;
 use App\Models\Zone;
+use App\Models\ZoneProductPrice;
+use App\Traits\AuthorizesLivewireActions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -15,7 +19,14 @@ use Livewire\Component;
 #[Title('Paramètres livraisons - WondoStock')]
 class Settings extends Component
 {
+    use AuthorizesLivewireActions;
+
     public string $activeTab = 'drivers';
+
+    public function mount(): void
+    {
+        $this->requirePermission('edit_deliveries');
+    }
 
     public function setTab(string $tab): void
     {
@@ -199,15 +210,145 @@ class Settings extends Component
         $this->dispatch('notify', message: 'Zone supprimée.', type: 'success');
     }
 
+    // ── TARIFICATION PAR ZONE ─────────────────────────────────────────────────
+
+    public ?int $selectedZonePriceZoneId = null;
+
+    /**
+     * État éditable indexé par product_id (string pour compatibilité wire:model).
+     *
+     * @var array<string, array{selling_price: int, margin_override: int|null, use_override: bool}>
+     */
+    public array $zonePriceValues = [];
+
+    public function updatedSelectedZonePriceZoneId(): void
+    {
+        $this->loadZonePriceValues();
+    }
+
+    private function loadZonePriceValues(): void
+    {
+        $this->zonePriceValues = [];
+
+        if (! $this->selectedZonePriceZoneId) {
+            return;
+        }
+
+        $companyId = Auth::user()->company_id;
+        $zone = Zone::where('company_id', $companyId)->find($this->selectedZonePriceZoneId);
+
+        if (! $zone) {
+            return;
+        }
+
+        $products = Product::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $existingPrices = ZoneProductPrice::where('zone_id', $zone->id)
+            ->where('company_id', $companyId)
+            ->get()
+            ->keyBy('product_id');
+
+        foreach ($products as $product) {
+            $existing = $existingPrices->get($product->id);
+
+            $this->zonePriceValues[(string) $product->id] = [
+                'selling_price' => $existing?->selling_price ?? $product->selling_price ?? 0,
+                'margin_override' => $existing?->margin_override,
+                'use_override' => $existing !== null && $existing->margin_override !== null,
+            ];
+        }
+    }
+
+    public function saveZonePrices(): void
+    {
+        if (! $this->checkPermission('edit_deliveries', 'Vous n\'avez pas la permission de modifier la tarification.')) {
+            return;
+        }
+
+        if (! $this->selectedZonePriceZoneId) {
+            return;
+        }
+
+        $companyId = Auth::user()->company_id;
+        $zone = Zone::where('company_id', $companyId)->findOrFail($this->selectedZonePriceZoneId);
+
+        // Whitelist : seuls les produits appartenant à cette entreprise sont traités.
+        // Protège contre l'injection de product_id cross-tenant via l'état Livewire.
+        $validProductIds = Product::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->pluck('id')
+            ->map(fn (int $id): string => (string) $id)
+            ->flip()
+            ->all();
+
+        $safeValues = array_intersect_key($this->zonePriceValues, $validProductIds);
+
+        $rules = [];
+        $attributes = [];
+        foreach (array_keys($safeValues) as $productId) {
+            $rules["zonePriceValues.{$productId}.selling_price"] = 'required|integer|min:0';
+            $rules["zonePriceValues.{$productId}.margin_override"] = [
+                'nullable',
+                'integer',
+                'min:0',
+                "required_if:zonePriceValues.{$productId}.use_override,1",
+            ];
+            $attributes["zonePriceValues.{$productId}.selling_price"] = 'prix de vente';
+            $attributes["zonePriceValues.{$productId}.margin_override"] = 'marge manuelle';
+        }
+
+        $this->validate($rules, [], $attributes);
+
+        DB::transaction(function () use ($zone, $companyId, $safeValues): void {
+            foreach ($safeValues as $productId => $row) {
+                $useOverride = (bool) ($row['use_override'] ?? false);
+                $marginOverride = ($useOverride && isset($row['margin_override']))
+                    ? (int) $row['margin_override']
+                    : null;
+
+                ZoneProductPrice::updateOrCreate(
+                    ['zone_id' => $zone->id, 'product_id' => (int) $productId],
+                    [
+                        'company_id' => $companyId,
+                        'selling_price' => (int) $row['selling_price'],
+                        'margin_override' => $marginOverride,
+                        'is_active' => true,
+                    ]
+                );
+            }
+        });
+
+        $this->dispatch('notify', message: "Tarification de « {$zone->name} » enregistrée.", type: 'success');
+    }
+
     // ── RENDER ────────────────────────────────────────────────────────────────
 
     public function render(): View
     {
         $companyId = Auth::user()->company_id;
-        $drivers = Driver::where('company_id', $companyId)->withTrashed()->orderBy('name')->get();
-        $vehicles = Vehicle::where('company_id', $companyId)->withTrashed()->orderBy('plate_number')->get();
-        $zones = Zone::where('company_id', $companyId)->orderBy('name')->get();
 
-        return view('livewire.deliveries.settings', compact('drivers', 'vehicles', 'zones'));
+        // Chaque collection n'est chargée que si l'onglet correspondant est actif.
+        $drivers = $this->activeTab === 'drivers'
+            ? Driver::where('company_id', $companyId)->withTrashed()->orderBy('name')->get()
+            : collect();
+
+        $vehicles = $this->activeTab === 'vehicles'
+            ? Vehicle::where('company_id', $companyId)->withTrashed()->orderBy('plate_number')->get()
+            : collect();
+
+        // Les zones sont toujours chargées : elles alimentent le sélecteur de l'onglet Tarification.
+        $zones = Zone::where('company_id', $companyId)
+            ->withCount('deliveryTrips')
+            ->orderBy('name')
+            ->get();
+
+        $zonePriceProducts = ($this->activeTab === 'zone_prices' && $this->selectedZonePriceZoneId)
+            ? Product::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get()
+            : collect();
+
+        return view('livewire.deliveries.settings', compact('drivers', 'vehicles', 'zones', 'zonePriceProducts'));
     }
 }

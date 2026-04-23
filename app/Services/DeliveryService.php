@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\DeliveryTripStatus;
 use App\Models\DeliveryTrip;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DeliveryService
@@ -101,6 +102,93 @@ class DeliveryService
         ]);
 
         return $trip->fresh();
+    }
+
+    /**
+     * Enregistre le chargement depuis une liste de produits (un row par produit).
+     * Crée les DeliveryItem et passe draft → in_progress.
+     *
+     * @param  array<int, array{product_id: int|null, name: string, sku: string|null, unit_price: int, margin_per_unit: int, qty: int}>  $rows
+     */
+    public function loadWithItems(DeliveryTrip $trip, array $rows): DeliveryTrip
+    {
+        $this->assertStatus($trip, DeliveryTripStatus::Draft, 'charger');
+
+        $validRows = array_filter($rows, fn (array $r): bool => (int) ($r['qty'] ?? 0) >= 1);
+
+        if (empty($validRows)) {
+            throw ValidationException::withMessages([
+                'loadingRows' => 'Ajoutez au moins un produit avec une quantité ≥ 1 avant de valider le départ.',
+            ]);
+        }
+
+        DB::transaction(function () use ($trip, $validRows): void {
+            $trip->items()->delete();
+
+            foreach ($validRows as $row) {
+                $trip->items()->create([
+                    'product_id' => $row['product_id'] ?? null,
+                    'product_ref' => $row['sku'] ?? null,
+                    'product_designation' => $row['name'],
+                    'qty_delivered' => (int) $row['qty'],
+                    'qty_returned' => 0,
+                    'unit_price' => (int) $row['unit_price'],
+                    'margin_per_unit' => (int) $row['margin_per_unit'],
+                ]);
+            }
+
+            $trip->update([
+                'loaded_crates' => array_sum(array_column($validRows, 'qty')),
+                'status' => DeliveryTripStatus::InProgress,
+                'loaded_at' => now(),
+            ]);
+        });
+
+        return $trip->fresh(['items']);
+    }
+
+    /**
+     * Enregistre le retour depuis les quantités par item.
+     * Met à jour qty_returned, calcule total_revenue et returned_crates automatiquement.
+     * Passe in_progress → completed.
+     *
+     * @param  array<string, int>  $returnQties  item_id (string) => qty_returned
+     */
+    public function recordReturnFromItems(DeliveryTrip $trip, array $returnQties): DeliveryTrip
+    {
+        $this->assertStatus($trip, DeliveryTripStatus::InProgress, 'enregistrer le retour');
+
+        $trip->load('items');
+
+        DB::transaction(function () use ($trip, $returnQties): void {
+            foreach ($returnQties as $itemId => $qtyReturned) {
+                $item = $trip->items->firstWhere('id', (int) $itemId);
+                if (! $item) {
+                    continue;
+                }
+
+                $qtyReturned = max(0, (int) $qtyReturned);
+
+                if ($qtyReturned > $item->qty_delivered) {
+                    throw ValidationException::withMessages([
+                        "returnQties.{$itemId}" => "Retour ({$qtyReturned}) > chargé ({$item->qty_delivered}) pour « {$item->product_designation} ».",
+                    ]);
+                }
+
+                $item->update(['qty_returned' => $qtyReturned]);
+            }
+
+            $trip->load('items');
+
+            $trip->update([
+                'returned_crates' => $trip->items->sum('qty_returned'),
+                'total_revenue' => $trip->items->sum(fn ($i) => $i->net_qty * $i->unit_price),
+                'status' => DeliveryTripStatus::Completed,
+                'returned_at' => now(),
+            ]);
+        });
+
+        return $trip->fresh(['items']);
     }
 
     /**

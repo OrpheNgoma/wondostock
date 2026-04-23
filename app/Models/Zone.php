@@ -30,4 +30,9 @@ class Zone extends Model
     {
         return $this->hasMany(DeliveryTrip::class);
     }
+
+    public function productPrices(): HasMany
+    {
+        return $this->hasMany(ZoneProductPrice::class);
+    }
 }

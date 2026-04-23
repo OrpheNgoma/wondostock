@@ -55,6 +55,11 @@ class Product extends Model implements HasMedia
         return $this->hasMany(Product::class, 'parent_id');
     }
 
+    public function zonePrices(): HasMany
+    {
+        return $this->hasMany(ZoneProductPrice::class);
+    }
+
     public function stores(): BelongsToMany
     {
         return $this->belongsToMany(Store::class, 'product_store')->withPivot('quantity', 'low_stock_threshold')->withTimestamps();

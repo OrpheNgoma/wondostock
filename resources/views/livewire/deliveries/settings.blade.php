@@ -44,6 +44,17 @@
                         </svg>
                         Zones
                     </button>
+                    <button
+                        wire:click="setTab('zone_prices')"
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200
+                            {{ $activeTab === 'zone_prices' ? 'bg-white text-indigo-700 shadow-sm' : 'bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20' }}"
+                    >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                        </svg>
+                        Tarification
+                    </button>
                 </div>
             </div>
         </div>
@@ -576,7 +587,7 @@
                                         </span>
                                     </td>
                                     <td class="px-3 py-4 text-center">
-                                        <span class="text-sm font-medium text-gray-700">{{ $zone->delivery_trips_count ?? $zone->deliveryTrips()->count() }}</span>
+                                        <span class="text-sm font-medium text-gray-700">{{ $zone->delivery_trips_count }}</span>
                                     </td>
                                     <td class="relative py-4 pl-3 pr-6 text-right">
                                         <div class="flex items-center justify-end gap-2">
@@ -607,6 +618,218 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+            @endif
+        </div>
+    @endif
+
+    {{-- ══════════════════════════════════════ TAB TARIFICATION ═══════════════════════════════════════ --}}
+    @if ($activeTab === 'zone_prices')
+        <div class="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
+            <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Prix de vente & marges par zone</h3>
+                        <p class="text-sm text-gray-500 mt-0.5">
+                            La marge est calculée automatiquement (prix vente − prix achat) sauf si vous la définissez manuellement.
+                        </p>
+                    </div>
+                    @if ($zones->isNotEmpty())
+                        <div class="shrink-0">
+                            <select
+                                wire:model.live="selectedZonePriceZoneId"
+                                class="block rounded-xl border-0 py-2.5 pl-4 pr-10 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                            >
+                                <option value="">-- Sélectionner une zone --</option>
+                                @foreach ($zones as $zone)
+                                    <option value="{{ $zone->id }}">{{ $zone->name }} ({{ $zone->city }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Pas de zones --}}
+            @if ($zones->isEmpty())
+                <div class="py-16 text-center">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center">
+                            <svg class="h-8 w-8 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-lg font-medium text-gray-900">Aucune zone configurée</p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Créez d'abord vos zones dans l'onglet <strong>Zones</strong> avant de configurer les prix.
+                            </p>
+                        </div>
+                        <button
+                            wire:click="setTab('zones')"
+                            type="button"
+                            class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all duration-200"
+                        >
+                            Aller à l'onglet Zones
+                        </button>
+                    </div>
+                </div>
+
+            {{-- Zone sélectionnée : aucun produit --}}
+            @elseif ($selectedZonePriceZoneId && $zonePriceProducts->isEmpty())
+                <div class="py-16 text-center">
+                    <p class="text-gray-500">Aucun produit actif trouvé. Ajoutez des produits depuis le catalogue.</p>
+                </div>
+
+            {{-- Zone sélectionnée : tableau de tarification --}}
+            @elseif ($selectedZonePriceZoneId && $zonePriceProducts->isNotEmpty())
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th scope="col" class="py-4 pl-6 pr-3 text-left text-sm font-semibold text-gray-700">Produit</th>
+                                <th scope="col" class="px-3 py-4 text-right text-sm font-semibold text-gray-700">Prix achat</th>
+                                <th scope="col" class="px-3 py-4 text-right text-sm font-semibold text-gray-700">
+                                    Prix vente <span class="text-red-500">*</span>
+                                </th>
+                                <th scope="col" class="px-3 py-4 text-right text-sm font-semibold text-gray-700">Marge auto</th>
+                                <th scope="col" class="px-4 py-4 text-left text-sm font-semibold text-gray-700">Marge manuelle</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50 bg-white">
+                            @foreach ($zonePriceProducts as $product)
+                                @php
+                                    $pid = (string) $product->id;
+                                    $row = $zonePriceValues[$pid] ?? ['selling_price' => $product->selling_price ?? 0, 'margin_override' => null, 'use_override' => false];
+                                    $autoMargin = max(0, (int)($row['selling_price'] ?? 0) - ($product->purchase_price ?? 0));
+                                @endphp
+                                <tr
+                                    wire:key="zpp-{{ $product->id }}"
+                                    x-data="{
+                                        sellingPrice: {{ (int)($row['selling_price'] ?? 0) }},
+                                        purchasePrice: {{ $product->purchase_price ?? 0 }},
+                                        get autoMargin() {
+                                            return Math.max(0, parseInt(this.sellingPrice) - this.purchasePrice);
+                                        },
+                                        formatFcfa(n) {
+                                            return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA';
+                                        }
+                                    }"
+                                    class="group hover:bg-indigo-50/30 transition-colors duration-150"
+                                >
+                                    {{-- Produit --}}
+                                    <td class="py-3 pl-6 pr-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">{{ $product->name }}</p>
+                                            @if ($product->sku)
+                                                <code class="text-xs text-gray-400">{{ $product->sku }}</code>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    {{-- Prix achat --}}
+                                    <td class="px-3 py-3 text-right">
+                                        <span class="text-sm text-gray-500">
+                                            {{ $product->purchase_price ? number_format($product->purchase_price, 0, ',', ' ').' FCFA' : '—' }}
+                                        </span>
+                                    </td>
+
+                                    {{-- Prix vente --}}
+                                    <td class="px-3 py-3 text-right">
+                                        <input
+                                            type="number"
+                                            wire:model="zonePriceValues.{{ $pid }}.selling_price"
+                                            @input="sellingPrice = parseInt($event.target.value) || 0"
+                                            min="0"
+                                            class="w-32 rounded-lg border-0 py-2 px-3 text-right text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                                        >
+                                        @error("zonePriceValues.{$pid}.selling_price")
+                                            <p class="mt-1 text-xs text-red-600 text-right">{{ $message }}</p>
+                                        @enderror
+                                    </td>
+
+                                    {{-- Marge auto (réactive via Alpine) --}}
+                                    <td class="px-3 py-3 text-right">
+                                        <span
+                                            x-text="formatFcfa(autoMargin)"
+                                            class="text-sm font-medium"
+                                            :class="autoMargin > 0 ? 'text-emerald-600' : 'text-gray-400'"
+                                        ></span>
+                                    </td>
+
+                                    {{-- Marge manuelle --}}
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
+                                            {{-- Toggle --}}
+                                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    wire:model.live="zonePriceValues.{{ $pid }}.use_override"
+                                                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                >
+                                                <span class="text-xs text-gray-500">Manuel</span>
+                                            </label>
+
+                                            {{-- Input override --}}
+                                            @if ($row['use_override'] === true)
+                                                <div class="flex flex-col">
+                                                    <input
+                                                        type="number"
+                                                        wire:model="zonePriceValues.{{ $pid }}.margin_override"
+                                                        min="0"
+                                                        placeholder="Ex: 1 200"
+                                                        class="w-32 rounded-lg border-0 py-2 px-3 text-right text-sm font-semibold text-indigo-700 shadow-sm ring-1 ring-inset ring-indigo-300 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                                                    >
+                                                    @error("zonePriceValues.{$pid}.margin_override")
+                                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                                    @enderror
+                                                </div>
+                                            @else
+                                                <span class="text-xs text-gray-400 italic">Automatique</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Footer avec bouton save --}}
+                <div class="border-t border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between gap-4">
+                    <p class="text-xs text-gray-400">
+                        Les prix sont enregistrés par zone et utilisés automatiquement lors de la création d'une tournée.
+                    </p>
+                    <button
+                        wire:click="saveZonePrices"
+                        wire:loading.attr="disabled"
+                        wire:target="saveZonePrices"
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition-all duration-200"
+                    >
+                        <svg wire:loading.remove wire:target="saveZonePrices" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <svg wire:loading wire:target="saveZonePrices" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 14.627 0 12 0v4a8 8 0 00-8 8h4z"></path>
+                        </svg>
+                        Enregistrer les prix
+                    </button>
+                </div>
+
+            {{-- Aucune zone sélectionnée --}}
+            @else
+                <div class="py-16 text-center">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center">
+                            <svg class="h-8 w-8 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                            </svg>
+                        </div>
+                        <p class="text-gray-600 font-medium">Sélectionnez une zone pour configurer ses prix</p>
+                        <p class="text-sm text-gray-400">Les prix de vente et marges sont définis par zone de livraison.</p>
+                    </div>
                 </div>
             @endif
         </div>

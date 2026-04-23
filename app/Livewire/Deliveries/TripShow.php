@@ -3,11 +3,11 @@
 namespace App\Livewire\Deliveries;
 
 use App\Enums\DeliveryTripStatus;
-use App\Models\Customer;
 use App\Models\DeliveryExpense;
 use App\Models\DeliveryExpenseCategory;
 use App\Models\DeliveryTrip;
 use App\Models\Product;
+use App\Models\ZoneProductPrice;
 use App\Services\DeliveryService;
 use App\Traits\AuthorizesLivewireActions;
 use Illuminate\Contracts\View\View;
@@ -25,42 +25,26 @@ class TripShow extends Component
 
     public DeliveryTrip $trip;
 
-    // ── Chargement ────────────────────────────────────────────────────────────
-    public int $loaded_crates = 0;
-
-    // ── Retour ────────────────────────────────────────────────────────────────
-    public int $returned_crates = 0;
-
-    public int $total_revenue = 0;
-
-    // ── Formulaire item ───────────────────────────────────────────────────────
-    public bool $showItemForm = false;
-
-    public ?int $item_customer_id = null;
-
-    public ?int $item_product_id = null;
-
-    public string $item_product_designation = '';
-
-    public int $item_qty_delivered = 0;
-
-    public int $item_qty_returned = 0;
-
-    public int $item_unit_price = 0;
-
-    public int $item_margin_per_unit = 0;
-
-    public string $item_notes = '';
-
-    public string $customer_search = '';
-
-    public string $product_search = '';
+    // ── Chargement par produit (statut : draft) ───────────────────────────────
+    public string $loading_search = '';
 
     /** @var array<int, array<string, mixed>> */
-    public array $customers_list = [];
+    public array $loading_list = [];
 
-    /** @var array<int, array<string, mixed>> */
-    public array $products_list = [];
+    /**
+     * Liste des produits à charger, indexée numériquement.
+     *
+     * @var array<int, array{product_id: int|null, name: string, sku: string|null, unit_price: int, margin_per_unit: int, qty: int}>
+     */
+    public array $loadingRows = [];
+
+    // ── Retour par produit (statut : in_progress) ────────────────────────────
+    /**
+     * Quantités retournées par item, clé = item_id (string).
+     *
+     * @var array<string, int>
+     */
+    public array $returnQties = [];
 
     // ── Formulaire dépense ────────────────────────────────────────────────────
     public bool $showExpenseForm = false;
@@ -74,65 +58,144 @@ class TripShow extends Component
     public function mount(DeliveryTrip $trip): void
     {
         $this->trip = $trip;
-        $this->loaded_crates = $trip->loaded_crates ?? 0;
-        $this->returned_crates = $trip->returned_crates ?? 0;
-        $this->total_revenue = $trip->total_revenue ?? 0;
+        $trip->load('items');
+
+        // Pré-remplir le tableau de chargement si des items existent déjà en brouillon
+        if ($trip->status === DeliveryTripStatus::Draft && $trip->items->isNotEmpty()) {
+            $this->loadingRows = $trip->items->map(fn ($item): array => [
+                'product_id' => $item->product_id,
+                'name' => $item->product_designation,
+                'sku' => $item->product_ref,
+                'unit_price' => $item->unit_price,
+                'margin_per_unit' => $item->margin_per_unit,
+                'qty' => $item->qty_delivered,
+            ])->values()->toArray();
+        }
+
+        // Pré-remplir les quantités retournées
+        if ($trip->status === DeliveryTripStatus::InProgress) {
+            $this->returnQties = $trip->items
+                ->mapWithKeys(fn ($item): array => [(string) $item->id => $item->qty_returned])
+                ->toArray();
+        }
     }
 
-    /**
-     * Sauvegarde les valeurs du formulaire de l'étape courante
-     * sans avancer le statut de la tournée.
-     */
-    public function saveProgress(): void
-    {
-        $data = match ($this->trip->status) {
-            DeliveryTripStatus::Draft => [
-                'loaded_crates' => $this->loaded_crates,
-            ],
-            DeliveryTripStatus::InProgress => [
-                'returned_crates' => $this->returned_crates,
-                'total_revenue' => $this->total_revenue,
-            ],
-            default => null,
-        };
+    // ── Chargement par produit ────────────────────────────────────────────────
 
-        if ($data === null) {
+    public function updatedLoadingSearch(): void
+    {
+        if (strlen($this->loading_search) < 1) {
+            $this->loading_list = [];
+
             return;
         }
 
-        $this->trip->update($data);
-        $this->trip = $this->trip->fresh();
-        $this->dispatch('notify', message: 'Progression sauvegardée.', type: 'success');
+        $products = Product::where('company_id', Auth::user()->company_id)
+            ->where('name', 'like', '%'.$this->loading_search.'%')
+            ->limit(8)
+            ->get(['id', 'name', 'sku', 'selling_price', 'purchase_price']);
+
+        $zoneId = $this->trip->zone_id;
+        $zonePrices = $zoneId
+            ? ZoneProductPrice::where('zone_id', $zoneId)
+                ->whereIn('product_id', $products->pluck('id'))
+                ->where('is_active', true)
+                ->get()
+                ->keyBy('product_id')
+            : collect();
+
+        $this->loading_list = $products->map(function (Product $p) use ($zonePrices): array {
+            $zp = $zonePrices->get($p->id);
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'sku' => $p->sku,
+                'unit_price' => $zp?->selling_price ?? $p->selling_price ?? 0,
+                'margin' => $zp?->effective_margin ?? 0,
+                'has_zone_price' => $zp !== null,
+            ];
+        })->toArray();
     }
 
-    // ── Workflow ──────────────────────────────────────────────────────────────
-
-    public function load(): void
+    public function addToLoading(int $id): void
     {
-        $this->validate(['loaded_crates' => 'required|integer|min:1']);
+        foreach ($this->loadingRows as $row) {
+            if ((int) ($row['product_id'] ?? 0) === $id) {
+                $product = Product::where('company_id', Auth::user()->company_id)->find($id);
+                $label = $product?->name ?? 'ce produit';
+                $this->dispatch('notify', message: "{$label} est déjà dans la liste.", type: 'warning');
+                $this->loading_search = '';
+                $this->loading_list = [];
 
-        try {
-            $this->trip = app(DeliveryService::class)->load($this->trip, $this->loaded_crates);
-            $this->dispatch('notify', message: 'Chargement enregistré. Le chauffeur peut partir.', type: 'success');
-        } catch (\Exception $e) {
-            $this->dispatch('notify', message: $e->getMessage(), type: 'error');
+                return;
+            }
         }
+
+        $product = Product::where('company_id', Auth::user()->company_id)
+            ->find($id, ['id', 'name', 'sku', 'selling_price', 'purchase_price']);
+
+        if (! $product) {
+            return;
+        }
+
+        $zoneId = $this->trip->zone_id;
+        $zonePrice = $zoneId
+            ? ZoneProductPrice::where('zone_id', $zoneId)
+                ->where('product_id', $id)
+                ->where('is_active', true)
+                ->first()
+            : null;
+
+        $unitPrice = $zonePrice?->selling_price ?? $product->selling_price ?? 0;
+        $margin = $zonePrice?->effective_margin ?? 0;
+
+        $this->loadingRows[] = [
+            'product_id' => $id,
+            'name' => $product->name,
+            'sku' => $product->sku ?? '',
+            'unit_price' => $unitPrice,
+            'margin_per_unit' => $margin,
+            'qty' => 1,
+        ];
+
+        $this->loading_search = '';
+        $this->loading_list = [];
     }
 
-    public function recordReturn(): void
+    public function removeLoadingRow(int $index): void
     {
-        $this->validate([
-            'returned_crates' => 'required|integer|min:0',
-            'total_revenue' => 'required|integer|min:0',
-        ]);
+        array_splice($this->loadingRows, $index, 1);
+        $this->loadingRows = array_values($this->loadingRows);
+    }
+
+    public function loadProducts(): void
+    {
+        if (! $this->checkPermission('manage_deliveries', "Vous n'avez pas la permission de valider le départ.")) {
+            return;
+        }
+
+        if (empty($this->loadingRows)) {
+            $this->addError('loadingRows', 'Ajoutez au moins un produit avant de valider le départ.');
+
+            return;
+        }
+
+        $rules = [];
+        foreach (array_keys($this->loadingRows) as $i) {
+            $rules["loadingRows.{$i}.qty"] = 'required|integer|min:1';
+        }
+        $this->validate($rules, [], array_fill_keys(
+            array_map(fn (int $i): string => "loadingRows.{$i}.qty", array_keys($this->loadingRows)),
+            'quantité'
+        ));
 
         try {
-            $this->trip = app(DeliveryService::class)->recordReturn(
-                $this->trip,
-                $this->returned_crates,
-                $this->total_revenue
-            );
-            $this->dispatch('notify', message: 'Retour enregistré.', type: 'success');
+            $this->trip = app(DeliveryService::class)->loadWithItems($this->trip, $this->loadingRows);
+            $this->loadingRows = [];
+            $this->loading_search = '';
+            $this->loading_list = [];
+            $this->dispatch('notify', message: 'Chargement enregistré. Le chauffeur peut partir.', type: 'success');
         } catch (ValidationException $e) {
             foreach ($e->errors() as $field => $messages) {
                 $this->addError($field, $messages[0]);
@@ -140,11 +203,29 @@ class TripShow extends Component
         }
     }
 
-    public function syncRevenue(): void
+    // ── Retour par produit ────────────────────────────────────────────────────
+
+    public function recordReturnFromProducts(): void
     {
-        $this->trip = app(DeliveryService::class)->syncRevenueFromItems($this->trip->load('items'));
-        $this->total_revenue = $this->trip->total_revenue ?? 0;
-        $this->dispatch('notify', message: 'Recette synchronisée depuis les lignes.', type: 'success');
+        if (! $this->checkPermission('manage_deliveries', "Vous n'avez pas la permission d'enregistrer le retour.")) {
+            return;
+        }
+
+        $rules = [];
+        foreach (array_keys($this->returnQties) as $itemId) {
+            $rules["returnQties.{$itemId}"] = 'required|integer|min:0';
+        }
+        $this->validate($rules);
+
+        try {
+            $this->trip = app(DeliveryService::class)->recordReturnFromItems($this->trip, $this->returnQties);
+            $this->returnQties = [];
+            $this->dispatch('notify', message: 'Retour enregistré. Vérifiez le résumé puis clôturez.', type: 'success');
+        } catch (ValidationException $e) {
+            foreach ($e->errors() as $field => $messages) {
+                $this->addError($field, $messages[0]);
+            }
+        }
     }
 
     public function close(): void
@@ -159,108 +240,6 @@ class TripShow extends Component
         } catch (\Exception $e) {
             $this->dispatch('notify', message: $e->getMessage(), type: 'error');
         }
-    }
-
-    // ── Recherche client / produit ────────────────────────────────────────────
-
-    public function updatedCustomerSearch(): void
-    {
-        if (strlen($this->customer_search) < 2) {
-            $this->customers_list = [];
-
-            return;
-        }
-
-        $this->customers_list = Customer::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%'.$this->customer_search.'%')
-            ->limit(5)
-            ->get(['id', 'name'])
-            ->toArray();
-    }
-
-    public function selectCustomer(int $id, string $name): void
-    {
-        $this->item_customer_id = $id;
-        $this->customer_search = $name;
-        $this->customers_list = [];
-    }
-
-    public function updatedProductSearch(): void
-    {
-        if (strlen($this->product_search) < 1) {
-            $this->products_list = [];
-
-            return;
-        }
-
-        $this->products_list = Product::where('company_id', Auth::user()->company_id)
-            ->where('name', 'like', '%'.$this->product_search.'%')
-            ->limit(8)
-            ->get(['id', 'name', 'sku', 'selling_price'])
-            ->toArray();
-    }
-
-    public function selectProduct(int $id, string $name, int $sellingPrice): void
-    {
-        $this->item_product_id = $id;
-        $this->item_product_designation = $name;
-        $this->item_unit_price = $sellingPrice;
-        $this->product_search = $name;
-        $this->products_list = [];
-    }
-
-    // ── Items ─────────────────────────────────────────────────────────────────
-
-    public function addItem(): void
-    {
-        $this->validate([
-            'item_product_designation' => 'required|string|max:255',
-            'item_customer_id' => 'nullable|exists:customers,id',
-            'item_qty_delivered' => 'required|integer|min:1',
-            'item_qty_returned' => 'required|integer|min:0',
-            'item_unit_price' => 'required|integer|min:0',
-            'item_margin_per_unit' => 'required|integer|min:0',
-        ]);
-
-        $product = $this->item_product_id ? Product::find($this->item_product_id) : null;
-
-        $this->trip->items()->create([
-            'customer_id' => $this->item_customer_id,
-            'product_id' => $this->item_product_id,
-            'product_ref' => $product?->sku,
-            'product_designation' => $this->item_product_designation,
-            'qty_delivered' => $this->item_qty_delivered,
-            'qty_returned' => $this->item_qty_returned,
-            'unit_price' => $this->item_unit_price,
-            'margin_per_unit' => $this->item_margin_per_unit,
-            'notes' => $this->item_notes ?: null,
-        ]);
-
-        $this->resetItemForm();
-        $this->trip = $this->trip->fresh(['items.customer', 'items.product']);
-        $this->dispatch('notify', message: 'Ligne ajoutée.', type: 'success');
-    }
-
-    public function removeItem(int $itemId): void
-    {
-        $this->trip->items()->where('id', $itemId)->delete();
-        $this->trip = $this->trip->fresh(['items.customer', 'items.product']);
-        $this->dispatch('notify', message: 'Ligne supprimée.', type: 'success');
-    }
-
-    private function resetItemForm(): void
-    {
-        $this->item_customer_id = null;
-        $this->item_product_id = null;
-        $this->item_product_designation = '';
-        $this->item_qty_delivered = 0;
-        $this->item_qty_returned = 0;
-        $this->item_unit_price = 0;
-        $this->item_margin_per_unit = 0;
-        $this->item_notes = '';
-        $this->customer_search = '';
-        $this->product_search = '';
-        $this->showItemForm = false;
     }
 
     // ── Dépenses ──────────────────────────────────────────────────────────────
@@ -306,19 +285,30 @@ class TripShow extends Component
 
     public function render(): View
     {
-        $this->trip->load([
+        $this->trip->loadMissing([
             'driver', 'vehicle', 'zone',
-            'items.customer', 'items.product',
+            'items',
             'expenses.category',
             'closedBy',
         ]);
 
-        $companyId = Auth::user()->company_id;
-        $expenseCategories = DeliveryExpenseCategory::where('company_id', $companyId)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $expenseCategories = collect();
+        if ($this->showExpenseForm) {
+            $expenseCategories = DeliveryExpenseCategory::where('company_id', Auth::user()->company_id)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        }
 
-        return view('livewire.deliveries.trip-show', compact('expenseCategories'));
+        $itemsData = $this->trip->canReturn()
+            ? $this->trip->items->map(fn ($i): array => [
+                'id' => $i->id,
+                'qty_delivered' => $i->qty_delivered,
+                'unit_price' => $i->unit_price,
+                'margin_per_unit' => $i->margin_per_unit,
+            ])->values()->toArray()
+            : [];
+
+        return view('livewire.deliveries.trip-show', compact('expenseCategories', 'itemsData'));
     }
 }

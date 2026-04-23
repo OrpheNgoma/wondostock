@@ -36,32 +36,62 @@
     </div>
 
     {{-- Progress bar workflow --}}
-    <div class="bg-white border border-gray-200 rounded-xl p-4">
-        <ol class="flex items-center w-full">
-            @foreach([['draft','1','Brouillon'],['in_progress','2','En route'],['completed','3','Retourné'],['closed','4','Clôturé']] as [$val,$num,$lbl])
-            @php
-                $statuses = ['draft','in_progress','completed','closed'];
-                $currentIdx = array_search($trip->status->value, $statuses);
-                $stepIdx = array_search($val, $statuses);
-                $isDone = $stepIdx < $currentIdx;
-                $isCurrent = $stepIdx === $currentIdx;
-            @endphp
-            <li class="flex items-center {{ $loop->last ? '' : 'flex-1' }}">
-                <span class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 text-sm font-bold
-                    {{ $isDone ? 'bg-indigo-600 text-white' : ($isCurrent ? 'bg-indigo-100 text-indigo-700 ring-2 ring-indigo-500' : 'bg-gray-100 text-gray-400') }}">
-                    @if($isDone)
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                    @else
-                        {{ $num }}
+    @php
+        $allSteps = [
+            ['val' => 'draft',       'num' => '1', 'lbl' => 'Brouillon',  'desc' => 'Ajoutez chaque produit chargé avec sa quantité, puis validez le départ.'],
+            ['val' => 'in_progress', 'num' => '2', 'lbl' => 'En route',   'desc' => 'Saisissez les produits vendus, les dépenses et la recette encaissée.'],
+            ['val' => 'completed',   'num' => '3', 'lbl' => 'Retourné',   'desc' => 'Vérifiez le résumé financier, puis clôturez la tournée.'],
+            ['val' => 'closed',      'num' => '4', 'lbl' => 'Clôturé',    'desc' => 'Tournée finalisée. Rapport et facture disponibles en PDF.'],
+        ];
+        $statusOrder = ['draft','in_progress','completed','closed'];
+        $currentIdx  = array_search($trip->status->value, $statusOrder);
+        $currentStep = $allSteps[$currentIdx] ?? null;
+    @endphp
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div class="px-5 pt-5 pb-4">
+            <ol class="flex items-center w-full">
+                @foreach($allSteps as $step)
+                @php
+                    $stepIdx   = array_search($step['val'], $statusOrder);
+                    $isDone    = $stepIdx < $currentIdx;
+                    $isCurrent = $stepIdx === $currentIdx;
+                @endphp
+                <li class="flex items-center {{ $loop->last ? '' : 'flex-1' }}">
+                    <span class="flex items-center justify-center w-9 h-9 rounded-full shrink-0 text-sm font-bold transition-all
+                        {{ $isDone    ? 'bg-indigo-600 text-white shadow-sm' : '' }}
+                        {{ $isCurrent ? 'bg-indigo-100 text-indigo-700 ring-2 ring-indigo-500 ring-offset-2' : '' }}
+                        {{ !$isDone && !$isCurrent ? 'bg-gray-100 text-gray-400' : '' }}">
+                        @if($isDone)
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                            </svg>
+                        @else
+                            {{ $step['num'] }}
+                        @endif
+                    </span>
+                    <span class="ms-2.5 text-xs font-semibold hidden sm:block
+                        {{ $isCurrent ? 'text-indigo-700' : ($isDone ? 'text-gray-500' : 'text-gray-400') }}">
+                        {{ $step['lbl'] }}
+                    </span>
+                    @if(!$loop->last)
+                        <div class="flex-1 mx-3 h-0.5 rounded-full {{ $isDone ? 'bg-indigo-400' : 'bg-gray-200' }}"></div>
                     @endif
-                </span>
-                <span class="ms-2 text-xs font-medium {{ $isCurrent ? 'text-indigo-700' : ($isDone ? 'text-gray-500' : 'text-gray-400') }}">{{ $lbl }}</span>
-                @if(!$loop->last)
-                    <div class="flex-1 mx-3 h-0.5 {{ $isDone ? 'bg-indigo-400' : 'bg-gray-200' }}"></div>
-                @endif
-            </li>
-            @endforeach
-        </ol>
+                </li>
+                @endforeach
+            </ol>
+        </div>
+        {{-- Description de l'étape courante --}}
+        @if($currentStep && $trip->status->value !== 'closed')
+        <div class="border-t border-indigo-100 bg-indigo-50/60 px-5 py-3 flex items-start gap-2.5">
+            <svg class="h-4 w-4 text-indigo-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <p class="text-sm text-indigo-700">
+                <span class="font-semibold">Étape {{ $currentStep['num'] }} — {{ $currentStep['lbl'] }} : </span>
+                {{ $currentStep['desc'] }}
+            </p>
+        </div>
+        @endif
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -69,234 +99,313 @@
         {{-- Colonne principale --}}
         <div class="lg:col-span-2 space-y-6">
 
-            {{-- Chargement --}}
+            {{-- ─── ÉTAPE 1 : CHARGEMENT PAR PRODUIT ─── --}}
             @if($trip->canLoad())
-            <div class="bg-white border border-indigo-200 rounded-xl p-5">
-                <h2 class="text-sm font-semibold text-gray-900 mb-4">Enregistrer le chargement</h2>
-                <div class="flex gap-3">
-                    <div class="flex-1">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Cassiers chargés <span class="text-red-500">*</span></label>
-                        <input type="number" wire:model="loaded_crates" min="1"
-                               class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @error('loaded_crates') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <button wire:click="saveProgress" type="button"
-                                class="px-4 py-2 bg-white text-indigo-600 text-sm font-medium rounded-lg ring-1 ring-inset ring-indigo-300 hover:bg-indigo-50 transition-colors">
-                            Sauvegarder
-                        </button>
-                        <button wire:click="load" type="button"
-                                class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                            Valider départ
-                        </button>
-                    </div>
+            <div class="overflow-hidden rounded-xl border border-indigo-200 bg-white"
+                 x-data="{
+                     get totalQty()    { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0), 0); },
+                     get totalAmount() { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0) * (parseInt(r.unit_price)||0), 0); },
+                     get totalMargin() { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0) * (parseInt(r.margin_per_unit)||0), 0); },
+                     fmt(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'; }
+                 }">
+                <div class="bg-indigo-600 px-5 py-3 flex items-center gap-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-white text-xs font-bold shrink-0">1</span>
+                    <h2 class="text-sm font-semibold text-white">Chargement du véhicule</h2>
                 </div>
-            </div>
-            @endif
+                <div class="bg-indigo-50 border-b border-indigo-100 px-5 py-3 flex items-start gap-2">
+                    <svg class="h-4 w-4 text-indigo-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                    </svg>
+                    <p class="text-xs text-indigo-700">
+                        Ajoutez chaque produit chargé dans le véhicule avec sa quantité (en cassiers).
+                        Le prix et la marge sont pré-remplis selon la zone <strong>{{ $trip->zone?->name ?? 'non définie' }}</strong>.
+                        Cliquez sur <strong>« Valider départ »</strong> pour lancer la tournée.
+                    </p>
+                </div>
+                <div class="p-5 space-y-4">
 
-            {{-- Retour --}}
-            @if($trip->canReturn())
-            <div class="bg-white border border-amber-200 rounded-xl p-5">
-                <h2 class="text-sm font-semibold text-gray-900 mb-4">Enregistrer le retour</h2>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Cassiers retournés</label>
-                        <input type="number" wire:model="returned_crates" min="0"
-                               class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @error('returned_crates') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            Recette totale (XAF)
-                            @if($trip->items->count() > 0)
-                            <button type="button" wire:click="syncRevenue"
-                                    class="ml-1 text-indigo-500 hover:text-indigo-700 text-xs underline">↻ Depuis lignes</button>
-                            @endif
-                        </label>
-                        <input type="number" wire:model="total_revenue" min="0"
-                               class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @error('total_revenue') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button wire:click="saveProgress" type="button"
-                            class="px-4 py-2 bg-white text-amber-700 text-sm font-medium rounded-lg ring-1 ring-inset ring-amber-300 hover:bg-amber-50 transition-colors">
-                        Sauvegarder
-                    </button>
-                    <button wire:click="recordReturn" type="button"
-                            class="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors">
-                        Valider retour
-                    </button>
-                </div>
-            </div>
-            @endif
-
-            {{-- Lignes de livraison --}}
-            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                    <h2 class="text-sm font-semibold text-gray-900">
-                        Lignes de livraison <span class="text-gray-400 font-normal">({{ $trip->items->count() }})</span>
-                    </h2>
-                    @if($trip->status->value !== 'closed')
-                    <button wire:click="$toggle('showItemForm')"
-                            class="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                        </svg>
-                        Ajouter
-                    </button>
-                    @endif
-                </div>
-
-                @if($showItemForm)
-                <div class="px-5 py-4 bg-indigo-50 border-b border-indigo-100 space-y-3">
-                    {{-- Sélection produit --}}
+                    {{-- Recherche produit --}}
                     <div class="relative">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Produit / Désignation <span class="text-red-500">*</span></label>
-                        <input type="text" wire:model.live="product_search"
-                               placeholder="Rechercher un produit (REGAB, CASTEL…)"
-                               class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @if(count($products_list) > 0)
-                        <ul class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                            @foreach($products_list as $p)
-                            <li wire:click="selectProduct({{ $p['id'] }}, @js($p['name']), {{ $p['selling_price'] ?? 0 }})"
-                                class="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer flex justify-between">
-                                <span>
-                                    <span class="font-medium">{{ $p['name'] }}</span>
-                                    @if($p['sku']) <span class="text-gray-400 text-xs ml-1">{{ $p['sku'] }}</span> @endif
-                                </span>
-                                @if($p['selling_price'])
-                                <span class="text-indigo-600 text-xs">{{ number_format($p['selling_price'], 0, ',', ' ') }} XAF</span>
-                                @endif
+                        <label class="block text-xs font-semibold text-gray-700 mb-1.5">Ajouter un produit</label>
+                        <input type="text"
+                               wire:model.live.debounce.300ms="loading_search"
+                               placeholder="Tapez le nom du produit (REGAB, CASTEL…)"
+                               autocomplete="off"
+                               class="block w-full rounded-lg border-0 py-2.5 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-indigo-200 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        @if(count($loading_list) > 0)
+                        <ul class="absolute z-20 w-full mt-1 bg-white border border-indigo-200 rounded-xl shadow-xl max-h-56 overflow-y-auto divide-y divide-gray-50">
+                            @foreach($loading_list as $p)
+                            <li wire:click="addToLoading({{ $p['id'] }})"
+                                class="px-4 py-2.5 text-sm hover:bg-indigo-50 cursor-pointer flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <span class="font-semibold text-gray-900 block truncate">{{ $p['name'] }}</span>
+                                    @if($p['sku'])
+                                    <code class="text-xs text-gray-400">{{ $p['sku'] }}</code>
+                                    @endif
+                                </div>
+                                <div class="text-right shrink-0">
+                                    @if($p['has_zone_price'])
+                                        <span class="block text-xs font-bold text-indigo-700">{{ number_format($p['unit_price'], 0, ',', ' ') }} FCFA</span>
+                                        <span class="block text-xs text-emerald-600">marge : {{ number_format($p['margin'], 0, ',', ' ') }} FCFA</span>
+                                    @elseif($p['unit_price'])
+                                        <span class="block text-xs text-gray-500">{{ number_format($p['unit_price'], 0, ',', ' ') }} FCFA</span>
+                                        <span class="block text-xs text-amber-500">pas de prix zone</span>
+                                    @endif
+                                </div>
                             </li>
                             @endforeach
                         </ul>
                         @endif
-                        @if(empty($item_product_id))
-                        <input type="text" wire:model="item_product_designation"
-                               placeholder="Ou saisir la désignation manuellement"
-                               class="block w-full mt-1 rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @endif
-                        @error('item_product_designation') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        @error('loadingRows') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                     </div>
 
-                    {{-- Sélection client --}}
-                    <div class="relative">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Client (optionnel)</label>
-                        <input type="text" wire:model.live="customer_search"
-                               placeholder="Rechercher un client…"
-                               class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        @if(count($customers_list) > 0)
-                        <ul class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                            @foreach($customers_list as $c)
-                            <li wire:click="selectCustomer({{ $c['id'] }}, @js($c['name']))"
-                                class="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer">{{ $c['name'] }}</li>
-                            @endforeach
-                        </ul>
-                        @endif
+                    {{-- Tableau des produits à charger --}}
+                    @if(count($loadingRows) > 0)
+                    <div class="overflow-x-auto rounded-lg border border-indigo-100">
+                        <table class="w-full text-sm">
+                            <thead class="bg-indigo-50 text-xs text-indigo-700 uppercase tracking-wide">
+                                <tr>
+                                    <th class="px-4 py-2.5 text-left">Produit</th>
+                                    <th class="px-4 py-2.5 text-right">P.U.</th>
+                                    <th class="px-4 py-2.5 text-right">Marge/u</th>
+                                    <th class="px-4 py-2.5 text-center w-28">Qté <span class="text-red-400">*</span></th>
+                                    <th class="px-4 py-2.5 w-8"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-indigo-50 bg-white">
+                                @foreach($loadingRows as $i => $row)
+                                <tr wire:key="loading-row-{{ $row['product_id'] ?? $i }}">
+                                    <td class="px-4 py-2.5">
+                                        <span class="font-medium text-gray-900 block">{{ $row['name'] }}</span>
+                                        @if($row['sku'])
+                                        <code class="text-xs text-gray-400">{{ $row['sku'] }}</code>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right text-gray-700 whitespace-nowrap">
+                                        {{ number_format($row['unit_price'], 0, ',', ' ') }}
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right text-emerald-700 whitespace-nowrap">
+                                        {{ number_format($row['margin_per_unit'], 0, ',', ' ') }}
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        <input type="number"
+                                               wire:model="loadingRows.{{ $i }}.qty"
+                                               min="1" placeholder="1"
+                                               class="block w-full rounded-lg border-0 py-1.5 px-2.5 text-sm text-center text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-indigo-200 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                                        @error("loadingRows.{$i}.qty") <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </td>
+                                    <td class="px-4 py-2.5 text-center">
+                                        <button wire:click="removeLoadingRow({{ $i }})" type="button"
+                                                class="text-red-300 hover:text-red-600 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="bg-indigo-50 border-t-2 border-indigo-200 font-semibold text-sm">
+                                <tr>
+                                    <td class="px-4 py-2.5 text-xs text-indigo-600 uppercase tracking-wide">Total</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-700" x-text="fmt(totalAmount)"></td>
+                                    <td class="px-4 py-2.5 text-right text-emerald-700" x-text="fmt(totalMargin)"></td>
+                                    <td class="px-4 py-2.5 text-center text-indigo-800 font-bold">
+                                        <span x-text="totalQty"></span> <span class="text-indigo-500 font-normal text-xs">cass.</span>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
+                    @endif
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Qté chargée <span class="text-red-500">*</span></label>
-                            <input type="number" wire:model="item_qty_delivered" min="0"
-                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Qté retournée</label>
-                            <input type="number" wire:model="item_qty_returned" min="0"
-                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Prix unitaire (XAF)</label>
-                            <input type="number" wire:model="item_unit_price" min="0"
-                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Marge / unité (XAF)</label>
-                            <input type="number" wire:model="item_margin_per_unit" min="0"
-                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Note (optionnel)</label>
-                            <input type="text" wire:model="item_notes"
-                                   class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button wire:click="addItem"
-                                class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700">
-                            Ajouter
-                        </button>
-                        <button wire:click="$toggle('showItemForm')"
-                                class="px-4 py-2 bg-white text-gray-600 text-xs rounded-lg border border-gray-300 hover:bg-gray-50">
-                            Annuler
+                    <div class="flex justify-end pt-1">
+                        <button wire:click="loadProducts" type="button"
+                                wire:loading.attr="disabled" wire:target="loadProducts"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60">
+                            <svg wire:loading.remove wire:target="loadProducts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                            <svg wire:loading wire:target="loadProducts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 14.627 0 12 0v4a8 8 0 00-8 8h4z"></path>
+                            </svg>
+                            Valider départ
+                            <span x-show="totalQty > 0" x-text="'(' + totalQty + ' cassiers)'" class="font-normal text-indigo-200 text-xs"></span>
                         </button>
                     </div>
                 </div>
-                @endif
+            </div>
+            @endif
 
-                @if($trip->items->count() > 0)
+            {{-- ─── ÉTAPE 2 : RETOUR PAR PRODUIT ─── --}}
+            @if($trip->canReturn())
+            <div class="overflow-hidden rounded-xl border border-amber-200 bg-white"
+                 x-data="{
+                     items: @js($itemsData),
+                     get totals() {
+                         return this.items.reduce((acc, item) => {
+                             const ret  = parseInt($wire.returnQties[String(item.id)]) || 0;
+                             const sold = Math.max(0, item.qty_delivered - ret);
+                             acc.ret    += ret;
+                             acc.sold   += sold;
+                             acc.amount += sold * item.unit_price;
+                             acc.marge  += sold * item.margin_per_unit;
+                             return acc;
+                         }, { ret: 0, sold: 0, amount: 0, marge: 0 });
+                     },
+                     fmt(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'; }
+                 }">
+                <div class="bg-amber-500 px-5 py-3 flex items-center gap-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-white text-xs font-bold shrink-0">2</span>
+                    <h2 class="text-sm font-semibold text-white">Retour du chauffeur</h2>
+                </div>
+                <div class="bg-amber-50 border-b border-amber-100 px-5 py-3 flex items-start gap-2">
+                    <svg class="h-4 w-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                    </svg>
+                    <p class="text-xs text-amber-800">
+                        Indiquez combien de cassiers sont revenus <strong>invendus</strong> pour chaque produit.
+                        Les quantités vendues, montants et marges sont calculés automatiquement.
+                    </p>
+                </div>
+                <div class="p-5 space-y-4">
+                    @if($trip->items->count() > 0)
+                    <div class="overflow-x-auto rounded-lg border border-amber-100">
+                        <table class="w-full text-sm">
+                            <thead class="bg-amber-50 text-xs text-amber-700 uppercase tracking-wide">
+                                <tr>
+                                    <th class="px-4 py-2.5 text-left">Produit</th>
+                                    <th class="px-4 py-2.5 text-right">P.U.</th>
+                                    <th class="px-4 py-2.5 text-right">Chargé</th>
+                                    <th class="px-4 py-2.5 text-center w-28">Retourné</th>
+                                    <th class="px-4 py-2.5 text-right">Vendu</th>
+                                    <th class="px-4 py-2.5 text-right">Montant</th>
+                                    <th class="px-4 py-2.5 text-right">Marge</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-amber-50 bg-white">
+                                @foreach($trip->items as $item)
+                                <tr wire:key="return-item-{{ $item->id }}"
+                                    x-data="{
+                                        loaded:    {{ $item->qty_delivered }},
+                                        unitPrice: {{ $item->unit_price }},
+                                        margin:    {{ $item->margin_per_unit }},
+                                        get returned() { return parseInt($wire.returnQties['{{ $item->id }}']) || 0; },
+                                        get sold()     { return Math.max(0, this.loaded - this.returned); },
+                                        get amount()   { return this.sold * this.unitPrice; },
+                                        get marge()    { return this.sold * this.margin; },
+                                        fmt(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'; }
+                                    }">
+                                    <td class="px-4 py-3">
+                                        <span class="font-medium text-gray-900 block">{{ $item->product_designation }}</span>
+                                        @if($item->product_ref)
+                                        <code class="text-xs text-gray-400">{{ $item->product_ref }}</code>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-gray-600 whitespace-nowrap">
+                                        {{ number_format($item->unit_price, 0, ',', ' ') }}
+                                    </td>
+                                    <td class="px-4 py-3 text-right text-gray-700 font-medium">{{ $item->qty_delivered }}</td>
+                                    <td class="px-4 py-3">
+                                        <input type="number"
+                                               wire:model="returnQties.{{ $item->id }}"
+                                               min="0" max="{{ $item->qty_delivered }}" placeholder="0"
+                                               class="block w-full rounded-lg border-0 py-1.5 px-2.5 text-sm text-center text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-amber-200 focus:ring-2 focus:ring-inset focus:ring-amber-500">
+                                        @error("returnQties.{$item->id}") <p class="mt-0.5 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold text-indigo-700" x-text="sold"></td>
+                                    <td class="px-4 py-3 text-right text-gray-900 whitespace-nowrap" x-text="fmt(amount)"></td>
+                                    <td class="px-4 py-3 text-right text-emerald-700 whitespace-nowrap" x-text="fmt(marge)"></td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="bg-amber-50 border-t-2 border-amber-200 font-semibold text-sm">
+                                <tr>
+                                    <td colspan="2" class="px-4 py-2.5 text-xs text-amber-700 uppercase tracking-wide">Total</td>
+                                    <td class="px-4 py-2.5 text-right text-gray-700">{{ $trip->items->sum('qty_delivered') }}</td>
+                                    <td class="px-4 py-2.5 text-center text-amber-800" x-text="totals.ret"></td>
+                                    <td class="px-4 py-2.5 text-right font-bold text-indigo-800" x-text="totals.sold"></td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900 whitespace-nowrap" x-text="fmt(totals.amount)"></td>
+                                    <td class="px-4 py-2.5 text-right text-emerald-700 whitespace-nowrap" x-text="fmt(totals.marge)"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @else
+                    <p class="py-6 text-center text-sm text-gray-400">Aucun produit chargé trouvé.</p>
+                    @endif
+
+                    <div class="flex justify-end pt-1">
+                        <button wire:click="recordReturnFromProducts" type="button"
+                                wire:loading.attr="disabled" wire:target="recordReturnFromProducts"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-60">
+                            <svg wire:loading.remove wire:target="recordReturnFromProducts" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <svg wire:loading wire:target="recordReturnFromProducts" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 14.627 0 12 0v4a8 8 0 00-8 8h4z"></path>
+                            </svg>
+                            Valider le retour
+                        </button>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- ─── RÉSUMÉ PRODUITS (completed / closed) ─── --}}
+            @if(!$trip->canLoad() && !$trip->canReturn() && $trip->items->count() > 0)
+            <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-900">
+                        Détail produits <span class="text-gray-400 font-normal">({{ $trip->items->count() }})</span>
+                    </h2>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
                             <tr>
                                 <th class="px-4 py-3 text-left">Produit</th>
-                                <th class="px-4 py-3 text-left">Client</th>
-                                <th class="px-4 py-3 text-right">Chargé</th>
-                                <th class="px-4 py-3 text-right">Retour</th>
-                                <th class="px-4 py-3 text-right">Vendu</th>
                                 <th class="px-4 py-3 text-right">P.U.</th>
-                                <th class="px-4 py-3 text-right">Marge/u</th>
-                                <th class="px-4 py-3 text-right">Total</th>
+                                <th class="px-4 py-3 text-right">Chargé</th>
+                                <th class="px-4 py-3 text-right">Retourné</th>
+                                <th class="px-4 py-3 text-right">Vendu</th>
+                                <th class="px-4 py-3 text-right">Montant</th>
                                 <th class="px-4 py-3 text-right">Marge</th>
-                                @if($trip->status->value !== 'closed') <th class="px-4 py-3"></th> @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach($trip->items as $item)
-                            <tr class="hover:bg-gray-50" wire:key="item-{{ $item->id }}">
+                            <tr class="hover:bg-gray-50" wire:key="summary-item-{{ $item->id }}">
                                 <td class="px-4 py-3 font-medium text-gray-900">
                                     {{ $item->product_designation }}
                                     @if($item->product_ref)
                                     <span class="text-xs text-gray-400 ml-1">{{ $item->product_ref }}</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-gray-600 text-xs">{{ $item->customer?->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-right text-gray-600">{{ number_format($item->unit_price, 0, ',', ' ') }}</td>
                                 <td class="px-4 py-3 text-right text-gray-700">{{ $item->qty_delivered }}</td>
                                 <td class="px-4 py-3 text-right text-gray-400">{{ $item->qty_returned ?: '—' }}</td>
                                 <td class="px-4 py-3 text-right font-bold text-indigo-700">{{ $item->net_qty }}</td>
-                                <td class="px-4 py-3 text-right text-gray-700">{{ number_format($item->unit_price, 0, ',', ' ') }}</td>
-                                <td class="px-4 py-3 text-right text-emerald-700">{{ number_format($item->margin_per_unit, 0, ',', ' ') }}</td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">{{ number_format($item->total, 0, ',', ' ') }}</td>
                                 <td class="px-4 py-3 text-right font-medium text-emerald-700">{{ number_format($item->line_total_margin, 0, ',', ' ') }}</td>
-                                @if($trip->status->value !== 'closed')
-                                <td class="px-4 py-3">
-                                    <button wire:click="removeItem({{ $item->id }})" wire:confirm="Supprimer cette ligne ?"
-                                            class="text-red-400 hover:text-red-600">
-                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </td>
-                                @endif
                             </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="bg-gray-50 text-sm font-semibold border-t-2 border-gray-200">
                             <tr>
-                                <td colspan="{{ $trip->status->value !== 'closed' ? 7 : 6 }}" class="px-4 py-3 text-right text-gray-600 uppercase text-xs tracking-wide">Total</td>
+                                <td colspan="4" class="px-4 py-3 text-right text-gray-600 uppercase text-xs tracking-wide">Total</td>
+                                <td class="px-4 py-3 text-right text-indigo-800">{{ $trip->items->sum('net_qty') }}</td>
                                 <td class="px-4 py-3 text-right text-gray-900">{{ number_format($trip->items->sum('total'), 0, ',', ' ') }}</td>
                                 <td class="px-4 py-3 text-right text-emerald-700">{{ number_format($trip->items->sum('line_total_margin'), 0, ',', ' ') }}</td>
-                                @if($trip->status->value !== 'closed') <td></td> @endif
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                @else
-                <p class="px-5 py-8 text-center text-sm text-gray-400">Aucune ligne saisie.</p>
-                @endif
             </div>
+            @endif
 
             {{-- Dépenses de tournée --}}
             <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -338,7 +447,7 @@
                             @error('expense_label') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Montant (XAF) <span class="text-red-500">*</span></label>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Montant (FCFA) <span class="text-red-500">*</span></label>
                             <input type="number" wire:model="expense_amount" min="1"
                                    class="block w-full rounded-lg border-0 py-2 px-3 text-sm text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-red-500">
                             @error('expense_amount') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -368,7 +477,7 @@
                             @endif
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-sm font-bold text-red-700">{{ number_format($expense->amount, 0, ',', ' ') }} XAF</span>
+                            <span class="text-sm font-bold text-red-700">{{ number_format($expense->amount, 0, ',', ' ') }} FCFA</span>
                             @if($trip->status->value !== 'closed')
                             <button wire:click="removeExpense({{ $expense->id }})" wire:confirm="Supprimer ?"
                                     class="text-red-300 hover:text-red-600">
@@ -383,7 +492,7 @@
                 </ul>
                 <div class="px-5 py-3 bg-gray-50 border-t border-gray-200 flex justify-between">
                     <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Total dépenses</span>
-                    <span class="text-sm font-bold text-red-700">{{ number_format($trip->expenses->sum('amount'), 0, ',', ' ') }} XAF</span>
+                    <span class="text-sm font-bold text-red-700">{{ number_format($trip->expenses->sum('amount'), 0, ',', ' ') }} FCFA</span>
                 </div>
                 @else
                 <p class="px-5 py-6 text-center text-sm text-gray-400">Aucune dépense.</p>
@@ -396,47 +505,69 @@
         <div class="space-y-4">
 
             {{-- Résumé financier --}}
+            @php
+                $isClosed      = $trip->status->value === 'closed';
+                $sousTotal     = $isClosed ? ($trip->total_revenue ?? 0)      : $trip->items->sum('total');
+                $liveDépenses  = $isClosed ? ($trip->total_expenses ?? 0)     : $trip->expenses->sum('amount');
+                $totalXAF      = max(0, $sousTotal - $liveDépenses);
+                $liveMargin    = $isClosed ? ($trip->total_margin ?? 0)       : $trip->items->sum('line_total_margin');
+                $bankPct       = $trip->bank_percentage ?? 80;
+                $bankAmt       = $isClosed ? ($trip->bank_amount  ?? 0)       : (int) round($liveMargin * $bankPct / 100);
+                $cashAmt       = $isClosed ? ($trip->cash_amount  ?? 0)       : $liveMargin - $bankAmt;
+                $fondsAmt      = $isClosed ? ($trip->funds_amount ?? 0)       : max(0, $totalXAF - $liveMargin);
+            @endphp
             <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
                     <h3 class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Résumé financier</h3>
+                    @if(!$isClosed)
+                    <span class="text-xs text-gray-400 italic">Projection en cours</span>
+                    @endif
                 </div>
                 <div class="divide-y divide-gray-100">
-                    @php
-                        $liveRevenue = $trip->total_revenue ?? $trip->items->sum('total');
-                        $liveMargin = $trip->status->value === 'closed' ? ($trip->total_margin ?? 0) : $trip->items->sum('line_total_margin');
-                        $liveExpenses = $trip->status->value === 'closed' ? ($trip->total_expenses ?? 0) : $trip->expenses->sum('amount');
-                    @endphp
-                    <div class="px-4 py-3 flex justify-between">
-                        <span class="text-xs text-gray-600">Recettes</span>
-                        <span class="text-sm font-semibold text-gray-900">{{ number_format($liveRevenue, 0, ',', ' ') }} XAF</span>
+                    {{-- Recette brute --}}
+                    <div class="px-4 py-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-600">Recette brute (Sous-total)</span>
+                        <span class="text-sm font-semibold text-gray-900">{{ number_format($sousTotal, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="px-4 py-3 flex justify-between">
-                        <span class="text-xs text-gray-600">Marge bénéficiaire</span>
-                        <span class="text-sm font-semibold text-emerald-700">{{ number_format($liveMargin, 0, ',', ' ') }} XAF</span>
+                    {{-- Dépenses --}}
+                    <div class="px-4 py-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-600">− Dépenses</span>
+                        <span class="text-sm font-semibold text-red-600">{{ number_format($liveDépenses, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="px-4 py-3 flex justify-between">
-                        <span class="text-xs text-gray-600">Dépenses</span>
-                        <span class="text-sm font-semibold text-red-600">{{ number_format($liveExpenses, 0, ',', ' ') }} XAF</span>
+                    {{-- Total XAF --}}
+                    <div class="px-4 py-3 flex justify-between items-center bg-gray-50">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-800">= TOTAL XAF</span>
+                            <p class="text-xs text-gray-400">Montant remis par le chauffeur</p>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900">{{ number_format($totalXAF, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    @if($trip->status->value === 'closed')
-                    <div class="px-4 py-3 flex justify-between bg-blue-50">
-                        <span class="text-xs text-blue-700 font-medium">Banque ({{ $trip->bank_percentage }}%)</span>
-                        <span class="text-sm font-bold text-blue-800">{{ number_format($trip->bank_amount ?? 0, 0, ',', ' ') }} XAF</span>
+                    {{-- Marges --}}
+                    <div class="px-4 py-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-600">− Marges bénéficiaires</span>
+                        <span class="text-sm font-semibold text-emerald-700">{{ number_format($liveMargin, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="px-4 py-3 flex justify-between bg-violet-50">
-                        <span class="text-xs text-violet-700 font-medium">Caisse ({{ 100 - $trip->bank_percentage }}%)</span>
-                        <span class="text-sm font-bold text-violet-800">{{ number_format($trip->cash_amount ?? 0, 0, ',', ' ') }} XAF</span>
+                    <div class="px-4 py-2.5 flex justify-between items-center bg-blue-50/70">
+                        <span class="text-xs text-blue-700">↳ Banque ({{ $bankPct }}%)</span>
+                        <span class="text-xs font-bold text-blue-800">{{ number_format($bankAmt, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    <div class="px-4 py-3 flex justify-between bg-orange-50">
-                        <span class="text-xs text-orange-700 font-medium">Fonds fournisseur</span>
-                        <span class="text-sm font-bold text-orange-800">{{ number_format($trip->funds_amount ?? 0, 0, ',', ' ') }} XAF</span>
+                    <div class="px-4 py-2.5 flex justify-between items-center bg-violet-50/70">
+                        <span class="text-xs text-violet-700">↳ Caisse ({{ 100 - $bankPct }}%)</span>
+                        <span class="text-xs font-bold text-violet-800">{{ number_format($cashAmt, 0, ',', ' ') }} FCFA</span>
+                    </div>
+                    {{-- Fonds fournisseur --}}
+                    <div class="px-4 py-3 flex justify-between items-center bg-orange-50">
+                        <div>
+                            <span class="text-xs font-semibold text-orange-800">= FONDS fournisseur</span>
+                            <p class="text-xs text-orange-500">Reversement SOBRAGA</p>
+                        </div>
+                        <span class="text-sm font-bold text-orange-800">{{ number_format($fondsAmt, 0, ',', ' ') }} FCFA</span>
                     </div>
                     @if($trip->mission_allowance_amount)
-                    <div class="px-4 py-3 flex justify-between">
+                    <div class="px-4 py-3 flex justify-between items-center">
                         <span class="text-xs text-gray-600">Prime de mission</span>
-                        <span class="text-sm font-semibold text-indigo-700">{{ number_format($trip->mission_allowance_amount, 0, ',', ' ') }} XAF</span>
+                        <span class="text-sm font-semibold text-indigo-700">{{ number_format($trip->mission_allowance_amount, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    @endif
                     @endif
                 </div>
             </div>
@@ -466,16 +597,39 @@
             </div>
             @endif
 
-            {{-- Clôturer --}}
+            {{-- ─── ÉTAPE 3 : CLÔTURE ─── --}}
             @if($trip->canClose())
-            <div class="bg-green-50 border border-green-200 rounded-xl p-4">
-                <p class="text-xs text-green-700 mb-3">
-                    Prêt à clôturer. Banque/Caisse/Fonds seront calculés automatiquement.
-                </p>
-                <button wire:click="close" wire:confirm="Clôturer définitivement cette tournée ?"
-                        class="w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors">
-                    Clôturer la tournée
-                </button>
+            <div class="overflow-hidden rounded-xl border border-green-200 bg-white">
+                <div class="bg-green-600 px-5 py-3 flex items-center gap-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-white text-xs font-bold shrink-0">3</span>
+                    <h2 class="text-sm font-semibold text-white">Clôturer la tournée</h2>
+                </div>
+                <div class="bg-green-50 border-b border-green-100 px-5 py-3 space-y-1.5">
+                    <div class="flex items-start gap-2">
+                        <svg class="h-4 w-4 text-green-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+                        </svg>
+                        <div class="text-xs text-green-800">
+                            <p class="font-semibold mb-0.5">Vérifiez le résumé financier avant de clôturer.</p>
+                            <p>La clôture est <strong>irréversible</strong>. Banque, Caisse et Fonds seront calculés et figés définitivement à partir de la recette et des marges saisies.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5">
+                    <button wire:click="close"
+                            wire:confirm="Clôturer définitivement cette tournée ? Cette action est irréversible."
+                            wire:loading.attr="disabled" wire:target="close"
+                            class="inline-flex items-center justify-center gap-2 w-full px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60">
+                        <svg wire:loading.remove wire:target="close" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                        </svg>
+                        <svg wire:loading wire:target="close" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 14.627 0 12 0v4a8 8 0 00-8 8h4z"></path>
+                        </svg>
+                        Clôturer définitivement
+                    </button>
+                </div>
             </div>
             @endif
 
