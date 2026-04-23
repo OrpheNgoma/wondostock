@@ -173,8 +173,8 @@
         </div>
 
         <!-- Section Produits - Cœur de l'application -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="bg-gradient-to-r from-emerald-500 to-green-600 rounded-t-xl px-6 py-4">
                 <h2 class="text-xl font-semibold text-white flex items-center justify-between">
                     <span class="flex items-center">
                         <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

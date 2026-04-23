@@ -1,6 +1,6 @@
 <div class="space-y-8">
     <!-- En-tête moderne avec gradient -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-8 shadow-2xl">
+    <div class="relative rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-8 shadow-2xl">
         <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-700/20 backdrop-blur-sm"></div>
         <div class="relative">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

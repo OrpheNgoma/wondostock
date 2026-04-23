@@ -101,14 +101,14 @@
 
             {{-- ─── ÉTAPE 1 : CHARGEMENT PAR PRODUIT ─── --}}
             @if($trip->canLoad())
-            <div class="overflow-hidden rounded-xl border border-indigo-200 bg-white"
+            <div class="rounded-xl border border-indigo-200 bg-white"
                  x-data="{
                      get totalQty()    { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0), 0); },
                      get totalAmount() { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0) * (parseInt(r.unit_price)||0), 0); },
                      get totalMargin() { return $wire.loadingRows.reduce((s, r) => s + (parseInt(r.qty)||0) * (parseInt(r.margin_per_unit)||0), 0); },
                      fmt(n) { return new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'; }
                  }">
-                <div class="bg-indigo-600 px-5 py-3 flex items-center gap-2">
+                <div class="bg-indigo-600 rounded-t-xl px-5 py-3 flex items-center gap-2">
                     <span class="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 text-white text-xs font-bold shrink-0">1</span>
                     <h2 class="text-sm font-semibold text-white">Chargement du véhicule</h2>
                 </div>
