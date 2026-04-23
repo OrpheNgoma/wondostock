@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $indexes = collect(Schema::getIndexes('roles'))->pluck('name');
-
-        Schema::table('roles', function (Blueprint $table) use ($indexes): void {
-            if ($indexes->contains('roles_name_guard_name_unique')) {
-                $table->dropUnique('roles_name_guard_name_unique');
-            }
-            if (!$indexes->contains('roles_name_guard_name_company_unique')) {
-                $table->unique(['name', 'guard_name', 'company_id'], 'roles_name_guard_name_company_unique');
-            }
+        Schema::table('roles', function (Blueprint $table): void {
+            // L'index global (name, guard_name) empêche deux entreprises d'avoir
+            // le même nom de rôle. En mode multi-tenant, l'unicité doit être
+            // scoped à (name, guard_name, company_id).
+            $table->dropUnique('roles_name_guard_name_unique');
+            $table->unique(['name', 'guard_name', 'company_id'], 'roles_name_guard_name_company_unique');
         });
     }
 

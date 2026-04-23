@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('roles', 'description')) {
-            Schema::table('roles', function (Blueprint $table): void {
-                $table->string('description')->nullable()->after('name');
-            });
-        }
+        Schema::table('roles', function (Blueprint $table): void {
+            $table->string('description')->nullable()->after('name');
+        });
     }
 
     /**
