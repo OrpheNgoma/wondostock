@@ -171,7 +171,7 @@ class TripShow extends Component
 
     public function loadProducts(): void
     {
-        if (! $this->checkPermission('manage_deliveries', "Vous n'avez pas la permission de valider le départ.")) {
+        if (! $this->checkPermission('edit_deliveries', "Vous n'avez pas la permission de valider le départ.")) {
             return;
         }
 
@@ -207,7 +207,7 @@ class TripShow extends Component
 
     public function recordReturnFromProducts(): void
     {
-        if (! $this->checkPermission('manage_deliveries', "Vous n'avez pas la permission d'enregistrer le retour.")) {
+        if (! $this->checkPermission('edit_deliveries', "Vous n'avez pas la permission d'enregistrer le retour.")) {
             return;
         }
 
