@@ -2,13 +2,15 @@ FROM php:8.4-fpm
 
 WORKDIR /var/www/html
 
-# System dependencies
+# System dependencies + Node.js 22 (via NodeSource)
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip \
+    git curl zip unzip gnupg \
     libpng-dev libonig-dev libxml2-dev libzip-dev \
     libfreetype6-dev libjpeg62-turbo-dev libwebp-dev \
     libicu-dev \
     nginx supervisor \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions
@@ -27,11 +29,6 @@ COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Install Node for asset build
-COPY --from=node:22-alpine /usr/local/bin/node /usr/local/bin/node
-COPY --from=node:22-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node:22-alpine /usr/local/bin/npm /usr/local/bin/npm
 
 # Copy application source
 COPY . .
