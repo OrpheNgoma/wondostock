@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     git curl zip unzip \
     libpng-dev libonig-dev libxml2-dev libzip-dev \
     libfreetype6-dev libjpeg62-turbo-dev libwebp-dev \
+    libicu-dev \
     nginx supervisor \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
