@@ -12,19 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('delivery_items', function (Blueprint $table) {
-            if (!Schema::hasColumn('delivery_items', 'product_id')) {
-                $table->foreignId('product_id')->nullable()->after('customer_id')->constrained('products')->nullOnDelete();
-                $table->index('product_id');
-            }
-            if (!Schema::hasColumn('delivery_items', 'product_ref')) {
-                $table->string('product_ref')->nullable()->after('product_id');
-            }
-            if (!Schema::hasColumn('delivery_items', 'product_designation')) {
-                $table->string('product_designation')->default('')->after('product_ref');
-            }
-            if (!Schema::hasColumn('delivery_items', 'margin_per_unit')) {
-                $table->integer('margin_per_unit')->default(0)->after('unit_price');
-            }
+            $table->foreignId('product_id')->nullable()->after('customer_id')->constrained('products')->nullOnDelete();
+            $table->string('product_ref')->nullable()->after('product_id');
+            $table->string('product_designation')->default('')->after('product_ref');
+            $table->integer('margin_per_unit')->default(0)->after('unit_price');
+
+            $table->index('product_id');
         });
     }
 
