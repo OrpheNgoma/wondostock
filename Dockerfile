@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && echo "[client]" > /root/.my.cnf \
-    && echo "ssl-mode=DISABLED" >> /root/.my.cnf
+    && echo "ssl=false" >> /root/.my.cnf
 
 # PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
