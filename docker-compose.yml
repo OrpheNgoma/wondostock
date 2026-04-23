@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wondostock_app
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    env_file:
+      - .env
+    volumes:
+      - app_storage:/var/www/html/storage/app
+      - app_logs:/var/www/html/storage/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - wondostock
+
+  db:
+    image: mysql:8.0
+    container_name: wondostock_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wondostock
+
+  redis:
+    image: redis:7-alpine
+    container_name: wondostock_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - wondostock
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wondostock_pma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8086:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 50M
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - wondostock
+
+volumes:
+  db_data:
+  redis_data:
+  app_storage:
+  app_logs:
+
+networks:
+  wondostock:
+    driver: bridge
