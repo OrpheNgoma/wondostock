@@ -53,6 +53,10 @@ class Login extends Component
             'type' => 'success',
         ]);
 
+        if (Auth::user()->is_global_admin) {
+            return redirect('/admin');
+        }
+
         return $this->redirect('/dashboard', navigate: true);
     }
 

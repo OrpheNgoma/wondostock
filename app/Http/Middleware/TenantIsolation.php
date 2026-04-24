@@ -23,24 +23,27 @@ class TenantIsolation
         }
 
         $user = Auth::user();
+        $isGlobalAdmin = $user->is_global_admin || $user->hasRole('Global-Admin');
 
         // Les routes Filament /admin/* sont réservées aux admins globaux uniquement
         if ($request->is('admin/*') || $request->is('admin')) {
-            if ($user->is_global_admin || $user->hasRole('Global-Admin')) {
+            if ($isGlobalAdmin) {
                 return $next($request);
             }
 
             abort(403, 'Accès réservé aux administrateurs globaux.');
         }
 
-        // Pour les admins globaux qui accèdent aux routes normales (sauf dashboard qui a son propre middleware)
-        // if ($user->is_global_admin && ! $request->is('admin/*') && ! $request->is('dashboard')) {
-        //     return redirect('admin'); // Redirection vers le panel Filament
-        // }
+        // Les admins globaux n'ont pas de company_id : on les laisse passer librement.
+        // La redirection vers /admin est gérée à la connexion (Login.php).
+        // Ne jamais rediriger ici : les requêtes AJAX Livewire (/livewire/update)
+        // passeraient aussi par ce middleware et seraient cassées par un redirect.
+        if ($isGlobalAdmin) {
+            return $next($request);
+        }
 
         // Vérifier si l'utilisateur a une company_id
         if (! $user->company_id) {
-            // Si pas de company_id, rediriger vers une page d'erreur ou setup
             abort(403, 'Aucune entreprise associée à votre compte.');
         }
 
