@@ -22,6 +22,7 @@ class RoleAndPermissionSeeder extends Seeder
             'create_products',
             'edit_products',
             'delete_products',
+            'manage_products',
 
             // Stock
             'view_stock',
@@ -174,6 +175,7 @@ class RoleAndPermissionSeeder extends Seeder
             'view_products',
             'create_products',
             'edit_products',
+            'manage_products',
             'view_stock',
             'create_stock_entries',
             'adjust_stock',
