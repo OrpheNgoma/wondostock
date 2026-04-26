@@ -261,7 +261,7 @@ class RolePermissionService
     {
         $groups = [
             'Tableau de bord' => ['view_dashboard_stats'],
-            'Produits' => ['view_products', 'create_products', 'edit_products', 'delete_products'],
+            'Produits' => ['view_products', 'create_products', 'edit_products', 'delete_products', 'manage_products'],
             'Stock' => ['view_stock', 'create_stock_entries', 'adjust_stock', 'transfer_stock'],
             'Ventes' => ['view_documents', 'create_documents', 'edit_documents', 'delete_documents', 'validate_documents', 'record_payments', 'view_all_sales_documents'],
             'Achats' => ['view_purchases', 'create_purchases', 'edit_purchases'],
@@ -272,7 +272,7 @@ class RolePermissionService
             'Salaires & RH' => ['view_salaries', 'manage_salaries', 'validate_salaries', 'approve_salary_advances'],
             'Employés' => ['view_employees', 'manage_employees'],
             'Finance & Rapports' => ['view_financial_reports', 'view_global_reports', 'view_store_reports'],
-            'Administration' => ['manage_users', 'manage_stores', 'manage_settings', 'manage_subscriptions', 'view_all_sales_documents', 'manage.roles'],
+            'Administration' => ['manage_users', 'manage_stores', 'manage_settings', 'manage_subscriptions', 'view_all_sales_documents'],
             'Audit' => ['view_audit_log'],
         ];
 
