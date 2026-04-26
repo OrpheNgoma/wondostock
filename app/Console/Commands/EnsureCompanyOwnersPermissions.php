@@ -85,20 +85,20 @@ class EnsureCompanyOwnersPermissions extends Command
                         'company_id' => $company->id,
                     ]);
 
-                    // Assigner toutes les permissions
-                    $ownerRole->syncPermissions($allPermissions);
+                    $ownerRole->givePermissionTo($allPermissions);
                     $this->info("    ✅ Rôle créé avec {$allPermissions->count()} permissions");
                 }
                 $created++;
             } else {
                 $this->info("  ✅ Rôle existant: {$roleName}");
 
-                // Vérifier si toutes les permissions sont assignées
-                $currentPermissions = $ownerRole->permissions->count();
-                if ($currentPermissions < $allPermissions->count()) {
-                    $this->info("    🔄 Mise à jour des permissions ({$currentPermissions} → {$allPermissions->count()})");
+                // Ajouter uniquement les permissions manquantes (non destructeur)
+                $existingNames = $ownerRole->permissions->pluck('name');
+                $missing = $allPermissions->whereNotIn('name', $existingNames);
+                if ($missing->isNotEmpty()) {
+                    $this->info("    🔄 Ajout de {$missing->count()} permission(s) manquante(s)");
                     if (! $isDryRun) {
-                        $ownerRole->syncPermissions($allPermissions);
+                        $ownerRole->givePermissionTo($missing);
                     }
                     $updated++;
                 }

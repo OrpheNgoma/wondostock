@@ -124,7 +124,7 @@ class Register extends Component
 
                     // Assigner toutes les permissions au rôle Propriétaire
                     $allPermissions = \Spatie\Permission\Models\Permission::all();
-                    $ownerRole->syncPermissions($allPermissions);
+                    $ownerRole->givePermissionTo($allPermissions);
                 }
 
                 // Assigner le rôle à l'utilisateur
