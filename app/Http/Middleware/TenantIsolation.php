@@ -23,22 +23,23 @@ class TenantIsolation
         }
 
         $user = Auth::user();
-        $isGlobalAdmin = $user->is_global_admin || $user->hasRole('Global-Admin');
 
-        // Les routes Filament /admin/* sont réservées aux admins globaux uniquement
+        // Routes Filament /admin/* réservées aux admins globaux.
+        // hasRole() n'est acceptable ici que parce que ces routes sont peu fréquentes
+        // et que les admins globaux ont leurs rôles sans contexte team (team_id = null).
         if ($request->is('admin/*') || $request->is('admin')) {
-            if ($isGlobalAdmin) {
+            if ($user->is_global_admin || $user->hasRole('Global-Admin')) {
                 return $next($request);
             }
 
             abort(403, 'Accès réservé aux administrateurs globaux.');
         }
 
-        // Les admins globaux n'ont pas de company_id : on les laisse passer librement.
-        // La redirection vers /admin est gérée à la connexion (Login.php).
-        // Ne jamais rediriger ici : les requêtes AJAX Livewire (/livewire/update)
-        // passeraient aussi par ce middleware et seraient cassées par un redirect.
-        if ($isGlobalAdmin) {
+        // Pour toutes les autres routes : on utilise UNIQUEMENT la colonne is_global_admin.
+        // Ne jamais appeler hasRole() ici — cela chargerait et mettrait en cache la relation
+        // roles avec team = null (InitializePermissionsTeam n'a pas encore tourné), ce qui
+        // ferait échouer tous les can() suivants pour les utilisateurs tenant normaux.
+        if ($user->is_global_admin) {
             return $next($request);
         }
 
