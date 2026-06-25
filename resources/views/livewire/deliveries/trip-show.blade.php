@@ -16,6 +16,7 @@
                 <p class="text-sm text-gray-500">
                     {{ $trip->trip_date->translatedFormat('l d MMMM Y') }}
                     @if($trip->zone) · {{ $trip->zone->name }} ({{ $trip->zone->city }}) @endif
+                    @if($trip->store) · Dépôt : {{ $trip->store->name }} @endif
                     @if($trip->vehicle) · {{ $trip->vehicle->display_name }} @endif
                 </p>
             </div>
@@ -514,7 +515,8 @@
                 $bankPct       = $trip->bank_percentage ?? 80;
                 $bankAmt       = $isClosed ? ($trip->bank_amount  ?? 0)       : (int) round($liveMargin * $bankPct / 100);
                 $cashAmt       = $isClosed ? ($trip->cash_amount  ?? 0)       : $liveMargin - $bankAmt;
-                $fondsAmt      = $isClosed ? ($trip->funds_amount ?? 0)       : max(0, $totalXAF - $liveMargin);
+                $commissionAmt = $isClosed ? ($trip->commission_amount ?? 0)  : (int) round($sousTotal * \App\Models\DeliveryTrip::COMMISSION_RATE);
+                $fondsAmt      = $isClosed ? ($trip->funds_amount ?? 0)       : max(0, $totalXAF - $liveMargin - $commissionAmt);
             @endphp
             <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
@@ -555,6 +557,11 @@
                         <span class="text-xs text-violet-700">↳ Caisse ({{ 100 - $bankPct }}%)</span>
                         <span class="text-xs font-bold text-violet-800">{{ number_format($cashAmt, 0, ',', ' ') }} FCFA</span>
                     </div>
+                    {{-- Commission chauffeur --}}
+                    <div class="px-4 py-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-600">− Commission chauffeur (15%)</span>
+                        <span class="text-sm font-semibold text-indigo-700">{{ number_format($commissionAmt, 0, ',', ' ') }} FCFA</span>
+                    </div>
                     {{-- Fonds fournisseur --}}
                     <div class="px-4 py-3 flex justify-between items-center bg-orange-50">
                         <div>
@@ -563,12 +570,6 @@
                         </div>
                         <span class="text-sm font-bold text-orange-800">{{ number_format($fondsAmt, 0, ',', ' ') }} FCFA</span>
                     </div>
-                    @if($trip->mission_allowance_amount)
-                    <div class="px-4 py-3 flex justify-between items-center">
-                        <span class="text-xs text-gray-600">Prime de mission</span>
-                        <span class="text-sm font-semibold text-indigo-700">{{ number_format($trip->mission_allowance_amount, 0, ',', ' ') }} FCFA</span>
-                    </div>
-                    @endif
                 </div>
             </div>
 

@@ -49,15 +49,20 @@
     </div>
 
     {{-- KPI Cards --}}
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
         @php
             $cards = [
-                ['label' => 'Recettes Ventes',     'value' => $summary['documents_revenue'],  'color' => 'green',  'evo' => null, 'invertEvo' => false],
-                ['label' => 'Recettes Livraisons', 'value' => $summary['deliveries_revenue'],  'color' => 'indigo', 'evo' => null, 'invertEvo' => false],
-                ['label' => 'Total Recettes',      'value' => $summary['total_revenue'],       'color' => 'emerald','evo' => $summary['evolution']['revenue'],         'invertEvo' => false],
-                ['label' => 'Dépenses Générales',  'value' => $summary['expenses_general'],    'color' => 'red',    'evo' => $summary['evolution']['expenses_general'], 'invertEvo' => true],
-                ['label' => 'Dépenses Tournées',   'value' => $summary['expenses_delivery'],   'color' => 'orange', 'evo' => null, 'invertEvo' => true],
-                ['label' => 'Masse Salariale',     'value' => $summary['salaries_net'],        'color' => 'purple', 'evo' => $summary['evolution']['salaries_net'],    'invertEvo' => true],
+                // Recettes
+                ['label' => 'Recettes Ventes (HT)', 'value' => $summary['documents_revenue'],   'color' => 'green',   'evo' => null, 'invertEvo' => false],
+                ['label' => 'Recettes Livraisons',  'value' => $summary['deliveries_revenue'],   'color' => 'indigo',  'evo' => null, 'invertEvo' => false],
+                ['label' => 'Total Recettes',       'value' => $summary['total_revenue'],        'color' => 'emerald', 'evo' => $summary['evolution']['revenue'],         'invertEvo' => false],
+                ['label' => 'Total Charges',        'value' => $summary['total_charges'],        'color' => 'red',     'evo' => $summary['evolution']['charges'],         'invertEvo' => true],
+                // Charges (détail)
+                ['label' => 'Dépenses Générales',   'value' => $summary['expenses_general'],     'color' => 'orange',  'evo' => $summary['evolution']['expenses_general'],'invertEvo' => true],
+                ['label' => 'Dépenses Tournées',    'value' => $summary['expenses_delivery'],    'color' => 'amber',   'evo' => null, 'invertEvo' => true],
+                ['label' => 'Fonds reversés',       'value' => $summary['delivery_funds'],       'color' => 'blue',    'evo' => null, 'invertEvo' => true],
+                ['label' => 'Commissions chauffeurs','value' => $summary['delivery_commissions'],'color' => 'purple',  'evo' => null, 'invertEvo' => true],
+                ['label' => 'Salaires (base)',      'value' => $summary['salaries_base'],        'color' => 'purple',  'evo' => $summary['evolution']['salaries_base'],   'invertEvo' => true],
             ];
         @endphp
         @foreach ($cards as $card)
@@ -91,7 +96,7 @@
                         Résultat Net du mois
                     </p>
                     <p class="text-xs {{ $isPositive ? 'text-green-600' : 'text-red-600' }} mt-1">
-                        Recettes − Dépenses − Tournées − Salaires
+                        Recettes − Charges (dépenses, fonds reversés, commissions, salaires)
                     </p>
                     @if ($summary['evolution']['net_result'] !== null)
                         <p class="mt-2 text-xs font-semibold {{ evoClass($summary['evolution']['net_result']) }}">
@@ -132,7 +137,8 @@
         {{-- Dépenses par catégorie --}}
         <div class="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
             <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
-                <h3 class="text-lg font-semibold text-gray-900">Dépenses par catégorie</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Dépenses générales par catégorie</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Hors dépenses tournées, fonds reversés et salaires</p>
             </div>
             @if ($summary['expenses_by_category']->isEmpty())
                 <div class="px-6 py-8 text-center">
@@ -190,7 +196,7 @@
                             <tr class="bg-gray-50">
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Chauffeur</th>
                                 <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Tournées</th>
-                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Recette</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Recette brute</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white">
@@ -214,7 +220,7 @@
     <div class="overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
         <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4">
             <h3 class="text-lg font-semibold text-gray-900">Tendance — 6 derniers mois</h3>
-            <p class="text-xs text-gray-500 mt-0.5">Résultat = Recettes − Dépenses − Tournées − Salaires</p>
+            <p class="text-xs text-gray-500 mt-0.5">Résultat = Recettes − Charges (dépenses, fonds reversés, commissions, salaires)</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-100">

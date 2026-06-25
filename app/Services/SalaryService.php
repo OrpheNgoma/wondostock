@@ -42,10 +42,10 @@ class SalaryService
                 ->get();
 
             $tripsCount = $trips->count();
-            $missionAllowances = (int) $trips->sum('mission_allowance_amount');
-            $totalCommissions = (int) ($trips->sum('total_revenue') * DeliveryTrip::COMMISSION_RATE);
+            // Commission = 15 % de la recette, figée par tournée à la clôture
+            $totalCommissions = (int) $trips->sum('commission_amount');
             $baseSalary = (int) $driver->base_salary;
-            $grossSalary = $baseSalary + $totalCommissions + $missionAllowances;
+            $grossSalary = $baseSalary + $totalCommissions;
 
             $advances = SalaryAdvance::withoutGlobalScopes()
                 ->where('company_id', $period->company_id)
@@ -70,7 +70,7 @@ class SalaryService
                     'net_salary' => $netSalary,
                     'trips_count' => $tripsCount,
                     'total_commissions' => $totalCommissions,
-                    'mission_allowances' => $missionAllowances,
+                    'mission_allowances' => 0,
                 ]
             );
 

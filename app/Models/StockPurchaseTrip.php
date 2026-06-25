@@ -11,20 +11,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
-class DeliveryTrip extends Model
+class StockPurchaseTrip extends Model
 {
-    /** @use HasFactory<\Database\Factories\DeliveryTripFactory> */
+    /** @use HasFactory<\Database\Factories\StockPurchaseTripFactory> */
     use Auditable, BelongsToCompany, HasFactory;
 
-    /** Commission du chauffeur : 15 % de la recette de la livraison, quelle que soit la zone. */
-    const COMMISSION_RATE = 0.15;
+    /** Prime de déplacement fixe par défaut (FCFA), figée sur chaque voyage à la création. */
+    const DEFAULT_MISSION_ALLOWANCE = 10000;
 
     protected $fillable = [
         'company_id',
         'driver_id',
         'vehicle_id',
-        'zone_id',
         'store_id',
+        'supplier_id',
         'closed_by',
         'status',
         'trip_date',
@@ -32,17 +32,12 @@ class DeliveryTrip extends Model
         'departed_at',
         'returned_at',
         'closed_at',
-        'loaded_crates',
-        'returned_crates',
-        'total_revenue',
-        'total_margin',
+        'stock_applied_at',
+        'empty_crates_out',
+        'full_crates_in',
+        'total_purchase_cost',
         'total_expenses',
-        'bank_percentage',
-        'bank_amount',
-        'cash_amount',
-        'funds_amount',
         'mission_allowance_amount',
-        'commission_amount',
         'notes',
     ];
 
@@ -55,17 +50,12 @@ class DeliveryTrip extends Model
             'departed_at' => 'datetime',
             'returned_at' => 'datetime',
             'closed_at' => 'datetime',
-            'loaded_crates' => 'integer',
-            'returned_crates' => 'integer',
-            'total_revenue' => 'integer',
-            'total_margin' => 'integer',
+            'stock_applied_at' => 'datetime',
+            'empty_crates_out' => 'integer',
+            'full_crates_in' => 'integer',
+            'total_purchase_cost' => 'integer',
             'total_expenses' => 'integer',
-            'bank_percentage' => 'integer',
-            'bank_amount' => 'integer',
-            'cash_amount' => 'integer',
-            'funds_amount' => 'integer',
             'mission_allowance_amount' => 'integer',
-            'commission_amount' => 'integer',
         ];
     }
 
@@ -79,14 +69,14 @@ class DeliveryTrip extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function zone(): BelongsTo
-    {
-        return $this->belongsTo(Zone::class);
-    }
-
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function closedBy(): BelongsTo
@@ -96,21 +86,12 @@ class DeliveryTrip extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(DeliveryItem::class, 'trip_id');
+        return $this->hasMany(StockPurchaseItem::class, 'trip_id');
     }
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(DeliveryExpense::class, 'trip_id');
-    }
-
-    public function getSoldCratesAttribute(): ?int
-    {
-        if ($this->loaded_crates === null || $this->returned_crates === null) {
-            return null;
-        }
-
-        return $this->loaded_crates - $this->returned_crates;
+        return $this->hasMany(StockPurchaseExpense::class, 'trip_id');
     }
 
     public function scopeToday($query)

@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Enums\DeliveryTripStatus;
+use App\Enums\StockMovementType;
 use App\Models\DeliveryTrip;
+use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -58,9 +61,10 @@ class DeliveryService
      * Calculs automatiques :
      *  - total_margin   = Σ (net_qty × margin_per_unit) sur les items
      *  - total_expenses = Σ amount sur les dépenses de tournée
-     *  - bank_amount    = bank_percentage % × total_margin
-     *  - cash_amount    = total_margin − bank_amount
-     *  - funds_amount   = total_revenue − total_margin − total_expenses
+     *  - bank_amount      = bank_percentage % × total_margin
+     *  - cash_amount      = total_margin − bank_amount
+     *  - commission_amount = 15 % × total_revenue (rémunération chauffeur)
+     *  - funds_amount     = total_revenue − total_margin − total_expenses − commission_amount
      *
      * Si aucun item n'est saisi, total_margin reste 0 (calcul manuel possible).
      * Passe le statut : completed → closed
@@ -69,7 +73,7 @@ class DeliveryService
     {
         $this->assertStatus($trip, DeliveryTripStatus::Completed, 'clôturer');
 
-        $trip->load(['items', 'expenses', 'zone']);
+        $trip->load(['items', 'expenses']);
 
         // Marge calculée depuis les lignes de livraison
         $totalMargin = $trip->items->sum(fn ($item) => $item->net_qty * $item->margin_per_unit);
@@ -82,12 +86,13 @@ class DeliveryService
         $bankAmount = (int) round($totalMargin * $bankPct);
         $cashAmount = $totalMargin - $bankAmount;
 
-        // Fonds = ce qui revient au fournisseur (recettes − marge − dépenses)
         $revenue = $trip->total_revenue ?? 0;
-        $fundsAmount = max(0, $revenue - $totalMargin - $totalExpenses);
 
-        // Prime de mission depuis la zone
-        $missionAllowance = $trip->zone?->mission_allowance ?? 0;
+        // Commission du chauffeur : 15 % de la recette, quelle que soit la zone
+        $commission = (int) round($revenue * DeliveryTrip::COMMISSION_RATE);
+
+        // Fonds = ce qui revient au fournisseur (recettes − marge − dépenses − commission)
+        $fundsAmount = max(0, $revenue - $totalMargin - $totalExpenses - $commission);
 
         $trip->update([
             'total_margin' => $totalMargin,
@@ -95,7 +100,8 @@ class DeliveryService
             'bank_amount' => $bankAmount,
             'cash_amount' => $cashAmount,
             'funds_amount' => $fundsAmount,
-            'mission_allowance_amount' => $missionAllowance,
+            'commission_amount' => $commission,
+            'mission_allowance_amount' => 0,
             'status' => DeliveryTripStatus::Closed,
             'closed_at' => now(),
             'closed_by' => Auth::id(),
@@ -186,6 +192,10 @@ class DeliveryService
                 'status' => DeliveryTripStatus::Completed,
                 'returned_at' => now(),
             ]);
+
+            // Décrémente le stock du dépôt source : uniquement les quantités vendues
+            // (livrées − retournées). Effectif au retour, pas au départ.
+            $this->applyStockReduction($trip);
         });
 
         return $trip->fresh(['items']);
@@ -202,6 +212,52 @@ class DeliveryService
         $trip->update(['total_revenue' => $revenue]);
 
         return $trip->fresh();
+    }
+
+    /**
+     * Décrémente l'inventaire du dépôt source de la tournée, produit par produit,
+     * de la quantité réellement vendue (net = livrée − retournée).
+     * Le stock est plafonné à 0 (jamais négatif) et un mouvement de type « Vente »
+     * est tracé pour chaque produit. Sans dépôt source, aucune décrémentation.
+     */
+    private function applyStockReduction(DeliveryTrip $trip): void
+    {
+        if (! $trip->store_id) {
+            return;
+        }
+
+        foreach ($trip->items as $item) {
+            $sold = $item->net_qty;
+
+            if (! $item->product_id || $sold <= 0) {
+                continue;
+            }
+
+            $product = Product::where('company_id', $trip->company_id)->find($item->product_id);
+
+            if (! $product) {
+                continue;
+            }
+
+            $pivot = $product->stores()->where('store_id', $trip->store_id)->first();
+
+            if ($pivot) {
+                $product->stores()->updateExistingPivot($trip->store_id, [
+                    'quantity' => max(0, $pivot->pivot->quantity - $sold),
+                ]);
+            }
+
+            StockMovement::create([
+                'company_id' => $trip->company_id,
+                'product_id' => $product->id,
+                'store_id' => $trip->store_id,
+                'user_id' => Auth::id(),
+                'source_type' => DeliveryTrip::class,
+                'source_id' => $trip->id,
+                'type' => StockMovementType::Sale,
+                'quantity' => -$sold,
+            ]);
+        }
     }
 
     private function assertStatus(DeliveryTrip $trip, DeliveryTripStatus $expected, string $action): void

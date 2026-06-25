@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('delivery_trips', 'total_margin')) {
+            return;
+        }
+
         Schema::table('delivery_trips', function (Blueprint $table) {
             $table->integer('total_margin')->default(0)->after('total_revenue');
             $table->integer('total_expenses')->default(0)->after('total_margin');

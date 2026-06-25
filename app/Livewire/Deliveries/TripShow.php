@@ -286,7 +286,7 @@ class TripShow extends Component
     public function render(): View
     {
         $this->trip->loadMissing([
-            'driver', 'vehicle', 'zone',
+            'driver', 'vehicle', 'zone', 'store',
             'items',
             'expenses.category',
             'closedBy',

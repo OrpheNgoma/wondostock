@@ -167,6 +167,27 @@
                         @enderror
                     </div>
 
+                    {{-- Dépôt source --}}
+                    <div>
+                        <label for="store_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Dépôt source <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            wire:model="store_id"
+                            id="store_id"
+                            class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+                        >
+                            <option value="">-- Sélectionner un dépôt --</option>
+                            @foreach ($stores as $store)
+                                <option value="{{ $store->id }}">{{ $store->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1.5 text-xs text-gray-500">Le stock vendu sera décompté de ce dépôt au retour de la tournée.</p>
+                        @error('store_id')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     {{-- Zone --}}
                     <div>
                         <label for="zone_id" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -180,7 +201,7 @@
                             <option value="">-- Sélectionner une zone --</option>
                             @foreach ($zones as $zone)
                                 <option value="{{ $zone->id }}">
-                                    {{ $zone->name }} — {{ number_format($zone->mission_allowance, 0, ',', ' ') }} FCFA/voyage
+                                    {{ $zone->name }}@if($zone->city) — {{ $zone->city }}@endif
                                 </option>
                             @endforeach
                         </select>
@@ -242,10 +263,9 @@
                                 <dd class="mt-1 text-sm font-semibold text-gray-900">{{ $selectedZone->city }}</dd>
                             </div>
                             <div>
-                                <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Prime de mission</dt>
-                                <dd class="mt-1 text-lg font-bold text-indigo-700">
-                                    {{ number_format($selectedZone->mission_allowance, 0, ',', ' ') }} FCFA/voyage
-                                </dd>
+                                <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide">Commission chauffeur</dt>
+                                <dd class="mt-1 text-lg font-bold text-indigo-700">15 % de la recette</dd>
+                                <p class="mt-1 text-xs text-gray-500">Appliquée à la clôture, quelle que soit la zone.</p>
                             </div>
                         </dl>
                         @php

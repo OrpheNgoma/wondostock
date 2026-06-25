@@ -56,7 +56,9 @@
       "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SHOW INDEX FROM roles;\")",
       "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT id, company_id, name, guard_name FROM roles ORDER BY company_id, name;\")",
       "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SHOW INDEX FROM roles WHERE Key_name LIKE '%unique%';\")",
-      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT name FROM permissions ORDER BY name;\")"
+      "Bash(mysql -u phpmyadmin -prk6ZoCvq0g5K wondostock -e \"SELECT name FROM permissions ORDER BY name;\")",
+      "Bash(echo \"=== tables in sqlite dump ===\" && grep -oE 'CREATE TABLE \\(IF NOT EXISTS \\)?\"[a-z_]+\"' database/schema/sqlite-schema.sql | grep -oE '\"[a-z_]+\"' | tr -d '\"' | sort > /tmp/dump_tables.txt && cat /tmp/dump_tables.txt | tr '\\\\n' ' '; echo \"\"; echo \"=== count ===\"; wc -l < /tmp/dump_tables.txt)",
+      "Read(//tmp/**)"
     ],
     "deny": []
   },

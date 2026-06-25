@@ -42,28 +42,31 @@ use App\Livewire\Documents\Index as DocumentIndex;
 use App\Livewire\Documents\Show as DocumentShow;
 use App\Livewire\Products\Index as ProductIndex;
 use App\Livewire\Products\PrintLabels as ProductLabels;
-// SaaS - Documents & Ventes
 use App\Livewire\Products\ProductForm;
 use App\Livewire\Products\ProductSettings;
 use App\Livewire\Profile\Index as ProfileIndex;
+// SaaS - Documents & Ventes
 use App\Livewire\Purchases\Index as PurchasesIndex;
-// SaaS - Gestion Relations
 use App\Livewire\Purchases\PurchaseOrderForm;
 use App\Livewire\Purchases\Show as PurchasesShow;
-// SaaS - Stock
 use App\Livewire\Reports\Index as ReportsIndex;
+// SaaS - Gestion Relations
 use App\Livewire\Settings\Company\Index as CompanySettingsIndex;
 use App\Livewire\Settings\Invitations\Index as InvitationsIndex;
-// SaaS - Achats
+// SaaS - Stock
 use App\Livewire\Settings\Numbering as NumberingSettings;
 use App\Livewire\Settings\Roles\Index as RolesIndex;
 use App\Livewire\Settings\Subscription\Index as SubscriptionIndex;
-// SaaS - Magasins & Rapports
+// SaaS - Achats
 use App\Livewire\Settings\Users\Index as UsersIndex;
 use App\Livewire\Stock\Movements\Index as StockMovementsIndex;
-// SaaS - Paramètres
 use App\Livewire\Stock\StockEntry;
+// SaaS - Magasins & Rapports
 use App\Livewire\Stock\TransferForm;
+use App\Livewire\StockPurchases\Index as StockPurchaseIndex;
+// SaaS - Paramètres
+use App\Livewire\StockPurchases\TripForm as StockPurchaseForm;
+use App\Livewire\StockPurchases\TripShow as StockPurchaseShow;
 use App\Livewire\StoreActivity\Dashboard as StoreActivityDashboard;
 use App\Livewire\Stores\Index as StoreIndex;
 use App\Livewire\Suppliers\Index as SuppliersIndex;
@@ -221,6 +224,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{trip}/pdf/report', [DeliveryPdfController::class, 'report'])->name('pdf.report');
         Route::get('/{trip}/pdf/invoice', [DeliveryPdfController::class, 'invoice'])->name('pdf.invoice');
         Route::get('/{trip}', TripShow::class)->name('show');
+    });
+
+    // ----------------------------------------
+    // ACHATS DE STOCK (sous-fonctionnalité des livraisons)
+    // ----------------------------------------
+    Route::middleware('module:deliveries')->prefix('stock-purchases')->name('stock-purchases.')->group(function () {
+        Route::get('/', StockPurchaseIndex::class)->name('index');
+        Route::get('/create', StockPurchaseForm::class)->name('create');
+        Route::get('/{trip}/edit', StockPurchaseForm::class)->name('edit');
+        Route::get('/{trip}', StockPurchaseShow::class)->name('show');
     });
 
     // ----------------------------------------

@@ -492,34 +492,6 @@
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Prime de mission (FCFA) <span class="text-red-500">*</span>
-                            </label>
-                            {{-- Presets rapides --}}
-                            <div class="flex items-center gap-2 mb-2">
-                                @foreach ([5000, 10000, 15000] as $preset)
-                                    <button
-                                        wire:click="$set('zoneForm.mission_allowance', {{ $preset }})"
-                                        type="button"
-                                        class="rounded-lg px-2.5 py-1 text-xs font-medium transition-colors duration-150
-                                            {{ (int) $zoneForm['mission_allowance'] === $preset ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' }}"
-                                    >
-                                        {{ number_format($preset, 0, ',', ' ') }}
-                                    </button>
-                                @endforeach
-                                <span class="text-xs text-gray-400">ou saisir :</span>
-                            </div>
-                            <input
-                                type="number"
-                                wire:model="zoneForm.mission_allowance"
-                                min="0"
-                                class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 shadow-sm ring-1 ring-inset ring-indigo-200 bg-white focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
-                            >
-                            @error('zoneForm.mission_allowance')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
                     </div>
                     <div class="mt-4 flex items-center gap-3">
                         <button
@@ -567,7 +539,6 @@
                             <tr>
                                 <th scope="col" class="py-4 pl-6 pr-3 text-left text-sm font-semibold text-gray-700">Nom</th>
                                 <th scope="col" class="px-3 py-4 text-left text-sm font-semibold text-gray-700">Ville</th>
-                                <th scope="col" class="px-3 py-4 text-right text-sm font-semibold text-gray-700">Prime de mission</th>
                                 <th scope="col" class="px-3 py-4 text-center text-sm font-semibold text-gray-700">Tournées</th>
                                 <th scope="col" class="relative py-4 pl-3 pr-6"><span class="sr-only">Actions</span></th>
                             </tr>
@@ -580,11 +551,6 @@
                                     </td>
                                     <td class="px-3 py-4">
                                         <span class="text-sm text-gray-600">{{ $zone->city }}</span>
-                                    </td>
-                                    <td class="px-3 py-4 text-right">
-                                        <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                                            {{ number_format($zone->mission_allowance, 0, ',', ' ') }} FCFA/voyage
-                                        </span>
                                     </td>
                                     <td class="px-3 py-4 text-center">
                                         <span class="text-sm font-medium text-gray-700">{{ $zone->delivery_trips_count }}</span>

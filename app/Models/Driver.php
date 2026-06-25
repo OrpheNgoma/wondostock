@@ -35,6 +35,11 @@ class Driver extends Model
         return $this->hasMany(DeliveryTrip::class);
     }
 
+    public function stockPurchaseTrips(): HasMany
+    {
+        return $this->hasMany(StockPurchaseTrip::class);
+    }
+
     public function salarySlips(): HasMany
     {
         return $this->hasMany(SalarySlip::class);

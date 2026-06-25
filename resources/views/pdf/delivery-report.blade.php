@@ -169,10 +169,10 @@
                 <td class="label">CAISSE ({{ 100 - $trip->bank_percentage }}%)</td>
                 <td class="amount">{{ number_format($trip->cash_amount ?? 0, 0, ',', ' ') }}</td>
             </tr>
-            <tr class="finance-row-funds"><td class="label">FONDS</td><td class="amount">{{ number_format($trip->funds_amount ?? 0, 0, ',', ' ') }}</td></tr>
-            @if($trip->mission_allowance_amount)
-            <tr><td class="label">Prime de mission</td><td class="amount">{{ number_format($trip->mission_allowance_amount, 0, ',', ' ') }}</td></tr>
+            @if($trip->commission_amount)
+            <tr><td class="label">Commission chauffeur (15%)</td><td class="amount">{{ number_format($trip->commission_amount, 0, ',', ' ') }}</td></tr>
             @endif
+            <tr class="finance-row-funds"><td class="label">FONDS</td><td class="amount">{{ number_format($trip->funds_amount ?? 0, 0, ',', ' ') }}</td></tr>
         </table>
     </div>
 </div>

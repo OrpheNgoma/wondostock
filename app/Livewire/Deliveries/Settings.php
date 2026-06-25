@@ -54,8 +54,8 @@ class Settings extends Component
 
     public ?int $editingZoneId = null;
 
-    /** @var array{name: string, city: string, mission_allowance: int} */
-    public array $zoneForm = ['name' => '', 'city' => '', 'mission_allowance' => 5000];
+    /** @var array{name: string, city: string} */
+    public array $zoneForm = ['name' => '', 'city' => ''];
 
     // ── DRIVERS ──────────────────────────────────────────────────────────────
 
@@ -167,7 +167,6 @@ class Settings extends Component
         return [
             'zoneForm.name' => 'required|string|max:100',
             'zoneForm.city' => 'required|string|max:100',
-            'zoneForm.mission_allowance' => 'required|integer|min:0',
         ];
     }
 
@@ -193,14 +192,14 @@ class Settings extends Component
     {
         $zone = Zone::where('company_id', Auth::user()->company_id)->findOrFail($id);
         $this->editingZoneId = $id;
-        $this->zoneForm = $zone->only(['name', 'city', 'mission_allowance']);
+        $this->zoneForm = $zone->only(['name', 'city']);
         $this->showZoneForm = true;
     }
 
     public function resetZoneForm(): void
     {
         $this->editingZoneId = null;
-        $this->zoneForm = ['name' => '', 'city' => '', 'mission_allowance' => 5000];
+        $this->zoneForm = ['name' => '', 'city' => ''];
         $this->showZoneForm = false;
     }
 

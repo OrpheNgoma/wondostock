@@ -3,6 +3,7 @@
 namespace App\Livewire\Finance;
 
 use App\Services\FinancialDashboardService;
+use App\Traits\AuthorizesLivewireActions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -14,12 +15,16 @@ use Livewire\Component;
 #[Title('Dashboard Financier - WondoStock')]
 class Dashboard extends Component
 {
+    use AuthorizesLivewireActions;
+
     public int $selectedMonth;
 
     public int $selectedYear;
 
     public function mount(): void
     {
+        $this->requirePermission('view_financial_reports');
+
         $now = Carbon::now();
         $this->selectedMonth = $now->month;
         $this->selectedYear = $now->year;

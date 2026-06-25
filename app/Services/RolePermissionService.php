@@ -269,6 +269,7 @@ class RolePermissionService
             'Dépenses' => ['view_expenses', 'create_expenses', 'edit_expenses', 'delete_expenses'],
             'Caisse' => ['view_cash_sessions', 'manage_cash_sessions', 'close_cash_sessions'],
             'Livraisons' => ['view_deliveries', 'create_deliveries', 'edit_deliveries', 'close_deliveries'],
+            'Achats de stock' => ['view_stock_purchases', 'create_stock_purchases', 'edit_stock_purchases', 'close_stock_purchases'],
             'Salaires & RH' => ['view_salaries', 'manage_salaries', 'validate_salaries', 'approve_salary_advances'],
             'Employés' => ['view_employees', 'manage_employees'],
             'Finance & Rapports' => ['view_financial_reports', 'view_global_reports', 'view_store_reports'],

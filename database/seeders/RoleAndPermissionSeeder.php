@@ -64,6 +64,12 @@ class RoleAndPermissionSeeder extends Seeder
             'edit_deliveries',
             'close_deliveries',
 
+            // Achats de stock
+            'view_stock_purchases',
+            'create_stock_purchases',
+            'edit_stock_purchases',
+            'close_stock_purchases',
+
             // Salaires & RH
             'view_salaries',
             'manage_salaries',
@@ -202,6 +208,10 @@ class RoleAndPermissionSeeder extends Seeder
             'create_deliveries',
             'edit_deliveries',
             'close_deliveries',
+            'view_stock_purchases',
+            'create_stock_purchases',
+            'edit_stock_purchases',
+            'close_stock_purchases',
             'view_employees',
             'view_store_reports',
             'manage_users',
